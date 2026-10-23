@@ -8,10 +8,10 @@ Stock and customer-credit ledger for one demonstration shop (TeSA Cohort 6 capst
 - Database (local): `docker compose up -d db` (healthy: `db ... Started`)
 - Service build and test: `cd service && ./mvnw verify` (healthy: `BUILD SUCCESS`, `Tests run: N, Failures: 0, Errors: 0`). Needs Docker running for Testcontainers.
 - Service run: `cd service && ./mvnw spring-boot:run -Dspring-boot.run.profiles=local,demo` (healthy: `Started StockwiseApplication`). `curl localhost:8080/api/v1/health` returns `{"status":"UP"}`.
-- Contract lint: `npx @redocly/cli lint contract/openapi.yaml` (healthy: `Woohoo! Your API description is valid.`)
-- Mock server: `npx @stoplight/prism-cli mock contract/openapi.yaml` (healthy: `Prism is listening on http://127.0.0.1:4010`)
+- Contract lint: `npx @redocly/cli@2 lint contract/openapi.yaml --config contract/redocly.yaml` (healthy: `Woohoo! Your API description is valid.`)
+- Mock server: `npx @stoplight/prism-cli@5 mock contract/openapi.yaml --port 4710` (healthy: `Prism is listening on http://127.0.0.1:4710`)
 - Web: `cd web && npm ci && npm run lint && npm run typecheck && npm test && npm run build`
-- Web dev against the mock: `cd web && VITE_API_BASE_URL=http://127.0.0.1:4010 npm run dev`
+- Web dev against the mock: `cd web && VITE_API_BASE_URL=http://127.0.0.1:4710 npm run dev`
 
 ## Conventions
 - Java 25, Spring Boot 4, Maven wrapper, Flyway, Spring `JdbcClient` with **hand-written SQL, no JPA** (DM1, DM17, DM18). React 19 + TypeScript strict + Vite + Tailwind + TanStack Query (DM21).
@@ -47,7 +47,7 @@ Rule: when an agent makes the same mistake twice, the correction goes here.
 ## Verifying your work
 Run these before reporting any task complete, and paste the output (full list in `sdlc/test-plan.md`):
 - Service: `cd service && ./mvnw verify` (must end with `BUILD SUCCESS`. Includes Testcontainers integration, contract and migration up/down/up tests, and JaCoCo ≥ 80% on rule packages)
-- Contract: `npx @redocly/cli lint contract/openapi.yaml` (valid, no errors)
+- Contract: `npx @redocly/cli@2 lint contract/openapi.yaml --config contract/redocly.yaml` (valid, no errors)
 - Web: `cd web && npm run lint && npm run typecheck && npm test -- --run` (zero errors and warnings, all tests green)
 - UI change: `cd web && npx playwright test` (axe: 0 serious or critical issues)
 

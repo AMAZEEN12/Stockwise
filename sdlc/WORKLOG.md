@@ -6,11 +6,11 @@ Source document: `Tesa cohort 6 software engineering capstone project.pdf` (TeSA
 > Any agent opening this project: read this file first, then the "Conventions and guidelines" and "Decisions" sections, then the artifacts in this folder. Continue from "Resume here". Don't re-ask anything already answered below.
 
 ## Resume here
-- **Stage:** Done (SDLC artifact chain complete). Implementation not started.
-- **Step:** EXECUTION.md written; chain finished on 2026-10-23.
-- **In progress:** nothing.
-- **Next action:** Follow `EXECUTION.md` "Steps", starting at step 1 (create the public GitHub repo and protections, owner Blessing Nwafor). Log each completed step here. When the repo exists, offer to commit the artifacts one commit per stage. Genie's chain (`genie/sdlc/`, separate repo) is next for the SDLC process.
-- **Waiting on:** GitHub repository creation. The local git repo exists (`main`, one commit per stage); there is no remote yet. The user chose "local only for now" because the GitHub CLI isn't installed. To finish EXECUTION step 1: create the public repo on github.com, `git remote add origin <url>`, push `main` (with the user's go-ahead), then set branch protection, CODEOWNERS and the `production` environment.
+- **Stage:** Implementation (EXECUTION.md)
+- **Step:** Step 1 done locally (no GitHub remote yet). Step 2 drafted: `contract/openapi.yaml` v0.1.0, `contract/redocly.yaml`, `contract/README.md`; lint clean; Prism mock smoke-tested. Not committed yet.
+- **In progress:** contract v0.1.0 awaits agreement by Isaac Bassey and Nnaemeka Chukwuma (`decisions.md` §3 line marked Pending).
+- **Next action:** Once the user approves committing, commit the contract. Get Isaac's review and record both names in §3. Then step 4 (migrations V1-V3 with undo scripts, Nnaemeka's area) or step 3 (walking skeleton, needs the GitHub repo).
+- **Waiting on:** the user (commit approval) and Isaac Bassey (contract agreement). GitHub repo creation is still pending for steps 1 and 3.
 
 ## How to continue without the sdlc skill
 1. Stages run in order: Plan (intent.md), Design (spec.md), Build (plan.md + repo AGENTS.md), Test (test-plan.md), Deploy (release.md + repo REVIEW.md), Maintain (monitoring.md), then EXECUTION.md.
@@ -39,6 +39,7 @@ Source document: `Tesa cohort 6 software engineering capstone project.pdf` (TeSA
 - **Stack and versions:** service: Java 25, Spring Boot 4, Flyway, JUnit + Testcontainers, PostgreSQL (DM1). Hosting: Vercel + Render + Neon, terms to verify (DM2). Auth: email+password, bcrypt, JWT bearer (DM3). Interface constraints from the brief: React interface with React Router (or equivalent) and Tailwind or plain CSS, typed models (no `any`); own HTTP service; free managed Postgres; GitHub Actions deploys both tiers; free tiers only.
 - **Naming:** change slugs `stockwise` and `genie`. Two repositories (DM19): this one is `stockwise/` (code, `sdlc/`, `AGENTS.md`, `decisions.md`, `deploy-plan.md`). Genie is a separate repository. Artifacts are independent (DM20).
 - **Code and docs style:** to be agreed at Build.
+- **Local ports:** the Prism mock runs on **4710**, not its default 4010. Windows on Nnaemeka's machine reserves TCP 3965-4064 (Hyper-V/WSL). The mock serves paths at the root; the real service serves them under `/api/v1` on 8080. Prism returns 422 for invalid requests, while the real service returns 400 `VALIDATION_FAILED`.
 - **Source of truth:** the repository. The Markdown artifacts are authoritative; the TeSA PDF brief is the originating record.
 - **Policies in force:** TeSA brief sections "Shared technical requirements", "Shared rules for fairness", "Delivery and cost" and the assessment rubric (PDF pages 3, 23-26). No other organisational policy supplied.
 - **Supporting skills:** none.
@@ -113,3 +114,4 @@ Append-only, newest last.
 - 2026-10-23 · agent · Recorded DM31 (monitoring postponed). Wrote `sdlc/monitoring.md` as a deferred placeholder.
 - 2026-10-23 · agent · Annotated intent.md open questions answered later (DM5-DM8); intent's accepted content is unchanged. Wrote `sdlc/EXECUTION.md`. SDLC chain complete for Stockwise.
 - 2026-10-23 · agent · EXECUTION step 1 (local part): `git init -b main` in `stockwise/`, added `.gitignore`, committed the artifacts one commit per stage (first commit 4de3402). No remote, nothing pushed (user: "local only for now").
+- 2026-10-23 · agent · EXECUTION step 2: drafted `contract/openapi.yaml` v0.1.0 (Monday paths), `redocly.yaml` (recommended rules plus a custom `money-is-integer-kobo` rule) and the contract README. Redocly lint: 0 errors, 0 warnings after fixing a missing 4xx on /health and an if/then conflict with additionalProperties (the CREDIT → customerId rule moved to the description, enforced by service and DB). Proved the money rule fails on a deliberate `priceKobo: number`. Prism mock failed on port 4010 (EACCES, Windows reserved range 3965-4064) and moved to 4710. Smoke test: health 200, login 201, products 401 without token and 200 with, sale 201, missing Idempotency-Key 422, float quantity 422, forced 409 returns the INSUFFICIENT_STOCK example. Logged as DRAFT in decisions.md §3, pending Isaac Bassey and Nnaemeka Chukwuma.
