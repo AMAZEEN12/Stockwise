@@ -10,7 +10,7 @@ Source document: `Tesa cohort 6 software engineering capstone project.pdf` (TeSA
 - **Step:** EXECUTION.md written; chain finished on 2026-10-23.
 - **In progress:** nothing.
 - **Next action:** Follow `EXECUTION.md` "Steps", starting at step 1 (create the public GitHub repo and protections, owner Blessing Nwafor). Log each completed step here. When the repo exists, offer to commit the artifacts one commit per stage. Genie's chain (`genie/sdlc/`, separate repo) is next for the SDLC process.
-- **Waiting on:** nothing (team to start implementation)
+- **Waiting on:** GitHub repository creation. The local git repo exists (`main`, one commit per stage); there is no remote yet. The user chose "local only for now" because the GitHub CLI isn't installed. To finish EXECUTION step 1: create the public repo on github.com, `git remote add origin <url>`, push `main` (with the user's go-ahead), then set branch protection, CODEOWNERS and the `production` environment.
 
 ## How to continue without the sdlc skill
 1. Stages run in order: Plan (intent.md), Design (spec.md), Build (plan.md + repo AGENTS.md), Test (test-plan.md), Deploy (release.md + repo REVIEW.md), Maintain (monitoring.md), then EXECUTION.md.
@@ -112,3 +112,4 @@ Append-only, newest last.
 - 2026-10-23 · Nnaemeka Chukwuma · Accepted release.md and REVIEW.md. Agent started the Maintain stage.
 - 2026-10-23 · agent · Recorded DM31 (monitoring postponed). Wrote `sdlc/monitoring.md` as a deferred placeholder.
 - 2026-10-23 · agent · Annotated intent.md open questions answered later (DM5-DM8); intent's accepted content is unchanged. Wrote `sdlc/EXECUTION.md`. SDLC chain complete for Stockwise.
+- 2026-10-23 · agent · EXECUTION step 1 (local part): `git init -b main` in `stockwise/`, added `.gitignore`, committed the artifacts one commit per stage (first commit 4de3402). No remote, nothing pushed (user: "local only for now").
