@@ -1,0 +1,20 @@
+extends:
+  - recommended
+
+rules:
+  # Every operation must say who it's for and whether it's safe/idempotent (in its description).
+  operation-description: error
+  operation-operationId: error
+  operation-4xx-response: error
+  no-server-example.com: off
+  info-license: off
+  # Money fields must be integer kobo: any schema property ending in "Kobo" must be an int64 with x-unit.
+  rule/money-is-integer-kobo:
+    subject:
+      type: Schema
+      property: type
+      matchParentKeys: /Kobo$/
+    assertions:
+      const: integer
+    message: Money fields (names ending in "Kobo") must be integers in kobo.
+    severity: error

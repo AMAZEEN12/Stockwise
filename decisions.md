@@ -120,4 +120,4 @@ Questions include session persistence and expiry during pending writes, recovery
 ## 3. Contract change log
 | Date | Change | Why | Agreed by (two engineers) |
 |------|--------|-----|---------------------------|
-| | | | |
+| 2026-10-23 | **v0.1.0 (DRAFT):** first contract with the Monday paths: `GET /health`, `POST /auth/sessions`, `GET /me`, `GET/POST /products`, `GET /products/{id}`, `GET/POST /customers`, `GET/POST /sales` (`Idempotency-Key` required), `GET /sales/{id}`. Problem+json errors with codes. Money as int64 kobo (`x-unit: kobo`, enforced by the lint rule `money-is-integer-kobo`). Mock on port 4710 | EXECUTION step 2: contract before code; unblocks the interface | **Pending:** Isaac Bassey (API and access owner) and Nnaemeka Chukwuma. Drafted by the agent for review; not agreed until both names are recorded here |
