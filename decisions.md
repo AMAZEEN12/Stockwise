@@ -128,6 +128,20 @@ Questions include session persistence and expiry during pending writes, recovery
 
 Implementation details and remaining limits: [auth UI](docs/auth-ui-implementation.md), [contract proposal](docs/auth-contract-proposal.md). Historical DM32–DM36 remain intact. No proposed endpoint is added to the active contract or counted as two-engineer approval.
 
+### Tailwind utility convention, 2026-10-24
+
+| ID | Date | Decision | Reason | Decided by | Logged by |
+|----|------|----------|--------|------------|-----------|
+| DM41 | 2026-10-24 | Prefer `focus-visible:outline-offset-(--focus-ring-offset)`, `rounded-md`, and `font-sans` over their equivalent arbitrary CSS-variable classes. Record recurring examples in AGENTS.md and apply the replacements across Button, Input and FormField, including future shared-component copies. Preserve 10px radius, Inter Tight and the configured focus offset | Victor identified recurring IDE canonical-class suggestions; reduce repeated guidance without changing appearance | Victor Oyeleke | Codex |
+
+Initial observations: neither the local mock (4710) nor backend (8080) was listening; no local override or demo password was configured. The seven reported D-marked files exist and are tracked in the current tree; deletion history includes the earlier requested rollback, followed by recreation in ec0bf7f. Victor identified vite.config.ts as an example after describing folder badges. `web/vite.config.ts` is a tracked, unchanged 196-byte file, not a deleted folder. The IDE panel/badge state cannot be reproduced from Git; refreshing Explorer/current Source Control is suggested without resetting files.
+
+| ID | Date | Decision | Reason | Decided by | Logged by |
+|----|------|----------|--------|------------|-----------|
+| DM42 | 2026-10-24 | Run the contract mock for UI development. Add a pinned Prism launcher with a generated, ignored copy of the active contract containing consistent OWNER/session response examples and a future eight-hour expiry. Configure the local UI to use port 4710. The public sample owner@stockwise.demo / stockwise-demo is mock-only; Prism validates request shape, not credentials, and returns a fixed OWNER fixture for all valid login bodies. Supersedes DM40's unset local demo password only for mock development; real backend seeds remain pending | Victor chose contract mock development when asked how sign-in should work; generated examples prevent random/expired sessions without changing the authoritative contract | Victor Oyeleke (mock mode); Codex (fixture/launcher implementation) | Codex |
+
+No registration endpoint, real account, server-authentication implementation or two-engineer contract approval is implied by DM42.
+
 ## 3. Contract change log
 | Date | Change | Why | Agreed by (two engineers) |
 |------|--------|-----|---------------------------|

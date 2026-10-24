@@ -2,7 +2,7 @@
 
 Derived from: [intent.md](intent.md) (accepted 2026-10-23) · Status: accepted (2026-10-23 by Nnaemeka Chukwuma; revised 2026-10-23 to apply team decisions DM5-DM16)
 
-Frontend amendments: 2026-10-24, DM32–DM40. Victor authorized Home/authentication implementation after review; the five-engineer agreement is reported by Victor, with implementation choices and API proposals attributed separately in decisions.md. See [auth UI implementation](../docs/auth-ui-implementation.md). No proposed API or business-rule change is approved by these amendments.
+Frontend amendments: 2026-10-24, DM32–DM42. Victor authorized Home/authentication implementation after review; the five-engineer agreement is reported by Victor, with implementation choices and API proposals attributed separately in decisions.md. DM41 adopts canonical Tailwind utilities; DM42 selects local contract-mock development with explicit simulated account examples. See [auth UI implementation](../docs/auth-ui-implementation.md). No proposed API or business-rule change is approved by these amendments.
 Product owner: Nnaemeka Chukwuma (acting) · Technical sign-off (if high risk): Isaac Bassey, Team 3 lead (DM7)
 Policies applied: TeSA brief "Shared technical requirements", "Shared rules for fairness", "Delivery and cost", assessment rubric and mentor checklist (PDF pp. 3, 23-26, dated 21 Oct 2026). No separate organisational policy supplied.
 Supporting skills: none

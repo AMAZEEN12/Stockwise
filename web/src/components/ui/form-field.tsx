@@ -62,7 +62,7 @@ export function FormField({
   };
 
   return (
-    <div className={cn("flex flex-col gap-1.5 font-[family-name:var(--font-sans)]", className)}>
+    <div className={cn("flex flex-col gap-1.5 font-sans", className)}>
       <label htmlFor={controlId} className="text-sm font-medium text-[var(--color-text)]">
         {label}
         {required && (

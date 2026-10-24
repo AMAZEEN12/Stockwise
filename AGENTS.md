@@ -12,7 +12,7 @@ Current frontend state (2026-10-24): runnable Home and authentication UI on `fea
 - Undo migrations (rollback): `cd service && ./mvnw -Pundo -Dundo.target=<n-1> exec:java` with `DATABASE_JDBC_URL`, `DATABASE_USERNAME`, `DATABASE_PASSWORD` set (verified by `MigrationRollbackIT`; not yet run against a real database)
 - Service run: `cd service && ./mvnw spring-boot:run -Dspring-boot.run.profiles=local,demo` (healthy: `Started StockwiseApplication`). `curl localhost:8080/api/v1/health` returns `{"status":"UP"}`.
 - Contract lint **(verified 2026-10-23)**: `npx @redocly/cli@2 lint contract/openapi.yaml --config contract/redocly.yaml` (healthy: `Woohoo! Your API description is valid.`)
-- Mock server **(verified 2026-10-23)**: `npx @stoplight/prism-cli@5 mock contract/openapi.yaml --port 4710` (healthy: `Prism is listening on http://127.0.0.1:4710`)
+- Mock server **(verified 2026-10-24)**: `cd web && npm run mock` (healthy: `Prism is listening on http://127.0.0.1:4710`). Uses an ignored generated contract copy with consistent OWNER/session fixtures and an unexpired session. `npm run check:mock` verifies actual browser sign-in with the mock; it requires the web dev server too. Public mock examples are in `.env.example`; they are not seeded accounts. Do not modify the active OpenAPI just to add development fixtures.
 - Web (implemented): `cd web && npm ci && npm run lint && npm run typecheck && npm test -- --run && npm run build`. Lint uses ESLint with zero warnings; typecheck uses strict tsc; browser checks use `npx playwright test` after `npx playwright install chromium`. See WORKLOG for actual results.
 - Web dev against the mock: `cd web && VITE_API_BASE_URL=http://127.0.0.1:4710 npm run dev`
 
@@ -53,6 +53,9 @@ Current frontend state (2026-10-24): runnable Home and authentication UI on `fea
 Rule: when an agent makes the same mistake twice, the correction goes here.
 - Removing a CHECK that is the last item in a `CREATE TABLE` leaves a dangling comma. When proving a rule test fails, make sure it fails on the rule, not on a syntax error (rule-removal log, R12).
 - Never leave backup or scratch files under `src/main/resources/db/`. `MigrationRollbackIT` treats every file there as a migration, and stale copies survive in `target/` until `./mvnw clean`.
+- Prefer Tailwind v4's canonical utilities over equivalent arbitrary-value syntax: use `focus-visible:outline-offset-(--focus-ring-offset)` instead of `focus-visible:[outline-offset:var(--focus-ring-offset)]`.
+- Use `rounded-md` instead of `rounded-[var(--radius-md)]`; preserve Stockwise's `--radius-md: 10px` mapping so this cleanup never changes the design.
+- Use `font-sans` instead of `font-[family-name:var(--font-sans)]`; preserve the Inter Tight theme mapping. These are canonical-class suggestions, not evidence that the old syntax caused a runtime error. Apply them when copying or updating shared components too (DM41).
 
 ## Verifying your work
 Run these before reporting any task complete, and paste the output (full list in `sdlc/test-plan.md`):

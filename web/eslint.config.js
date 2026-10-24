@@ -12,4 +12,5 @@ export default tseslint.config(
     plugins: { 'react-hooks': hooks, 'react-refresh': refresh },
     rules: { ...hooks.configs.recommended.rules, 'react-refresh/only-export-components': ['error', { allowConstantExport: true }] } },
   { files: ['src/components/ui/toast.tsx'], rules: { 'react-refresh/only-export-components': 'off' } },
+  { files: ['scripts/*.mjs'], languageOptions: { globals: globals.node } },
 );

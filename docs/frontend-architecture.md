@@ -91,6 +91,8 @@ Use separate branches: `chore/web-structure`, `feat/<feature>`, and `fix/<bug>`.
 
 ## Supplied design tokens
 
+DM41 canonical utility convention: prefer `focus-visible:outline-offset-(--focus-ring-offset)`, `rounded-md`, and `font-sans` over equivalent arbitrary-value expressions. `rounded-md` resolves to Stockwise's existing 10px radius token; `font-sans` uses the existing Inter Tight theme mapping. Record recurring mistakes in AGENTS.md and apply this convention to copied shared components. See the official [outline-offset](https://tailwindcss.com/docs/outline-offset), [border-radius](https://tailwindcss.com/docs/border-radius), and [font-family](https://tailwindcss.com/docs/font-family) references.
+
 Source: Victor's token image in the local reference folder. Values are implemented in `web/src/styles/tokens.css`; the image's estimated contrast figures are not test evidence. Actual browser accessibility results are recorded separately in WORKLOG.
 
 | Token | Supplied value | Intended use |

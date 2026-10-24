@@ -18,6 +18,10 @@ Local additive extensions: Dialog exposes styling slots and close-focus restorat
 
 ## Routes and data
 
+DM42 local development update: run `npm run mock` with the web dev server. The pinned Prism launcher derives an ignored example-only contract copy without changing OpenAPI, ensuring a fixed OWNER response and future expiry. Local `.env.local` uses the public mock inputs from `.env.example`. These are simulated inputs, not backend seeds; other role buttons still receive the OWNER fixture. See auth-contract-proposal.md and web/README.md for switching to real authentication. `npm run check:mock` verifies actual browser integration and canonical computed styles without request interception.
+
+Dependency note for this development tool: Prism 5.16.0 brings eight transitive audit advisories (seven high, one moderate in the final audit). Compatible `npm audit fix` did not resolve them. They are development-only; `npm audit --omit=dev` reports zero vulnerabilities. No forced major overrides or unverified downgrade was applied. The mock binds only 127.0.0.1 and reads this repository's trusted contract; it is not included in the browser build or intended for public hosting.
+
 React Router Data Mode: `/` Home, `/sign-in` and `/sign-up` nested overlays; closing returns Home, switching replaces the modal route. Deep links render the same backdrop. Escape/backdrop/Close dismiss and abort the pending login. Route teardown clears timers and ignores stale results. Password visibility is a local toggle. Loading's visual password label is hidden as in the reference while retaining its accessible label.
 
 Axios feeds one RTK Query service; models alias generated contract types. Per-resource files reference endpoint definitions. No invented registration, dashboard or logout call. `/workspace` is a minimal authenticated welcome/handoff, not a fabricated dashboard; its loader fetches `/me` on navigation/refresh and redirects 401 to sign-in. Transport failures show a retry page. Future feature routes replace this handoff as implemented.

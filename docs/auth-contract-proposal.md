@@ -34,4 +34,8 @@ There is no refresh or server logout endpoint in v0.1.0. Current sign-out clears
 
 ## Demo buttons
 
+2026-10-24 update (DM42): Victor selected contract mock development. Local mock-only configuration uses `owner@stockwise.demo` / `stockwise-demo`. This is an illustrative input, not a seeded account; Prism accepts any body meeting LoginRequest constraints and returns a fixed OWNER response. Assistant/Admin buttons do not simulate distinct roles in this fixture. Real authentication and role testing still require backend implementation and seeds.
+
+Run `npm run mock` in web. The launcher derives ignored `.mock/openapi.yaml` from the unchanged authoritative contract, adding deterministic example responses for session creation and /me. The session expires eight hours after the mock starts; restart it when expired. This fixture copy is not an API-contract amendment or approval.
+
 Owner/Assistant/Admin fill public demonstration details and wait for an explicit Sign in. Emails default to the reference naming convention, with environment overrides. No password is invented: without the seed owner's public VITE_DEMO_PASSWORD, the UI asks for the team-provided password. Do not use real credentials in Vite environment variables; all VITE values are public in the build.

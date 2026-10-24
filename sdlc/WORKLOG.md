@@ -6,6 +6,7 @@ Source document: `Tesa cohort 6 software engineering capstone project.pdf` (TeSA
 > Any agent opening this project: read this file first, then the "Conventions and guidelines" and "Decisions" sections, then the artifacts in this folder. Continue from "Resume here". Don't re-ask anything already answered below.
 
 ## Resume here
+- **Current alignment follow-up:** Applied/verified canonical Tailwind replacements (DM41). Victor selected contract mock development (DM42); the mock is running on 127.0.0.1:4710, local mock-only configuration is set, and actual browser sign-in/refresh/logout passed. Existing user edits to HomePage.tsx/app.css and untracked web/Screens are preserved. His example D badge is vite.config.ts: current web/vite.config.ts exists, is tracked and unchanged; the precise IDE view cannot be reproduced from Git.
 - **Stage:** Frontend implementation authorized by Victor on 2026-10-24, following review of all 16 references.
 - **In progress:** Home and authentication UI implemented and verified on `feat/auth-ui`, ready for review. Merged API/database work from PR #2 is retained. PR #1 remains unmerged.
 - **Next action:** Human visual review of the captured screens; API-owner resolution of registration, seed credentials and pending two-engineer sign-off. No automatic main merge or deployment.
@@ -212,3 +213,35 @@ exit 1; service verification unavailable on this machine
 ```
 
 The first sandboxed Vitest/Vite attempt could not resolve config paths; rerunning with filesystem permission succeeded. Playwright emits a terminal NO_COLOR/FORCE_COLOR environment warning, unrelated to lint or UI correctness. Backend tests were attempted but could not start without Java; upstream test results are not represented as this session's passing checks. Browser API interception proves UI behavior and wire shapes, not a deployed backend. No database guard or migration changed, so no new rule-removal run applies.
+
+### Tailwind guidance and working local mock (2026-10-24)
+
+- Victor requested recording the three recurring utility suggestions and applying them. Added them under AGENTS.md Mistakes to avoid; replaced every matching class in Button, Input and FormField (DM41). Kept existing design-token values and checked the compiled rules and browser computed styles.
+- Asked how sign-in should work and where D appeared. Victor chose the contract mock, then identified vite.config.ts as an example badge. Current Git lists all seven originally named files as tracked and present; web/vite.config.ts is unchanged (196 bytes), with no deletion status. Full history shows deletion in requested rollback 3632ae0 and recreation in ec0bf7f. The specific IDE panel was not supplied; do not claim that Git currently reports a deletion or reset files to clear a badge.
+- Initial API probes found no listeners on 4710 or 8080 and no local environment override. Added pinned Prism 5.16.0 and yaml 2.9.1, an npm mock launcher, an ignored generated fixture copy and an ignored local .env.local. The active contract and backend remain unchanged. Session and /me examples now agree and have a future expiry. Public mock-only input: owner@stockwise.demo / stockwise-demo. These are not seeded backend credentials; all schema-valid mock logins return the fixed OWNER fixture. Assistant/Admin role simulation remains outside this fixture (DM42).
+- Started the mock at http://127.0.0.1:4710 and left it running for Victor's selected local workflow. Added a repeatable check:mock script and verified it against the actual mock and existing dev server, without intercepting HTTP. It confirmed demo autofill, login, /me, refresh and logout, plus radius/font/focus styles. No existing test file was edited in this follow-up.
+- Preserved independent user modifications in HomePage.tsx and app.css and untracked web/Screens. They are excluded from this follow-up commit. Browser checks used the current working tree, including those edits. No remote push, main merge, backend implementation or production deployment is part of this round.
+
+Actual verification output:
+
+```text
+npm run lint: exit 0, zero errors/warnings
+npm run typecheck: exit 0, no diagnostics
+npm test -- --run: Test Files 3 passed (3); Tests 6 passed (6)
+npx playwright test --workers=2: 12 passed (1.4m)
+Compiled CSS: canonical radius rule references --radius-md; token is 10px;
+              canonical font utility and configured focus offset emitted
+npm run build: 328 modules transformed; built in 15.38s; exit 0
+npm run lint:contract: authoritative API description valid; exit 0
+redocly lint .mock/openapi.yaml: generated example copy valid; exit 0
+npm run mock: Prism is listening on http://127.0.0.1:4710
+HTTP smoke: POST /auth/sessions 201; GET /me 200; matching OWNER and future expiry
+npm run check:mock:
+PASS: actual Prism 201/200, future session, demo autofill, canonical styles,
+      browser sign-in, refresh and sign-out.
+npm audit --omit=dev: total vulnerabilities 0
+Full development audit: 8 advisories (7 high, 1 moderate), via Prism/Postman dependencies;
+                       compatible npm audit fix could not resolve them
+```
+
+The mock is development-only, binds 127.0.0.1, reads the trusted repository contract and is excluded from the browser build. No forced major dependency overrides or unverified downgrade was applied. The remaining advisory limitation is documented in the implementation notes. Service verification remains unavailable due to the previously observed JAVA_HOME setup; no backend files or business-rule guards changed.

@@ -11,13 +11,15 @@ npm ci
 npm run dev
 ```
 
-Open the printed local URL. The public Home/sign-in/sign-up screens work without a service. Default API URL is Prism at `http://127.0.0.1:4710`. To run that mock, from the repository root:
+Open the printed local URL. The public Home/sign-in/sign-up screens work without a service. Default API URL is Prism at `http://127.0.0.1:4710`. In a second terminal in this web folder, start the configured contract mock:
 
 ```powershell
-npx @stoplight/prism-cli@5 mock contract/openapi.yaml --port 4710
+npm run mock
 ```
 
-Copy `.env.example` to `.env.local` if configuration is needed. A real service must use its `/api/v1` base URL. Vite's VITE variables are public; only fictional, intentionally published demo credentials belong there. Demo buttons fill fields and require Sign in. No seed password is fabricated.
+Copy `.env.example` to `.env.local` and restart Vite after changing environment values. Local setup now includes an ignored `.env.local` with these public mock examples. Use **owner@stockwise.demo / stockwise-demo**, or select Owner then Sign in. Prism checks body format, not passwords; all valid logins return the fixed demonstration OWNER. It does not simulate separate Assistant/Admin roles or real security.
+
+The launcher derives ignored `.mock/openapi.yaml` from the unchanged active contract, adds consistent session/user examples, and sets an expiry eight hours after startup. Restart the mock when that expires. A real service must use its `/api/v1` base URL and backend-supplied credentials; clear/replace the mock sample password then. Vite's VITE variables are public. Demo buttons fill fields and require an explicit Sign in.
 
 ## Verification
 
@@ -31,6 +33,8 @@ npm run build
 npx playwright install chromium
 npx playwright test
 ```
+
+With the dev server and mock already running, `npm run check:mock` checks the actual HTTP/browser integration without intercepted responses, including demo autofill, session refresh/logout and the canonical Tailwind computed styles. Prism is development-only and currently carries transitive audit advisories; the shipped application's `npm audit --omit=dev` is clean. See the implementation document for the exact audit limitation.
 
 Browser tests start/stop their own local server. Optional `PLAYWRIGHT_CHANNEL=chrome` uses installed Chrome. Captures live under ignored `test-results/`; dimensions match the supplied 1440×900 desktop and 360×880 mobile frames at 2×. They are review artifacts, not approved visual baselines. Routes are `/`, `/sign-in`, `/sign-up`, and the protected `/workspace` welcome handoff. Static hosting will need SPA fallback to index.html for deep links.
 

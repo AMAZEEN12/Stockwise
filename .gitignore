@@ -32,3 +32,4 @@ Thumbs.db
 # Local reference exports and TypeScript cache
 /web/*Login-png/
 web/*.tsbuildinfo
+web/.mock/
