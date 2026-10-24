@@ -144,7 +144,16 @@ Initial observations: neither the local mock (4710) nor backend (8080) was liste
 
 No registration endpoint, real account, server-authentication implementation or two-engineer contract approval is implied by DM42.
 
+### Publication and supplied Home refinements, 2026-10-24
+
+| ID | Date | Decision | Reason | Decided by | Logged by |
+|----|------|----------|--------|------------|-----------|
+| DM43 | 2026-10-24 | Commit Victor's recent HomePage/CSS changes and the 16 design references under web/Screens before pushing feat/auth-ui and opening a PR into main. Preserve the supplied headline punctuation, removed description, 320px desktop coin offset and CSS formatting. Treat Screens as versioned design inputs, not runtime assets; no automatic merge/deployment | Victor explicitly requested committing his recent changes before creating the PR | Victor Oyeleke | Codex |
+
+Visual-review note: the supplied CSS still hides the headline on mobile. With the description removed, mobile Home has no supporting copy; this is retained as supplied for human review rather than silently changed during publication.
+
 ## 3. Contract change log
+
 | Date | Change | Why | Agreed by (two engineers) |
 |------|--------|-----|---------------------------|
 | 2026-10-23 | **v0.1.0 (DRAFT):** first contract with the Monday paths: `GET /health`, `POST /auth/sessions`, `GET /me`, `GET/POST /products`, `GET /products/{id}`, `GET/POST /customers`, `GET/POST /sales` (`Idempotency-Key` required), `GET /sales/{id}`. Problem+json errors with codes. Money as int64 kobo (`x-unit: kobo`, enforced by the lint rule `money-is-integer-kobo`). Mock on port 4710 | EXECUTION step 2: contract before code; unblocks the interface | **Pending:** Isaac Bassey (API and access owner) and Nnaemeka Chukwuma. Drafted by the agent for review; not agreed until both names are recorded here |

@@ -83,7 +83,7 @@ URLs and wire models come from `contract/openapi.yaml`. `/categories` was only a
 
 ## Assets and naming
 
-Store runtime image files in `assets/images/`, exported by the central `index.ts`. The reconstructed coin is the first asset; reference screenshots are ignored design inputs and never used as page backgrounds. Other supplied artwork should join the same import index.
+Store runtime image files in `assets/images/`, exported by the central `index.ts`. The reconstructed coin is the first runtime asset. DM43 commits Victor's design references under `web/Screens/`; these are versioned review inputs, never page backgrounds or runtime imports. The earlier local Login-png ignore pattern remains for any private copies. Other runtime artwork should join the asset import index.
 
 Use lowercase kebab-case directory names and descriptive filenames. Resource API files use `<resource>.api.ts`; URL definition files use `<resource>.endpoints.ts`; Yup files use `<form>.schema.ts`; request/response models use `<operation>.request.ts` and `<operation>.response.ts`. React screen/component filenames use PascalCase by default; copied shared component filenames must follow the eventual shared agreement. Generated types retain their established filename.
 

@@ -6,6 +6,7 @@ Source document: `Tesa cohort 6 software engineering capstone project.pdf` (TeSA
 > Any agent opening this project: read this file first, then the "Conventions and guidelines" and "Decisions" sections, then the artifacts in this folder. Continue from "Resume here". Don't re-ask anything already answered below.
 
 ## Resume here
+- **Current publication request:** confirmed commit 2f15ec4 exists. Victor then explicitly requested committing his recent Home/CSS/Screens changes before the PR (DM43). Review/verification is underway; commit those files, push feat/auth-ui and open a PR into main. No automatic merge/deployment.
 - **Standing instruction reaffirmed by Victor:** before every new task, read root AGENTS.md, including Mistakes to avoid. DM41's three Tailwind replacements are persistent frontend conventions; the startup reminder, exact mapping and Victor/Codex attribution are now explicit there. Existing component replacements remain applied.
 - **Current alignment follow-up:** Applied/verified canonical Tailwind replacements (DM41). Victor selected contract mock development (DM42); the mock is running on 127.0.0.1:4710, local mock-only configuration is set, and actual browser sign-in/refresh/logout passed. Existing user edits to HomePage.tsx/app.css and untracked web/Screens are preserved. His example D badge is vite.config.ts: current web/vite.config.ts exists, is tracked and unchanged; the precise IDE view cannot be reproduced from Git.
 - **Stage:** Frontend implementation authorized by Victor on 2026-10-24, following review of all 16 references.
@@ -252,3 +253,11 @@ The mock is development-only, binds 127.0.0.1, reads the trusted repository cont
 - Victor reaffirmed that DM41 exists to prevent agents repeating the three class patterns on every future task. Strengthened root AGENTS.md with a startup reminder, exact replacement table, before-edit/before-completion guidance, and explicit Decided by Victor Oyeleke / Logged by Codex attribution. Recorded the clarification beneath DM41 instead of duplicating the decision.
 - Confirmed Button, Input and FormField already use the proposed replacements; no old pattern remains in web/src. This follow-up changes documentation only and preserves the user's independent Home/CSS/Screens work.
 - Verification: exact replacement/attribution checks and git diff --check; no application tests rerun for this documentation-only clarification. The code replacements were verified in the previous round.
+
+### Requested publication and latest user changes (2026-10-24)
+
+- Confirmed 2f15ec4 exists locally with the persistent agent instructions. Victor requested a PR, then explicitly instructed committing his recent changes before creating it. DM43 records that instruction and attribution.
+- Reviewed and prepared the exact supplied HomePage.tsx and app.css edits, plus 16 PNG design inputs under web/Screens (9,194,092 bytes, PNG signatures and expected frame dimensions checked). The prior ignored Login-png folder is no longer present locally; documentation now points to the versioned Screens location. Runtime assets remain in src/assets/images.
+- Retained the supplied copy removal, punctuation and coin-position changes without changing tests or silently restoring mobile copy. Noted the mobile supporting-copy consequence for human visual review.
+- Fresh verification on the final source: ESLint exit 0 (zero warnings), strict typecheck exit 0, authoritative contract lint valid in 507ms, 3 unit files / 6 tests passed, Vite build succeeded in 14.19s (328 modules), Playwright 12 passed in 1.5m with the existing axe assertions, and git diff --check passed. The service/JAVA_HOME limitation and development-only Prism advisories remain as previously recorded; no backend or active contract changed.
+- Next: commit these changes, push feat/auth-ui and create an open PR into main. No merge or deployment is authorized by this publication request.

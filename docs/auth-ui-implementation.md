@@ -4,7 +4,9 @@
 
 ## Reference and visual acceptance
 
-All 16 PNGs in local `web/Stockwise — Login-png/` were inspected. They are ignored design inputs, not application backgrounds. Desktop Home is 1440×900 at 1×; desktop auth/interactive frames are 2880×1800, treated as 1440×900 at 2×. Mobile frames are 720×1760, treated as 360×880 at 2×. Intermediate widths interpolate responsively. A white strip at the export edge is not page artwork.
+All 16 PNGs were inspected during implementation. Victor subsequently placed the versioned design inputs under `web/Screens/` (token sheet plus `login/` frames), replacing the earlier local `web/Stockwise — Login-png/` location. They are not application backgrounds or runtime assets. Desktop Home is 1440×900 at 1×; desktop auth/interactive frames are 2880×1800, treated as 1440×900 at 2×. Mobile frames are 720×1760, treated as 360×880 at 2×. Intermediate widths interpolate responsively. A white strip at the export edge is not page artwork.
+
+DM43 preserves Victor's supplied refinements for publication: remove headline-ending periods and the Home description, move the desktop coin offset from 350px to 320px, and retain expanded CSS formatting. The existing mobile rule hides the headline, so mobile Home now has no supporting copy. This consequence is noted for visual review; publication does not silently override his changes.
 
 Reference screens take precedence for composition: stacked solid/outlined wordmark, home header, desktop coin, blurred modal backdrop, mobile stacked demo controls. General token notes remain authoritative for colors, fonts, focus and targets. Desktop Home's measured headline is 48px; the token-sheet 58px headline describes another composition, so the Home frame governs its geometry. Auth input/button height is 48px, minimum hit areas 44px, control radius 10px, card radius 16px. Supplied fonts are self-hosted from pinned Fontsource packages (Inter Tight, Syne 800, Instrument Serif italic, JetBrains Mono).
 

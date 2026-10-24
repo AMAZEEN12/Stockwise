@@ -3,7 +3,7 @@
 Derived from: [intent.md](intent.md) (accepted 2026-10-23), [spec.md](spec.md) (accepted 2026-10-23, revised with DM5-DM16) · Status: accepted
 Accepted by: Nnaemeka Chukwuma (2026-10-23) · Higher-risk sign-off: Isaac Bassey (team lead, DM7). Required for the sale transaction, the store-credit logic and every migration.
 Frontend amendments DM32–DM40: Victor authorized Home/authentication implementation on 2026-10-24 after the design/API review. Codex logs scope, implementation choices and pending proposals separately. Other area approvals are unchanged.
-Decisions in force: [decisions.md](../decisions.md) DM1–DM42 · Deployment: [deploy-plan.md](../deploy-plan.md)
+Decisions in force: [decisions.md](../decisions.md) DM1–DM43 · Deployment: [deploy-plan.md](../deploy-plan.md)
 Supporting skills: none
 
 All paths are relative to the **Stockwise repository root** (the local `stockwise/` folder, DM19). Java package root: `ng.tesa.stockwise`.
@@ -226,6 +226,8 @@ Each row is confirmed with `EXPLAIN (ANALYZE, BUFFERS)` on the full seed, with t
 | N15 | `ci.yml` runs all three test levels; a failure blocks `deploy.yml` |
 
 ## Plan maintenance
+
+Publication DM43: commit Victor's supplied Home/CSS refinements and 16 PNG references under web/Screens, verify the combined feature branch, push feat/auth-ui and open a PR into main. Keep the mobile-copy consequence and existing API/mock/artwork limitations visible in review. No automatic merge or deployment.
 
 Frontend maintenance DM41: normalize the three requested Tailwind utility patterns in copied shared components, keep Stockwise token values and existing behavior, verify with the existing checks, and preserve the user's independent Home/CSS/reference edits. Victor selected contract-mock development (DM42): add a pinned Prism launcher, ignored derived fixture contract and public mock-only local configuration. Verify session creation, /me, CORS/browser sign-in, refresh and logout against the actual mock. This does not implement backend authentication or create real accounts.
 
