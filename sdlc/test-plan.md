@@ -21,7 +21,16 @@ The agent (or engineer) runs these itself and iterates until they pass, before a
 | Deployed concurrency | `node load/concurrency/last-unit.mjs --base $SERVICE_URL --n 10` | `201 x1, 409 x9, final quantity 0` |
 
 ## Done-targets
+
+**Frontend phase 2 (2026-10-24, DM36)**
+
+- Compare the folder tree with `docs/frontend-architecture.md`; all 27 `.gitkeep` placeholders and `web/src/service/http-client.ts` must be zero-byte files.
+- Confirm there is no package manifest, dependency installation, application configuration, generated schema or UI implementation. Review changed Markdown links, decision references and staged whitespace.
+- After publication, compare local baseline/starter commit IDs with the remote branch heads; confirm the PR targets `main` and remains unmerged.
+- Runtime checks above are unavailable until service/contract/web scaffolding exists; do not report them as passed. This scoped preparation changes no business rules or rendered UI.
+
 **Monday 26 Oct (MVP checkpoint)**
+
 - `SaleConcurrencyIT` passes on `main` **and fails** on `evidence/no-stock-guard`. Both logs are saved as artifacts of `concurrency-evidence.yml` (S1, brief MVP item 2).
 - `IdempotencyIT` passes: the same `Idempotency-Key` twice gives one sale (S2).
 - `AuthorizationIT` passes, including assistant `POST /products` → 403.
@@ -70,7 +79,7 @@ The agent (or engineer) runs these itself and iterates until they pass, before a
 | N8 web performance | Lighthouse / WebPageTest on the deployed address | manual measurement |
 | N9 accessibility | axe in Playwright; NVDA or VoiceOver pass | e2e, manual |
 | N10 responsive | Playwright 360 px project; visual baselines (DM24) | e2e, visual |
-| N11 slow network | manual throttled and offline test; `client.test.ts` retries with the same key | manual, unit |
+| N11 slow network | manual throttled and offline test; future `service/http-client.test.ts` retries with the same key | manual, unit |
 | N12 migrations | `MigrationRollbackIT` | integration |
 | N13 demo data | seed review checklist | manual |
 | N14 free tier | README "Free tier terms checked" table | manual |

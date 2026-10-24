@@ -9,6 +9,8 @@ This file is the brief's required "decisions file". It has three parts:
 
 Every entry records **who decided** (for example Team 3, a named engineer, or the supervisor) and **who logged it**, as separate columns. Decisions DM1-DM11 were made by Team 3 together and logged by Nnaemeka Chukwuma.
 
+Frontend decisions DM32-DM36 were made by Victor Oyeleke on 2026-10-24 and logged by Codex as the logging assistant. Nnaemeka Chukwuma remains the existing decision-log owner. These entries do not imply approval by Team 3, the supervisor or the other interface engineers.
+
 When a pending decision is settled, move it to "Decisions made" with the date and the deciders, and update [spec.md](sdlc/spec.md) and the work log ([sdlc/WORKLOG.md](sdlc/WORKLOG.md)).
 
 ## 1. Decisions to make or confirm
@@ -65,6 +67,16 @@ Flyway Community has no undo migrations (that is a paid feature). Options: (a) a
 ### PD12: Seed-data subset for Monday
 **Who decides:** Data and rules owner. **Status:** resolved → DM16. Proposed: 20 products (including zero-stock, at-threshold and archived), 5 customers (one with credit), 7 days of sales, and one demo account per role. The full volumes (120 / 60 days / 14) come after Monday.
 
+### PD13: Cross-team shared-component agreement
+**Who decides:** the four interface engineers together. **Status:** UNRESOLVED; Victor confirms the agreement has not concluded (2026-10-24).
+
+The eight-page `shared-component-set-plan.pdf` is a proposal. Radix, copy-in distribution, component interfaces, the work split and dates are not accepted commitments. Shadcn is not a Stockwise requirement (DM35). Record the actual agreed foundation, token names, Formik/Yup compatibility, component interfaces, distribution and approving engineers before adoption. Do not create a shared repository or assign Victor Dialog/Toast based only on the PDF.
+
+### PD14: Phase 3 interface behavior and design details
+**Who decides:** Victor Oyeleke, with Isaac Bassey for contract/session behavior and Team 3 for any change to business rules. **Status:** UNRESOLVED; align before implementing affected behavior.
+
+Questions include session persistence and expiry during pending writes, recovery of submission keys after refresh, retry policy, changed stock/prices during checkout, store-credit presentation, login state details, safe client money limits, and missing design tokens/assets. See [frontend architecture](docs/frontend-architecture.md#pending-agreement-and-phase-3-questions). Existing permissions, eight-hour tokens without refresh tokens, integer kobo and safe-retry rules remain in force.
+
 ## 2. Decisions made
 | ID | Date | Decision | Reason | Decided by | Logged by |
 |----|------|----------|--------|------------|-----------|
@@ -99,6 +111,11 @@ Flyway Community has no undo migrations (that is a paid feature). Options: (a) a
 | DM29 | 2026-10-23 | No AI agent runs in the CI/CD pipeline. AI tools are used locally only and logged in the AI log | Nil cost, no provider keys in GitHub secrets | Team 3 | Nnaemeka Chukwuma |
 | DM30 | 2026-10-23 | Reviews: passes for bugs, security, compliance, money and concurrency, and accessibility. At most 5 nits. One code-owner approval, never from the author. Sale, store-credit and migration changes also need Isaac Bassey's approval | Proportionate rigour on the risky code | Isaac Bassey | Nnaemeka Chukwuma |
 | DM31 | 2026-10-23 | Monitoring (Maintain stage) is postponed. `sdlc/monitoring.md` is kept as a deferred placeholder listing what is settled and what is still to decide. When to resume is UNRESOLVED | Team priority on the MVP and the core build | Team 3 | Nnaemeka Chukwuma |
+| DM32 | 2026-10-24 | Frontend: keep Vite, React 19, strict TypeScript, Tailwind, npm and the existing generation/test tools; specify React Router Data Mode, Axios, Formik/Yup, Redux Toolkit and RTK Query. Supersedes DM21's TanStack Query selection only; no Framework Mode | Victor's interface stack; one server-state cache with Axios transport | Victor Oyeleke | Codex (logging assistant) |
+| DM33 | 2026-10-24 | Frontend structure: one API file per resource in `web/src/service/api/`; central URL definitions in `service/endpoints/`; shared `service/http-client.ts`; contract-derived request/response models; Yup schemas; `auth/`; reusable `components/ui/`, layouts and separate shared hooks/constants/utilities. Preserve generated `src/api/schema.d.ts` and `lib/money.ts` locations | Separate transport, URLs, resource operations, models and validation without occupying the Java service folder | Victor Oyeleke | Codex (logging assistant) |
+| DM34 | 2026-10-24 | Images live in `web/src/assets/images/` with central named exports added later. Supplied foundational design tokens apply app-wide; coin, wordmark treatment and hero layout stay login-specific | Central asset imports and consistent product styling; no artwork or stylesheet in phase 2 | Victor Oyeleke | Codex (logging assistant) |
+| DM35 | 2026-10-24 | Shared-component agreement remains pending (PD13). Shadcn is not required; adopt the foundation and dependencies actually agreed by the interface engineers | The PDF describes a proposal and its copy-in approach does not require shadcn | Victor Oyeleke | Codex (logging assistant) |
+| DM36 | 2026-10-24 | Phase 2 creates frontend folders, documentation, `.gitkeep` placeholders and one empty HTTP-client source file only. Publish existing planning docs as the one-time initial `main` baseline, then publish `chore/web-structure` and open a reviewed PR. Later features use separate branches and descriptive commits; no force-push or automatic merge | Make the empty cloned repository useful and visible to teammates without implementing screens or bypassing later review gates | Victor Oyeleke | Codex (logging assistant) |
 
 ## 3. Contract change log
 | Date | Change | Why | Agreed by (two engineers) |

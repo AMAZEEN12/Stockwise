@@ -4,6 +4,8 @@ Stock and customer-credit ledger for one demonstration shop (TeSA Cohort 6 capst
 
 > Commands below are **planned** (plan.md, Build stage). The first engineer to scaffold each part replaces "planned" with the verified command and its real healthy output.
 
+Current frontend state (2026-10-24): folders and `.gitkeep` placeholders only, plus an empty `web/src/service/http-client.ts`. There is no package manifest, runnable app, service scaffold or OpenAPI contract yet. The application commands below cannot run at this stage; do not report them as passing. Frontend conventions and pending questions are in [docs/frontend-architecture.md](docs/frontend-architecture.md).
+
 ## Commands
 - Database (local): `docker compose up -d db` (healthy: `db ... Started`)
 - Service build and test: `cd service && ./mvnw verify` (healthy: `BUILD SUCCESS`, `Tests run: N, Failures: 0, Errors: 0`). Needs Docker running for Testcontainers.
@@ -14,7 +16,7 @@ Stock and customer-credit ledger for one demonstration shop (TeSA Cohort 6 capst
 - Web dev against the mock: `cd web && VITE_API_BASE_URL=http://127.0.0.1:4010 npm run dev`
 
 ## Conventions
-- Java 25, Spring Boot 4, Maven wrapper, Flyway, Spring `JdbcClient` with **hand-written SQL, no JPA** (DM1, DM17, DM18). React 19 + TypeScript strict + Vite + Tailwind + TanStack Query (DM21).
+- Java 25, Spring Boot 4, Maven wrapper, Flyway, Spring `JdbcClient` with **hand-written SQL, no JPA** (DM1, DM17, DM18). Frontend: React 19 + TypeScript strict + Vite + React Router **Data Mode**, Tailwind, Axios, Formik/Yup, Redux Toolkit and RTK Query (DM32 supersedes DM21's TanStack Query choice). Pin current compatible package versions when the runnable foundation is authorized; install nothing in the folder-only phase.
 - **Money is always integer kobo**: `BIGINT` in SQL, `long` in Java, JSON integers. Never `double`, `float`, `BigDecimal` or `numeric`. Format as ₦ only in `web/src/lib/money.ts`, using integer arithmetic.
 - **Business rules live in the database**: `CHECK` constraints plus conditional `UPDATE … WHERE <guard> RETURNING`. Never read a value, check it in Java and then write it.
 - Every POST that records money or stock takes an `Idempotency-Key` header (sales, restocks, repayments).
@@ -24,6 +26,12 @@ Stock and customer-credit ledger for one demonstration shop (TeSA Cohort 6 capst
 - Every business rule has a test that **fails when the rule is removed**.
 - Every new migration `V<n>__x.sql` ships with `db/rollback/U<n>__x.sql` (DM13).
 - Decision entries record "Decided by" and "Logged by" separately.
+- Frontend API calls: one file per resource in `web/src/service/api/` (for example `products.api.ts`), referencing URL definitions in `service/endpoints/`. The frontend `service/` is distinct from the root Java `service/`.
+- The future `web/src/service/http-client.ts` owns shared Axios configuration, headers and error normalization. Preserve field errors and existing operation-specific headers, including `Idempotency-Key` and `If-Match`. Never generate a new submission key on a retry of the same write.
+- Request/response models belong in `web/src/models/requests/` and `responses/`, derived from generated contract types. Yup form validation belongs in `web/src/schema/`; it does not replace the OpenAPI contract. Do not invent endpoints or wire models before the contract exists.
+- Image files belong in `web/src/assets/images/`, with a central `index.ts` of named exports added when assets exist. Reusable UI belongs in `components/ui/`; feature-specific components stay with their feature. Shared hooks, constants and utilities belong in `shared/`.
+- The cross-team shared-component agreement is **pending**. Neither shadcn nor Radix is selected as a required foundation. The supplied app-wide tokens and login-specific design notes are recorded in `docs/frontend-architecture.md`; no styles or artwork are implemented yet.
+- Work on separate branches: `chore/web-structure` for the starter, `feat/<feature>` for features and `fix/<bug>` for fixes. Use descriptive commit subjects such as `feat(auth): add responsive login screens`. Review and merge gates in REVIEW.md still apply after the explicitly authorized initial documentation baseline on `main` (DM36).
 
 ## Architecture
 - `contract/`: OpenAPI 3.1, the single source of the API, plus the mock.

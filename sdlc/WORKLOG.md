@@ -1,16 +1,16 @@
 # Work log: Stockwise (Team 3 main product)
 
-Change slug: `stockwise` · Started: 2026-10-23 · Last updated: 2026-10-23 by the agent
+Change slug: `stockwise` · Started: 2026-10-23 · Last updated: 2026-10-24 by Codex (logging assistant for Victor Oyeleke)
 Source document: `Tesa cohort 6 software engineering capstone project.pdf` (TeSA Africa, "Four Real-World Products", 26 pages; Stockwise is product 3, pages 10-11; shared requirements pages 23-26)
 
 > Any agent opening this project: read this file first, then the "Conventions and guidelines" and "Decisions" sections, then the artifacts in this folder. Continue from "Resume here". Don't re-ask anything already answered below.
 
 ## Resume here
-- **Stage:** Done (SDLC artifact chain complete). Implementation not started.
-- **Step:** EXECUTION.md written; chain finished on 2026-10-23.
-- **In progress:** nothing.
-- **Next action:** Follow `EXECUTION.md` "Steps", starting at step 1 (create the public GitHub repo and protections, owner Blessing Nwafor). Log each completed step here. When the repo exists, offer to commit the artifacts one commit per stage. Genie's chain (`genie/sdlc/`, separate repo) is next for the SDLC process.
-- **Waiting on:** nothing (team to start implementation)
+- **Stage:** Build preparation, frontend phase 2. The original SDLC artifact chain is accepted; no runnable application exists.
+- **Step:** Existing planning documents published to `main` in baseline commit `176fc3a` on 2026-10-24. Frontend starter prepared on `chore/web-structure` under Victor's approved plan (DM32-DM36).
+- **In progress:** static verification and publication of the frontend branch/PR. Folders and documentation only, plus one empty `web/src/service/http-client.ts`; no application code, dependencies or configuration.
+- **Next action:** verify the starter, commit and push `chore/web-structure`, then open a PR into `main`. Update this section with publication evidence. Leave merging for the required human review. Phase 3 awaits Victor's login prompt/screens and answers to PD14; do not start the runnable foundation automatically.
+- **Waiting on:** the four interface engineers' shared-component agreement (PD13), the API owner's OpenAPI contract, and phase 3 interface alignment (PD14). Branch protections, CODEOWNERS and CI remain the delivery owners' work; they are not claimed complete.
 
 ## How to continue without the sdlc skill
 1. Stages run in order: Plan (intent.md), Design (spec.md), Build (plan.md + repo AGENTS.md), Test (test-plan.md), Deploy (release.md + repo REVIEW.md), Maintain (monitoring.md), then EXECUTION.md.
@@ -28,6 +28,7 @@ Source document: `Tesa cohort 6 software engineering capstone project.pdf` (TeSA
 | intent.md | accepted | Nnaemeka Chukwuma | 2026-10-23 |
 | spec.md | accepted | Nnaemeka Chukwuma | 2026-10-23 |
 | plan.md | accepted | Nnaemeka Chukwuma | 2026-10-23 |
+| Frontend phase 2 amendment and docs/frontend-architecture.md | accepted (DM32-DM36; other area approvals unchanged) | Victor Oyeleke | 2026-10-24 |
 | AGENTS.md (repo) | draft (commands planned, not yet verified) | | 2026-10-23 |
 | test-plan.md | accepted | Nnaemeka Chukwuma | 2026-10-23 |
 | REVIEW.md (repo) | accepted | Nnaemeka Chukwuma | 2026-10-23 |
@@ -38,12 +39,12 @@ Source document: `Tesa cohort 6 software engineering capstone project.pdf` (TeSA
 ## Conventions and guidelines
 - **Stack and versions:** service: Java 25, Spring Boot 4, Flyway, JUnit + Testcontainers, PostgreSQL (DM1). Hosting: Vercel + Render + Neon, terms to verify (DM2). Auth: email+password, bcrypt, JWT bearer (DM3). Interface constraints from the brief: React interface with React Router (or equivalent) and Tailwind or plain CSS, typed models (no `any`); own HTTP service; free managed Postgres; GitHub Actions deploys both tiers; free tiers only.
 - **Naming:** change slugs `stockwise` and `genie`. Two repositories (DM19): this one is `stockwise/` (code, `sdlc/`, `AGENTS.md`, `decisions.md`, `deploy-plan.md`). Genie is a separate repository. Artifacts are independent (DM20).
-- **Code and docs style:** to be agreed at Build.
+- **Code and docs style:** frontend folder map and conventions are in `docs/frontend-architecture.md` (DM32-DM36). One API file per resource, central endpoints, Axios HTTP client, Formik/Yup, Redux Toolkit/RTK Query and React Router Data Mode. Shared-component foundation pending; shadcn is not required. Use separate feature branches and descriptive commits. Backend conventions remain unchanged.
 - **Source of truth:** the repository. The Markdown artifacts are authoritative; the TeSA PDF brief is the originating record.
 - **Policies in force:** TeSA brief sections "Shared technical requirements", "Shared rules for fairness", "Delivery and cost" and the assessment rubric (PDF pages 3, 23-26). No other organisational policy supplied.
 - **Supporting skills:** none.
 - **Approvers:** product owner: Nnaemeka Chukwuma (acting). Team lead and technical sign-off: Isaac Bassey. Area owners: Nnaemeka (Data and rules), Isaac (API and access), Blessing Nwafor (Delivery and evidence). Supervisor: Goodnews (reviews at checkpoints).
-- **User preferences for this workflow:** structured multiple-choice questions with a recommended default, asked one decision at a time, with plain explanations and concrete examples. For every decision, also ask who to record as the decision maker (options: Team 3, a named engineer, the supervisor). Record "Decided by" and "Logged by" separately. Nnaemeka Chukwuma is the logger.
+- **User preferences for this workflow:** structured multiple-choice questions with a recommended default, asked one decision at a time, with plain explanations and concrete examples. For every decision, also ask who to record as the decision maker (options: Team 3, a named engineer, the supervisor). Record "Decided by" and "Logged by" separately. Nnaemeka Chukwuma is the existing decision-log owner and historical logger. Victor explicitly owns DM32-DM36; Codex records those entries as logging assistant, without attributing wider team approval. Do not re-ask these settled choices.
 
 ## Decisions
 Append-only. To change a decision, add a new entry that supersedes it.
@@ -68,6 +69,7 @@ Append-only. To change a decision, add a new entry that supersedes it.
 | D18 | 2026-10-23 | Deploy answers: release manager Isaac Bassey with Blessing Nwafor as backup (DM26, Isaac), staging after Monday (DM27, Isaac), rollback rehearsals Sat 24 Oct plus two after Monday (DM28, Team 3), no AI agent in CI (DM29, Team 3), reviews with 5 nits and one code-owner approval, plus Isaac for high-risk code (DM30, Isaac) | User's answers | as listed (logged by Nnaemeka Chukwuma) | release.md, REVIEW.md | active |
 | D19 | 2026-10-23 | Monitoring postponed (DM31). monitoring.md is a deferred placeholder | User answered "monitoring should be postponed" to Maintain 1 | Team 3 (logged by Nnaemeka Chukwuma) | monitoring.md, EXECUTION.md | active |
 | D6 | 2026-10-23 | Propose "reversing a partly repaid credit sale (negative balance)" as Stockwise's design problem, pending Goodnews's agreement | The brief names no design problem for Stockwise | Nnaemeka Chukwuma | intent.md, spec.md | active |
+| D20 | 2026-10-24 | Frontend phase 2 accepted: folders/docs and empty HTTP-client file; resource API files, central endpoints, image exports, app-wide foundational tokens, Formik/Yup, Axios, Redux Toolkit/RTK Query and Router Data Mode. Shared-component agreement pending and shadcn not required. Bootstrap docs on main then publish starter on a separate branch/PR. Details DM32-DM36 | Victor's answers and explicit implementation request in this conversation | Victor Oyeleke (logged by Codex, logging assistant) | frontend docs, plan, spec, AGENTS.md | active |
 
 ## Questions and answers
 | # | Date | Stage | Question | Answer | Status |
@@ -85,6 +87,11 @@ Append-only. To change a decision, add a new entry that supersedes it.
 | Q13 | 2026-10-23 | Maintain | What runs the monitoring checks? | "monitoring should be postponed" (decided by Team 3) | answered (deferred) |
 | Q12 | 2026-10-23 | Design | Provisional rule for the design problem? | "keeps all 3 options open until other team members can confirm, write decisions that need to be confirmed/made in decisions.md" | answered (PD1 open) |
 | Q8 | 2026-10-23 | Plan | How to handle Stockwise's missing design problem? | "Propose one, ask Goodnews" | answered (proposal UNRESOLVED) |
+| Q14 | 2026-10-24 | Frontend phase 2 | Starter scope? | Folders, documentation, `.gitkeep` placeholders and one explicitly requested empty `http-client.ts`; frontend and docs only | answered |
+| Q15 | 2026-10-24 | Frontend phase 2 | API and asset separation? | One file per resource, central endpoint definitions, central image named exports | answered |
+| Q16 | 2026-10-24 | Frontend phase 2 | Components and tokens? | `components/ui/` plus `shared/` utilities; app-wide foundational tokens, login-specific hero/coin/wordmark; shared-component agreement pending, shadcn not required | answered |
+| Q17 | 2026-10-24 | Frontend phase 2 | Attribution? | Decided by Victor Oyeleke; Codex as logging assistant; no implied cross-team approval | answered |
+| Q18 | 2026-10-24 | Frontend phase 2 | Publish from an empty remote? | One-time docs baseline on main, then separate `chore/web-structure` commit/push and PR; never force-push or merge automatically | answered |
 
 ## Activity log
 Append-only, newest last.
@@ -112,3 +119,23 @@ Append-only, newest last.
 - 2026-10-23 · Nnaemeka Chukwuma · Accepted release.md and REVIEW.md. Agent started the Maintain stage.
 - 2026-10-23 · agent · Recorded DM31 (monitoring postponed). Wrote `sdlc/monitoring.md` as a deferred placeholder.
 - 2026-10-23 · agent · Annotated intent.md open questions answered later (DM5-DM8); intent's accepted content is unchanged. Wrote `sdlc/EXECUTION.md`. SDLC chain complete for Stockwise.
+- 2026-10-24 · Codex (logging assistant for Victor Oyeleke) · Read every SDLC artifact, AGENTS.md, decisions.md, deploy-plan.md and REVIEW.md, plus the local eight-page shared-component proposal. Distinguished its proposals from Victor's instructions and recorded the unresolved shared agreement.
+- 2026-10-24 · Victor Oyeleke · Accepted the phase 2 frontend publication plan and explicitly requested implementation. Confirmed resource-level API files, central endpoints/image exports, shared folder placement, token scope, stack changes, pending component foundation, empty HTTP-client file and Git bootstrap/publication workflow (DM32-DM36).
+- 2026-10-24 · Codex · Confirmed the remote was empty; staged only the 12 existing planning documents, checked the staged diff and created `176fc3a` (`docs: establish Stockwise planning baseline`). Pushed `main` to `origin` successfully using configured Git credentials. No branch protections or CI setup claimed.
+- 2026-10-24 · Codex · Created `chore/web-structure`, 27 empty `.gitkeep` placeholders and a zero-byte HTTP-client file. Added frontend architecture/design-token notes, appended DM32-DM36 and PD13-PD14, and aligned the frontend plan/spec/agent conventions and execution runbook. Static verification and branch publication are next; application checks remain unavailable.
+- 2026-10-24 · Codex · Static verification passed before staging: exact folder/file set, all 28 starter files zero bytes, no unauthorized scaffolding, 29 local Markdown links/fragments resolving, continuous decision tables with unique IDs, historical decision rows and contract log unchanged, and no stale shared-agreement assertion or old API-client path in the current spec/plan. `git diff --check` exited 0. Runtime checks are unavailable because their scaffolds do not exist.
+
+### Phase 2 verification output (2026-10-24)
+
+Read-only inline Python assertions and `git diff --check` produced:
+
+```text
+PASS: exact starter tree; 27 empty .gitkeep files and a zero-byte HTTP client
+PASS: no dependencies, configuration, generated schema, backend or workflow scaffold
+PASS: 29 local Markdown links and fragments resolve
+PASS: appended decision IDs are unique, tables continuous, historical decisions and contract log preserved
+PASS: current spec/plan use the pending shared agreement and new HTTP-client location
+git diff --check: exit 0
+```
+
+Service verify, contract lint, web lint/typecheck/unit/build, and Playwright: unavailable at this stage, not run. No package manifest, service wrapper or OpenAPI file exists. No rendered UI or business rule was changed.
