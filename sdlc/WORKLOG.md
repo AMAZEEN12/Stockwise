@@ -269,3 +269,17 @@ The mock is development-only, binds 127.0.0.1, reads the trusted repository cont
 - Committed Victor's supplied changes and their decision/documentation updates as `e200ce0` (`feat(home): refine landing copy and coin placement with design references`), including all 16 PNG references. Pushed `feat/auth-ui` to origin successfully; no user changes were omitted.
 - Created [PR #3](https://github.com/AMAZEEN12/Stockwise/pull/3), title `feat(auth): add responsive entry UI, contract mock and agent conventions`, base `main`, head `feat/auth-ui`. GitHub returned state `open`, draft `false`, merged `false`, initial head `e200ce0716484d9236f63e84387580bd765b31ac`.
 - The description covers the final feature, latest supplied refinements, fresh verification, mobile-copy consequence, and existing API/mock/artwork/environment limits. No reviewers were impersonated, no merge/deployment performed, and no credentials were printed or written to project files. This documentation follow-up records the confirmed publication on the same branch.
+
+### Current main integration for Products/Sales PRs (2026-10-25)
+
+Victor requested both feature PRs into main: Products [PR #4](https://github.com/AMAZEEN12/Stockwise/pull/4), feature commit 86fb5ea, and Sales [PR #5](https://github.com/AMAZEEN12/Stockwise/pull/5), feature commit 74d6eef. Both feature commits were confirmed and pushed. Authentication PR #3 remains open; review order is #3, #4, #5.
+
+GitHub reported a WORKLOG conflict after main merged PR #1 (2d170e6). Merge current main into Products and carry that merge into Sales, preserving feature history without force-pushing or merging either PR. The conflict contains older main startup notes; retain current frontend guidance and the historical notes below. Decided by: Victor Oyeleke (publication scope); Codex (routine conflict resolution). Logged by: Codex. Only Markdown resolution is required; application source and earlier test results are unchanged.
+
+Incoming main's historical Resume here snapshot, retained for context only; its open-PR and next-action statements are superseded by the current publication status:
+
+- **Stage:** Implementation (EXECUTION.md)
+- **Step:** Step 2 committed (contract draft, pending Isaac and Nnaemeka in decisions.md §3). Step 4 done locally: migrations V1-V3, undo scripts U1-U3, `MigrationUndo` runner, `MigrationRollbackIT` and `SchemaRulesIT`. `./mvnw clean verify` gives 11/11 green, and each protection was shown failing when removed (`docs/rule-removal-log.md`). Committed and pushed to `emeka's-branch` on https://github.com/AMAZEEN12/Stockwise PR https://github.com/AMAZEEN12/Stockwise/pull/2 (open, into `main`).
+- **In progress:** nothing half-done.
+- **Next action:** Get PR 2 reviewed and merged. Isaac must still approve the migrations (high-risk path, release.md). Then step 7 (auth and roles) and step 9 (sale transaction) need the Spring Boot application from step 3 (walking skeleton: app class, `spring-boot-maven-plugin`, Dockerfile, health). Work on `emeka's-branch` (based on `origin/main`), not local `main`, which has an unrelated history.
+- **Waiting on:** Isaac Bassey (contract agreement and migration review). He isn't a repo collaborator yet, so the owner (AMAZEEN12) must invite him before he can be requested as reviewer on PR 2.
