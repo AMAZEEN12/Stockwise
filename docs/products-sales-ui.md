@@ -2,7 +2,7 @@
 
 2026-10-24. Decided by Victor Oyeleke (scope and supplied references); implementation choices/proposals by Codex; logged by Codex.
 
-Products and shared application layout belong to feat/products-ui. New sale and Receipt belong to a subsequent feat/sales-ui branch based on Products; these are stacked on the existing authentication work, without merging main. Each gets a descriptive feature commit. No publishing or deployment is implied.
+Products and shared application layout belong to feat/products-ui. New sale and Receipt belong to a subsequent feat/sales-ui branch based on Products; these are stacked on the existing authentication work, without merging main. Each has a descriptive feature commit. Publication was separately authorized by Victor on 2026-10-25 (DM49): [Products PR #4](https://github.com/AMAZEEN12/Stockwise/pull/4) and [Sales PR #5](https://github.com/AMAZEEN12/Stockwise/pull/5) both target main. Review order is authentication PR #3, then Products, then Sales. No merge or deployment is implied. Decided by Victor Oyeleke; logged by Codex.
 
 Reference inputs live locally in web/Screens, ignored and removed from the Git index while preserving local files. This supersedes DM43's versioned-reference policy. Runtime assets remain in src/assets/images with named exports. Existing binary history is not rewritten.
 
