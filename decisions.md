@@ -1,0 +1,106 @@
+# Stockwise decisions file
+
+Team 3 · Main product · Started 2026-10-23
+
+This file is the brief's required "decisions file". It has three parts:
+1. **Decisions to make or confirm.** Open items the team, or the supervisor, must settle. Each has options, the cost of each, and who decides.
+2. **Decisions made.** Settled choices, append-only.
+3. **Contract change log.** Every change to `contract/openapi.yaml`: a dated line saying what changed, why, and **which two engineers agreed it**.
+
+Every entry records **who decided** (for example Team 3, a named engineer, or the supervisor) and **who logged it**, as separate columns. Decisions DM1-DM11 were made by Team 3 together and logged by Nnaemeka Chukwuma.
+
+When a pending decision is settled, move it to "Decisions made" with the date and the deciders, and update [spec.md](sdlc/spec.md) and the work log ([sdlc/WORKLOG.md](sdlc/WORKLOG.md)).
+
+## 1. Decisions to make or confirm
+
+### PD1: Reversing a credit sale that has already been partly repaid (design problem)
+**Who decides:** Goodnews (confirm that this is Stockwise's design problem) and Team 3 (choose the option). **Status:** resolved → DM5 (option C, store credit); supervisor confirmation of the problem still pending
+
+The brief names no "design problem with no clean answer" for Stockwise, unlike the other three main products. Proposed problem: a customer buys ₦10,000 on credit and repays ₦6,000, then the sale is reversed. The balance would become -₦6,000, meaning the shop owes the customer.
+
+| Option | Behaviour | Cost | What would make us reverse it |
+|----|----|----|----|
+| A. Allow, record refund owed | Reversal goes through. The balance goes negative and is shown as "shop owes customer ₦X". A later refund entry or new credit sale settles it. | Negative balances need careful wording. The dashboard needs a separate "owed to customers" total. The `balance ≥ 0` check can't be a simple CHECK constraint. | Owners misreading negative balances as debt in testing. |
+| B. Block the reversal | Refused until the repayments are reversed first. `CHECK (balance_kobo >= 0)` holds. | Two or more steps for the assistant. Cash that was really received is awkward to represent. | Assistants repeatedly reversing repayments that really happened, just to unblock. |
+| C. Convert to store credit | The excess becomes store credit, applied automatically to the next sale. | An extra entry type and auto-application logic in the sale transaction. More to test. | Customers wanting cash back rather than credit. |
+
+Until this is decided, the service refuses this case with `409 REVERSAL_NEEDS_DECISION`, and the UI and README label it as an open decision.
+
+### PD2: Final submission date
+**Who decides:** facilitators (via Goodnews). **Status:** resolved → DM6. We are planning for **Tue 3 Nov 2026** (Day 14, counting Wed 21 Oct as Day 1).
+
+### PD3: Team 3 lead
+**Who decides:** Team 3. **Status:** resolved → DM7 (Isaac Bassey). The brief says to designate one lead to coordinate both projects. No one is pre-assigned.
+
+### PD4: Service area split
+**Who decides:** Team 3 (record on day 1). **Status:** resolved → DM8.
+Areas: *Data and rules* · *API and access* · *Delivery and evidence*, among Blessing Nwafor, Isaac Bassey and Nnaemeka Chukwuma. Nnaemeka intends to work across all service areas. A named owner per area is still needed for the rubric's "Your own contribution" (spec concern C6).
+
+### PD5: Hosting accounts and free-tier verification
+**Who decides:** Delivery and evidence owner. **Status:** resolved → DM9 (both stacks in parallel). Still open: **PD5a** who funds the Qocent credits (Unknown yet; owners Isaac Bassey and Goodnews), **PD5b** the Qocent day-1 spike results (owner Blessing Nwafor), **PD5c** Render workspace per product or shared (owner Blessing Nwafor).
+Plan: Vercel (interface), Render (service), Neon (Postgres). To do: read each provider's own pricing page, record what was found with the date in the README, and decide one account or several for Stockwise and Genie, given monthly instance hours and project limits.
+
+### PD6: Role permission matrix and who may reverse
+**Who decides:** Team 3. **Status:** resolved → DM10.
+Proposed: OWNER can do everything. ASSISTANT can read, record sales, create customers and record repayments. ADMIN is read-only. **Only OWNER can create reversals.** Alternative: let ASSISTANT reverse their own entries made the same day.
+
+### PD7: Which action updates the screen before the service answers
+**Who decides:** Victor Oyeleke (interface) with the API owner. **Status:** resolved → DM11 (archive/unarchive).
+Candidates: (a) archive or unarchive a product, which is low risk and refused on a version conflict; (b) record a repayment, which is refused when it exceeds the balance and so demonstrates rollback well, but is optimistic about money; (c) add to cart. Must state "which action and why".
+
+### PD8: Performance targets
+**Who decides:** Team 3. **Status:** resolved → DM12 (standard targets).
+Proposed: `POST /sales` p95 ≤ 500 ms and `GET /dashboard` p95 ≤ 800 ms on a warm instance. LCP ≤ 2.5 s and INP ≤ 200 ms on the deployed address.
+
+### PD9: How migrations are reversed
+**Who decides:** Delivery and evidence owner. **Status:** resolved → DM13 (Flyway + undo scripts).
+Flyway Community has no undo migrations (that is a paid feature). Options: (a) a hand-written rollback script per migration, tested up, down, up in CI; (b) Liquibase, whose free edition supports rollback; (c) forward-only compensating migrations, documented.
+
+### PD10: Time zone for "today"
+**Who decides:** Team 3. **Status:** resolved → DM14. Proposed: store UTC and compute "today" in Africa/Lagos (WAT, UTC+1).
+
+### PD11: Access-token lifetime
+**Who decides:** API and access owner. **Status:** resolved → DM15 (8 hours). Originally proposed: 60 minutes, no refresh token for the MVP (the user logs in again).
+
+### PD12: Seed-data subset for Monday
+**Who decides:** Data and rules owner. **Status:** resolved → DM16. Proposed: 20 products (including zero-stock, at-threshold and archived), 5 customers (one with credit), 7 days of sales, and one demo account per role. The full volumes (120 / 60 days / 14) come after Monday.
+
+## 2. Decisions made
+| ID | Date | Decision | Reason | Decided by | Logged by |
+|----|------|----------|--------|------------|-----------|
+| DM1 | 2026-10-23 | Service stack: Java 25, Spring Boot 4, Flyway, JUnit + Testcontainers, PostgreSQL | Team choice | Team 3 | Nnaemeka Chukwuma |
+| DM2 | 2026-10-23 | Hosting plan: Vercel + Render + Neon (subject to the PD5 verification) | Free tiers that fit a static app, a container service and Postgres | Team 3 | Nnaemeka Chukwuma |
+| DM3 | 2026-10-23 | Authentication: email + password (bcrypt), JWT bearer token, roles OWNER / ASSISTANT / ADMIN enforced in the service | Simple to test with direct service calls. No CSRF or cross-site cookie setup | Team 3 | Nnaemeka Chukwuma |
+| DM4 | 2026-10-23 | Idempotency: a client-generated `Idempotency-Key` on POST /sales, /restocks and /repayments, stored under a unique constraint | The brief requires a duplicate sale to be recorded once | Team 3 (confirmed at spec acceptance) | Nnaemeka Chukwuma |
+| DM5 | 2026-10-23 | **PD1 resolved: option C, convert to store credit.** Reversing a partly repaid credit sale turns the excess repaid amount into store credit, applied automatically to the customer's next sale. Supervisor (Goodnews) still to confirm this is Stockwise's design problem | Keeps balances non-negative while honouring cash already received | Team 3 | Nnaemeka Chukwuma |
+| DM6 | 2026-10-23 | **PD2 resolved:** final submission Tue 3 Nov 2026. The MVP presentation on Mon 26 Oct 2026 stays the nearer milestone | Team plan | Team 3 | Nnaemeka Chukwuma |
+| DM7 | 2026-10-23 | **PD3 resolved:** team lead is Isaac Bassey (also gives technical sign-off on high-risk items) | Team choice | Team 3 | Nnaemeka Chukwuma |
+| DM8 | 2026-10-23 | **PD4 resolved:** Nnaemeka Chukwuma owns Data and rules. Isaac Bassey owns API and access. Blessing Nwafor owns Delivery and evidence. Help across areas is logged | Rubric "Your own contribution" needs named owners | Team 3 | Nnaemeka Chukwuma |
+| DM9 | 2026-10-23 | **PD5 resolved:** both hosting stacks run in parallel (Stack Q: Qocent + Neon; Stack V: Vercel + Render + Neon), sharing one Neon database per product. Stack V is the official README address until PD5a is settled. See `deploy-plan.md` | Team wants both stacks available | Team 3 | Nnaemeka Chukwuma |
+| DM10 | 2026-10-23 | **PD6 resolved:** OWNER and ADMIN both have full reversal access. ADMIN is otherwise read-only. ASSISTANT can read, record sales, create customers and record repayments | Team choice | Team 3 | Nnaemeka Chukwuma |
+| DM11 | 2026-10-23 | **PD7 resolved:** the optimistic action is archive/unarchive product. It reverts with a message on 412 version conflict or 403 | No money at risk if briefly wrong; easy two-tab demo | Team 3 (Victor Oyeleke to confirm the interface detail) | Nnaemeka Chukwuma |
+| DM12 | 2026-10-23 | **PD8 resolved:** standard targets. `POST /sales` p95 ≤ 500 ms, `GET /dashboard` p95 ≤ 800 ms (warm service), LCP ≤ 2.5 s, INP ≤ 200 ms on the deployed address. Cold start reported separately | Google's "good" thresholds; realistic on warm free tiers | Victor Oyeleke | Nnaemeka Chukwuma |
+| DM13 | 2026-10-23 | **PD9 resolved:** keep Flyway Community. Every `V<n>__*.sql` gets a hand-written undo script in `db/rollback/U<n>__*.sql`, and CI tests up → down → up against Testcontainers. Resolves spec concern C1 | Keeps DM1 and plain SQL; reversible as the brief requires | Team 3 | Nnaemeka Chukwuma |
+| DM14 | 2026-10-23 | **PD10 resolved:** store all timestamps in UTC (`timestamptz`). "Today" and date filters use Africa/Lagos (WAT, UTC+1) day boundaries | Dashboard totals match what the counter saw; one shop, one zone | Team 3 | Nnaemeka Chukwuma |
+| DM15 | 2026-10-23 | **PD11 resolved:** JWT access tokens last 8 hours (one trading shift), with no refresh token for the MVP. The role is re-read from the database on each request, so demotion applies at once | An assistant is never logged out mid-sale. Accepted cost: a stolen token works for up to 8 h | Team 3 | Nnaemeka Chukwuma |
+| DM16 | 2026-10-23 | **PD12 resolved:** Monday seed is 20 products (including zero-stock, at-threshold, archived and a very long name), 5 customers (one owing, one with store credit), 7 days of sales, one login per role. Full volumes (120 products / 60 days / 14 credit customers) after Monday | Demos every rule without delaying the Monday journey | Nnaemeka Chukwuma | Nnaemeka Chukwuma |
+| DM17 | 2026-10-23 | Build tool: Maven with a committed wrapper (`./mvnw`) | Installed locally; Spring Initializr default; most Flyway and Testcontainers examples | Blessing Nwafor | Nnaemeka Chukwuma |
+| DM18 | 2026-10-23 | Data access: Spring `JdbcClient` with hand-written SQL (no JPA) | Every concurrency guard is one visible SQL statement, easy to remove for the failing-test demo and to explain; no ORM caching hiding races | Nnaemeka Chukwuma | Nnaemeka Chukwuma |
+| DM19 | 2026-10-23 | Two GitHub repositories: one for Stockwise (the `stockwise/` folder) and one for Genie (`genie/`). The parent folder is a local workspace only, not a repository | Each product deploys and is assessed on its own | Team 3 | Nnaemeka Chukwuma |
+| DM20 | 2026-10-23 | Each repository carries its own SDLC artifacts (`sdlc/`), `AGENTS.md`, `REVIEW.md`, `decisions.md` and deploy plan, updated independently. Nothing is synced between them | The two products have different artifacts | Team 3 | Nnaemeka Chukwuma |
+| DM21 | 2026-10-23 | Interface tooling: Vite, React 19, TypeScript strict, React Router, Tailwind, TanStack Query, openapi-typescript, Vitest + Testing Library, Playwright + axe, Prism mock, npm | Static build fits Vercel and Qocent; types generated from the contract | Victor Oyeleke | Nnaemeka Chukwuma |
+| DM22 | 2026-10-23 | Coverage: JaCoCo fails the build below 80% line coverage on the rule packages (`sale`, `customer`, `reversal`, `product` services and repositories). Other packages are reported, not gated | Guards the code where bugs cost marks | Team 3 | Nnaemeka Chukwuma |
+| DM23 | 2026-10-23 | Test protection: a CI check fails `fix/*` branches or PRs labelled `bug` that modify test files after the commit adding the failing test. CODEOWNERS requires the rule owner to approve test changes | Protects the test-first loop for humans and AI tools | Team 3 | Nnaemeka Chukwuma |
+| DM24 | 2026-10-23 | Visual checks: Playwright screenshots (360 px and desktop) of five key screens after Monday. Victor approves the baselines. CI flags differences for review, not as a hard fail. A manual checklist before Monday | Catches regressions without noise while the UI is changing | Victor Oyeleke | Nnaemeka Chukwuma |
+| DM25 | 2026-10-23 | Evals: a small suite (10-20 real AI-assisted tasks) in `evals/` from day 6, re-run manually on AGENTS.md changes. An AI-introduced bug adds an eval and an AI-log entry. Not a merge gate | Proportionate to a 14-day project; feeds the AI log | Team 3 | Nnaemeka Chukwuma |
+| DM26 | 2026-10-23 | Release manager: Isaac Bassey approves every production deploy (GitHub `production` environment required reviewer). Blessing Nwafor is the backup. The approver is never the author of the change | Avoids a single point of delay over the weekend | Isaac Bassey | Nnaemeka Chukwuma |
+| DM27 | 2026-10-23 | Staging from day 6: Neon `staging` branch, Vercel preview, and a second Render service; every PR deploys there. Production only until Monday | Keeps the weekend on the MVP | Isaac Bassey | Nnaemeka Chukwuma |
+| DM28 | 2026-10-23 | Rollback rehearsals: Sat 24 Oct on the production walking skeleton, about day 9 in staging, and about day 13 before final. Each records the date and time taken in release.md | The Monday demo shouldn't run on an untried rollback | Team 3 | Nnaemeka Chukwuma |
+| DM29 | 2026-10-23 | No AI agent runs in the CI/CD pipeline. AI tools are used locally only and logged in the AI log | Nil cost, no provider keys in GitHub secrets | Team 3 | Nnaemeka Chukwuma |
+| DM30 | 2026-10-23 | Reviews: passes for bugs, security, compliance, money and concurrency, and accessibility. At most 5 nits. One code-owner approval, never from the author. Sale, store-credit and migration changes also need Isaac Bassey's approval | Proportionate rigour on the risky code | Isaac Bassey | Nnaemeka Chukwuma |
+| DM31 | 2026-10-23 | Monitoring (Maintain stage) is postponed. `sdlc/monitoring.md` is kept as a deferred placeholder listing what is settled and what is still to decide. When to resume is UNRESOLVED | Team priority on the MVP and the core build | Team 3 | Nnaemeka Chukwuma |
+
+## 3. Contract change log
+| Date | Change | Why | Agreed by (two engineers) |
+|------|--------|-----|---------------------------|
+| | | | |
