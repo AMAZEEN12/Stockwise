@@ -173,6 +173,8 @@ Details and unresolved API decisions: [UI implementation](docs/products-sales-ui
 
 Published: [Products PR #4](https://github.com/AMAZEEN12/Stockwise/pull/4) and [Sales PR #5](https://github.com/AMAZEEN12/Stockwise/pull/5), both open with base main. Authentication [PR #3](https://github.com/AMAZEEN12/Stockwise/pull/3) was still open when checked on 2026-10-25. The descriptions disclose inherited changes, prior local verification, visual differences, service setup limits and pending API proposals. Creating these PRs does not supply human review or contract approval.
 
+Publication follow-up: current main includes merged structure PR #1 (2d170e6). Its only merge conflict with Products was in sdlc/WORKLOG.md. Codex retained the current frontend guidance and appended the incoming historical startup notes, committed the main integration as 8fa08ac on Products, then carried it into Sales. No application files changed, existing feature commits were preserved and neither branch was force-pushed. Decided by: Codex (routine conflict resolution within Victor's publication request). Logged by: Codex.
+
 ## 3. Contract change log
 
 | Date | Change | Why | Agreed by (two engineers) |
