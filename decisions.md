@@ -163,6 +163,8 @@ Visual-review note: the supplied CSS still hides the headline on mobile. With th
 
 Details and unresolved API decisions: [UI implementation](docs/products-sales-ui.md), [contract proposal](docs/products-sales-contract-proposal.md). No two-engineer sign-off is invented.
 
+| DM48 | 2026-10-25 | Keep unsubmitted carts in per-user tab storage as well as immutable pending writes. Bind pending recovery to the original service base URL and user, recheck current role, reject unsafe customer money, and retain the original preview during recovery. Use one browser worker on this Windows machine. Decorative error icons use SVG; keep exact-copy assertions intact | Continuation safety and concrete browser/lint findings during implementation; no backend business-rule change | Codex, implementation choices under Victor's authorization | Codex |
+
 ## 3. Contract change log
 
 | Date | Change | Why | Agreed by (two engineers) |

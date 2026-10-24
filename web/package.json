@@ -9,6 +9,8 @@
     "mock:prism": "node scripts/mock-api.mjs",
     "mock:prepare": "node scripts/mock-api.mjs --prepare-only",
     "check:mock": "node scripts/check-mock.mjs",
+    "check:shop": "node scripts/check-shop.mjs",
+    "check:shop:browser": "node scripts/check-shop-browser.mjs",
     "build": "tsc -b && vite build",
     "lint": "eslint . --max-warnings 0",
     "typecheck": "tsc --noEmit",
