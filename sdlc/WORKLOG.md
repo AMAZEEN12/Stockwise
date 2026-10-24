@@ -1,6 +1,6 @@
 # Work log: Stockwise (Team 3 main product)
 
-Change slug: `stockwise` · Started: 2026-10-23 · Last updated: 2026-10-23 by the agent
+Change slug: `stockwise` · Started: 2026-10-23 · Last updated: 2026-10-24 by Codex (logging assistant for Victor Oyeleke)
 Source document: `Tesa cohort 6 software engineering capstone project.pdf` (TeSA Africa, "Four Real-World Products", 26 pages; Stockwise is product 3, pages 10-11; shared requirements pages 23-26)
 
 > Any agent opening this project: read this file first, then the "Conventions and guidelines" and "Decisions" sections, then the artifacts in this folder. Continue from "Resume here". Don't re-ask anything already answered below.
@@ -28,6 +28,7 @@ Source document: `Tesa cohort 6 software engineering capstone project.pdf` (TeSA
 | intent.md | accepted | Nnaemeka Chukwuma | 2026-10-23 |
 | spec.md | accepted | Nnaemeka Chukwuma | 2026-10-23 |
 | plan.md | accepted | Nnaemeka Chukwuma | 2026-10-23 |
+| Frontend phase 2 amendment and docs/frontend-architecture.md | accepted (DM32-DM36; other area approvals unchanged) | Victor Oyeleke | 2026-10-24 |
 | AGENTS.md (repo) | draft (commands planned, not yet verified) | | 2026-10-23 |
 | test-plan.md | accepted | Nnaemeka Chukwuma | 2026-10-23 |
 | REVIEW.md (repo) | accepted | Nnaemeka Chukwuma | 2026-10-23 |
@@ -46,7 +47,7 @@ Source document: `Tesa cohort 6 software engineering capstone project.pdf` (TeSA
 - **Policies in force:** TeSA brief sections "Shared technical requirements", "Shared rules for fairness", "Delivery and cost" and the assessment rubric (PDF pages 3, 23-26). No other organisational policy supplied.
 - **Supporting skills:** none.
 - **Approvers:** product owner: Nnaemeka Chukwuma (acting). Team lead and technical sign-off: Isaac Bassey. Area owners: Nnaemeka (Data and rules), Isaac (API and access), Blessing Nwafor (Delivery and evidence). Supervisor: Goodnews (reviews at checkpoints).
-- **User preferences for this workflow:** structured multiple-choice questions with a recommended default, asked one decision at a time, with plain explanations and concrete examples. For every decision, also ask who to record as the decision maker (options: Team 3, a named engineer, the supervisor). Record "Decided by" and "Logged by" separately. Nnaemeka Chukwuma is the logger.
+- **User preferences for this workflow:** structured multiple-choice questions with a recommended default, asked one decision at a time, with plain explanations and concrete examples. For every decision, also ask who to record as the decision maker (options: Team 3, a named engineer, the supervisor). Record "Decided by" and "Logged by" separately. Nnaemeka Chukwuma is the existing decision-log owner and historical logger. Victor explicitly owns DM32-DM36; Codex records those entries as logging assistant, without attributing wider team approval. Do not re-ask these settled choices.
 
 ## Decisions
 Append-only. To change a decision, add a new entry that supersedes it.
@@ -71,6 +72,7 @@ Append-only. To change a decision, add a new entry that supersedes it.
 | D18 | 2026-10-23 | Deploy answers: release manager Isaac Bassey with Blessing Nwafor as backup (DM26, Isaac), staging after Monday (DM27, Isaac), rollback rehearsals Sat 24 Oct plus two after Monday (DM28, Team 3), no AI agent in CI (DM29, Team 3), reviews with 5 nits and one code-owner approval, plus Isaac for high-risk code (DM30, Isaac) | User's answers | as listed (logged by Nnaemeka Chukwuma) | release.md, REVIEW.md | active |
 | D19 | 2026-10-23 | Monitoring postponed (DM31). monitoring.md is a deferred placeholder | User answered "monitoring should be postponed" to Maintain 1 | Team 3 (logged by Nnaemeka Chukwuma) | monitoring.md, EXECUTION.md | active |
 | D6 | 2026-10-23 | Propose "reversing a partly repaid credit sale (negative balance)" as Stockwise's design problem, pending Goodnews's agreement | The brief names no design problem for Stockwise | Nnaemeka Chukwuma | intent.md, spec.md | active |
+| D20 | 2026-10-24 | Frontend phase 2 accepted: folders/docs and empty HTTP-client file; resource API files, central endpoints, image exports, app-wide foundational tokens, Formik/Yup, Axios, Redux Toolkit/RTK Query and Router Data Mode. Shared-component agreement pending and shadcn not required. Bootstrap docs on main then publish starter on a separate branch/PR. Details DM32-DM36 | Victor's answers and explicit implementation request in this conversation | Victor Oyeleke (logged by Codex, logging assistant) | frontend docs, plan, spec, AGENTS.md | active |
 
 ## Questions and answers
 | # | Date | Stage | Question | Answer | Status |
@@ -88,6 +90,11 @@ Append-only. To change a decision, add a new entry that supersedes it.
 | Q13 | 2026-10-23 | Maintain | What runs the monitoring checks? | "monitoring should be postponed" (decided by Team 3) | answered (deferred) |
 | Q12 | 2026-10-23 | Design | Provisional rule for the design problem? | "keeps all 3 options open until other team members can confirm, write decisions that need to be confirmed/made in decisions.md" | answered (PD1 open) |
 | Q8 | 2026-10-23 | Plan | How to handle Stockwise's missing design problem? | "Propose one, ask Goodnews" | answered (proposal UNRESOLVED) |
+| Q14 | 2026-10-24 | Frontend phase 2 | Starter scope? | Folders, documentation, `.gitkeep` placeholders and one explicitly requested empty `http-client.ts`; frontend and docs only | answered |
+| Q15 | 2026-10-24 | Frontend phase 2 | API and asset separation? | One file per resource, central endpoint definitions, central image named exports | answered |
+| Q16 | 2026-10-24 | Frontend phase 2 | Components and tokens? | `components/ui/` plus `shared/` utilities; app-wide foundational tokens, login-specific hero/coin/wordmark; shared-component agreement pending, shadcn not required | answered |
+| Q17 | 2026-10-24 | Frontend phase 2 | Attribution? | Decided by Victor Oyeleke; Codex as logging assistant; no implied cross-team approval | answered |
+| Q18 | 2026-10-24 | Frontend phase 2 | Publish from an empty remote? | One-time docs baseline on main, then separate `chore/web-structure` commit/push and PR; never force-push or merge automatically | answered |
 
 ## Activity log
 Append-only, newest last.
@@ -115,6 +122,28 @@ Append-only, newest last.
 - 2026-10-23 · Nnaemeka Chukwuma · Accepted release.md and REVIEW.md. Agent started the Maintain stage.
 - 2026-10-23 · agent · Recorded DM31 (monitoring postponed). Wrote `sdlc/monitoring.md` as a deferred placeholder.
 - 2026-10-23 · agent · Annotated intent.md open questions answered later (DM5-DM8); intent's accepted content is unchanged. Wrote `sdlc/EXECUTION.md`. SDLC chain complete for Stockwise.
+- 2026-10-24 · Codex (logging assistant for Victor Oyeleke) · Read every SDLC artifact, AGENTS.md, decisions.md, deploy-plan.md and REVIEW.md, plus the local eight-page shared-component proposal. Distinguished its proposals from Victor's instructions and recorded the unresolved shared agreement.
+- 2026-10-24 · Victor Oyeleke · Accepted the phase 2 frontend publication plan and explicitly requested implementation. Confirmed resource-level API files, central endpoints/image exports, shared folder placement, token scope, stack changes, pending component foundation, empty HTTP-client file and Git bootstrap/publication workflow (DM32-DM36).
+- 2026-10-24 · Codex · Confirmed the remote was empty; staged only the 12 existing planning documents, checked the staged diff and created `176fc3a` (`docs: establish Stockwise planning baseline`). Pushed `main` to `origin` successfully using configured Git credentials. No branch protections or CI setup claimed.
+- 2026-10-24 · Codex · Created `chore/web-structure`, 27 empty `.gitkeep` placeholders and a zero-byte HTTP-client file. Added frontend architecture/design-token notes, appended DM32-DM36 and PD13-PD14, and aligned the frontend plan/spec/agent conventions and execution runbook. Static verification and branch publication are next; application checks remain unavailable.
+- 2026-10-24 · Codex · Static verification passed before staging: exact folder/file set, all 28 starter files zero bytes, no unauthorized scaffolding, 29 local Markdown links/fragments resolving, continuous decision tables with unique IDs, historical decision rows and contract log unchanged, and no stale shared-agreement assertion or old API-client path in the current spec/plan. `git diff --check` exited 0. Runtime checks are unavailable because their scaffolds do not exist.
+- 2026-10-24 · Codex · Created starter commit `45f49c6` (`chore(web): add frontend starter structure and conventions`), pushed `chore/web-structure`, and opened [PR #1](https://github.com/AMAZEEN12/Stockwise/pull/1) targeting `main`. The GitHub connector's PR creation returned 403 (integration permissions); creation succeeded through the Git credentials already used for the authorized pushes. No credentials were printed or written to project files. PR creation returned state `open`, base `main`, head `chore/web-structure`, merged `false`.
+- 2026-10-24 · Codex · Verified remote branch heads after the starter push: `main` = `176fc3aa826a0299bacd5ea2139e1d39f90b5e0f`, `chore/web-structure` = `45f49c649b486e9809f50560cbfd2ba99f1ae7db`, matching local refs. A documentation-only follow-up on the same branch records this publication evidence; main and the review gate remain unchanged.
+
+### Phase 2 verification output (2026-10-24)
+
+Read-only inline Python assertions and `git diff --check` produced:
+
+```text
+PASS: exact starter tree; 27 empty .gitkeep files and a zero-byte HTTP client
+PASS: no dependencies, configuration, generated schema, backend or workflow scaffold
+PASS: 29 local Markdown links and fragments resolve
+PASS: appended decision IDs are unique, tables continuous, historical decisions and contract log preserved
+PASS: current spec/plan use the pending shared agreement and new HTTP-client location
+git diff --check: exit 0
+```
+
+Service verify, contract lint, web lint/typecheck/unit/build, and Playwright: unavailable at this stage, not run. No package manifest, service wrapper or OpenAPI file exists. No rendered UI or business rule was changed.
 - 2026-10-23 · agent · EXECUTION step 1 (local part): `git init -b main` in `stockwise/`, added `.gitignore`, committed the artifacts one commit per stage (first commit 4de3402). No remote, nothing pushed (user: "local only for now").
 - 2026-10-23 · agent · EXECUTION step 2: drafted `contract/openapi.yaml` v0.1.0 (Monday paths), `redocly.yaml` (recommended rules plus a custom `money-is-integer-kobo` rule) and the contract README. Redocly lint: 0 errors, 0 warnings after fixing a missing 4xx on /health and an if/then conflict with additionalProperties (the CREDIT → customerId rule moved to the description, enforced by service and DB). Proved the money rule fails on a deliberate `priceKobo: number`. Prism mock failed on port 4010 (EACCES, Windows reserved range 3965-4064) and moved to 4710. Smoke test: health 200, login 201, products 401 without token and 200 with, sale 201, missing Idempotency-Key 422, float quantity 422, forced 409 returns the INSUFFICIENT_STOCK example. Logged as DRAFT in decisions.md §3, pending Isaac Bassey and Nnaemeka Chukwuma.
 - 2026-10-23 · agent · Committed the contract draft (Stockwise 199f70b) and the Genie port note (Genie 491ea43).
