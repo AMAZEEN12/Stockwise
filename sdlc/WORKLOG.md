@@ -6,12 +6,12 @@ Source document: `Tesa cohort 6 software engineering capstone project.pdf` (TeSA
 > Any agent opening this project: read this file first, then the "Conventions and guidelines" and "Decisions" sections, then the artifacts in this folder. Continue from "Resume here". Don't re-ask anything already answered below.
 
 ## Resume here
-- **Current publication request:** confirmed commit 2f15ec4 exists. Victor then explicitly requested committing his recent Home/CSS/Screens changes before the PR (DM43). Review/verification is underway; commit those files, push feat/auth-ui and open a PR into main. No automatic merge/deployment.
+- **Current publication:** persistent guidance commit 2f15ec4 confirmed; Victor's recent Home/CSS/Screens changes committed as e200ce0 and pushed before PR creation (DM43). [PR #3](https://github.com/AMAZEEN12/Stockwise/pull/3) is open from feat/auth-ui into main, not merged. Human review is next; no deployment was performed.
 - **Standing instruction reaffirmed by Victor:** before every new task, read root AGENTS.md, including Mistakes to avoid. DM41's three Tailwind replacements are persistent frontend conventions; the startup reminder, exact mapping and Victor/Codex attribution are now explicit there. Existing component replacements remain applied.
 - **Current alignment follow-up:** Applied/verified canonical Tailwind replacements (DM41). Victor selected contract mock development (DM42); the mock is running on 127.0.0.1:4710, local mock-only configuration is set, and actual browser sign-in/refresh/logout passed. Existing user edits to HomePage.tsx/app.css and untracked web/Screens are preserved. His example D badge is vite.config.ts: current web/vite.config.ts exists, is tracked and unchanged; the precise IDE view cannot be reproduced from Git.
 - **Stage:** Frontend implementation authorized by Victor on 2026-10-24, following review of all 16 references.
-- **In progress:** Home and authentication UI implemented and verified on `feat/auth-ui`, ready for review. Merged API/database work from PR #2 is retained. PR #1 remains unmerged.
-- **Next action:** Human visual review of the captured screens; API-owner resolution of registration, seed credentials and pending two-engineer sign-off. No automatic main merge or deployment.
+- **In progress:** Home and authentication UI implemented, verified and published on `feat/auth-ui` in PR #3. Merged API/database work from PR #2 is retained. PR #1 remains unmerged.
+- **Next action:** Human review of PR #3 and captured screens; API-owner resolution of registration, seed credentials and pending two-engineer sign-off. No automatic main merge or deployment.
 - **Waiting on:** Registration API approval, seeded demo credentials, backend authentication implementation, and the two-engineer contract sign-off still marked pending in the merged log.
 
 ## How to continue without the sdlc skill
@@ -261,3 +261,9 @@ The mock is development-only, binds 127.0.0.1, reads the trusted repository cont
 - Retained the supplied copy removal, punctuation and coin-position changes without changing tests or silently restoring mobile copy. Noted the mobile supporting-copy consequence for human visual review.
 - Fresh verification on the final source: ESLint exit 0 (zero warnings), strict typecheck exit 0, authoritative contract lint valid in 507ms, 3 unit files / 6 tests passed, Vite build succeeded in 14.19s (328 modules), Playwright 12 passed in 1.5m with the existing axe assertions, and git diff --check passed. The service/JAVA_HOME limitation and development-only Prism advisories remain as previously recorded; no backend or active contract changed.
 - Next: commit these changes, push feat/auth-ui and create an open PR into main. No merge or deployment is authorized by this publication request.
+
+### Publication completed (2026-10-24)
+
+- Committed Victor's supplied changes and their decision/documentation updates as `e200ce0` (`feat(home): refine landing copy and coin placement with design references`), including all 16 PNG references. Pushed `feat/auth-ui` to origin successfully; no user changes were omitted.
+- Created [PR #3](https://github.com/AMAZEEN12/Stockwise/pull/3), title `feat(auth): add responsive entry UI, contract mock and agent conventions`, base `main`, head `feat/auth-ui`. GitHub returned state `open`, draft `false`, merged `false`, initial head `e200ce0716484d9236f63e84387580bd765b31ac`.
+- The description covers the final feature, latest supplied refinements, fresh verification, mobile-copy consequence, and existing API/mock/artwork/environment limits. No reviewers were impersonated, no merge/deployment performed, and no credentials were printed or written to project files. This documentation follow-up records the confirmed publication on the same branch.
