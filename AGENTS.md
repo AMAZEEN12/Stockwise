@@ -6,10 +6,11 @@ Stock and customer-credit ledger for one demonstration shop (TeSA Cohort 6 capst
 
 ## Commands
 - Database (local): `docker compose up -d db` (healthy: `db ... Started`)
-- Service build and test: `cd service && ./mvnw verify` (healthy: `BUILD SUCCESS`, `Tests run: N, Failures: 0, Errors: 0`). Needs Docker running for Testcontainers.
+- Service build and test **(verified 2026-10-23)**: `cd service && ./mvnw verify` (healthy: `Tests run: 11, Failures: 0, Errors: 0, Skipped: 0` then `BUILD SUCCESS`). Needs **Docker Desktop running** for Testcontainers (Postgres 17). On Windows Docker Desktop is installed per-user at `%LOCALAPPDATA%\Programs\DockerDesktop`.
+- Undo migrations (rollback): `cd service && ./mvnw -Pundo -Dundo.target=<n-1> exec:java` with `DATABASE_JDBC_URL`, `DATABASE_USERNAME`, `DATABASE_PASSWORD` set (verified by `MigrationRollbackIT`; not yet run against a real database)
 - Service run: `cd service && ./mvnw spring-boot:run -Dspring-boot.run.profiles=local,demo` (healthy: `Started StockwiseApplication`). `curl localhost:8080/api/v1/health` returns `{"status":"UP"}`.
-- Contract lint: `npx @redocly/cli@2 lint contract/openapi.yaml --config contract/redocly.yaml` (healthy: `Woohoo! Your API description is valid.`)
-- Mock server: `npx @stoplight/prism-cli@5 mock contract/openapi.yaml --port 4710` (healthy: `Prism is listening on http://127.0.0.1:4710`)
+- Contract lint **(verified 2026-10-23)**: `npx @redocly/cli@2 lint contract/openapi.yaml --config contract/redocly.yaml` (healthy: `Woohoo! Your API description is valid.`)
+- Mock server **(verified 2026-10-23)**: `npx @stoplight/prism-cli@5 mock contract/openapi.yaml --port 4710` (healthy: `Prism is listening on http://127.0.0.1:4710`)
 - Web: `cd web && npm ci && npm run lint && npm run typecheck && npm test && npm run build`
 - Web dev against the mock: `cd web && VITE_API_BASE_URL=http://127.0.0.1:4710 npm run dev`
 
@@ -42,7 +43,8 @@ Stock and customer-credit ledger for one demonstration shop (TeSA Cohort 6 capst
 
 ## Mistakes to avoid
 Rule: when an agent makes the same mistake twice, the correction goes here.
-- (none yet)
+- Removing a CHECK that is the last item in a `CREATE TABLE` leaves a dangling comma. When proving a rule test fails, make sure it fails on the rule, not on a syntax error (rule-removal log, R12).
+- Never leave backup or scratch files under `src/main/resources/db/`. `MigrationRollbackIT` treats every file there as a migration, and stale copies survive in `target/` until `./mvnw clean`.
 
 ## Verifying your work
 Run these before reporting any task complete, and paste the output (full list in `sdlc/test-plan.md`):
