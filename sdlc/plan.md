@@ -228,6 +228,11 @@ Each row is confirmed with `EXPLAIN (ANALYZE, BUFFERS)` on the full seed, with t
 ## Plan maintenance
 If implementation departs from this plan, update this file in the same commit as the code.
 
+**Departures recorded:**
+- 2026-10-23, step 4: the Maven project (`service/pom.xml`, Maven wrapper) was created in step 4, not step 3, because the migration tests need it. Versions: Spring Boot **4.1.2** (latest stable; 4.2.0-RC1 not used), which manages Flyway 12.4.0, Testcontainers 2.0.5 and the Postgres driver 42.7.14. Step 3 (Blessing) still adds the Spring Boot application class, `spring-boot-maven-plugin`, the Dockerfile and the health endpoints. The pom deliberately has no `spring-boot-maven-plugin` yet, so `package` doesn't need a main class.
+- 2026-10-23, step 4: V3 also adds `sale_reference_seq` (sale references `S-000001`), the `OPENING` movement type (so a product's opening stock reconciles with its movements, R13), and a `sale_line_total_matches` CHECK. `SchemaRulesIT` covers the database-level rules R4 (backstop), R5, R8, R9, R12 and N1 now, ahead of the service tests.
+- 2026-10-23, step 4: the undo runner is `ng.tesa.stockwise.db.MigrationUndo` (`./mvnw -Pundo -Dundo.target=<n-1> exec:java`). It finds `U<v>__<description>.sql` from Flyway's history description and runs each undo plus its history-row delete in one transaction.
+
 ## Measurement
 - Leading: share of changes that merge from the first implementation pass; time from plan acceptance to merged PR.
 - Lagging: rework cycles per change; whether the merged diff still matches this plan.
