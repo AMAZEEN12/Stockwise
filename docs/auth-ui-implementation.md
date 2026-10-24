@@ -4,7 +4,7 @@
 
 ## Reference and visual acceptance
 
-All 16 PNGs were inspected during implementation. Victor subsequently placed the versioned design inputs under `web/Screens/` (token sheet plus `login/` frames), replacing the earlier local `web/Stockwise — Login-png/` location. They are not application backgrounds or runtime assets. Desktop Home is 1440×900 at 1×; desktop auth/interactive frames are 2880×1800, treated as 1440×900 at 2×. Mobile frames are 720×1760, treated as 360×880 at 2×. Intermediate widths interpolate responsively. A white strip at the export edge is not page artwork.
+All 16 PNGs were inspected during implementation. Victor subsequently placed the design inputs under `web/Screens/` (token sheet plus `login/` frames), replacing the earlier local `web/Stockwise — Login-png/` location. DM45 now ignores/untracks these references while preserving local files. They are not application backgrounds or runtime assets. Desktop Home is 1440×900 at 1×; desktop auth/interactive frames are 2880×1800, treated as 1440×900 at 2×. Mobile frames are 720×1760, treated as 360×880 at 2×. Intermediate widths interpolate responsively. A white strip at the export edge is not page artwork.
 
 DM43 preserves Victor's supplied refinements for publication: remove headline-ending periods and the Home description, move the desktop coin offset from 350px to 320px, and retain expanded CSS formatting. The existing mobile rule hides the headline, so mobile Home now has no supporting copy. This consequence is noted for visual review; publication does not silently override his changes.
 

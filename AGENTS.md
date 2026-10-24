@@ -6,7 +6,7 @@ Stock and customer-credit ledger for one demonstration shop (TeSA Cohort 6 capst
 
 > Frontend commands below are implemented and verified; actual output is in sdlc/WORKLOG.md. Backend run/deployment commands remain planned. Earlier service results are upstream evidence, not this machine's verification.
 
-Current frontend state (2026-10-24): runnable Home and authentication UI on `feat/auth-ui`; React Router Data Mode, Tailwind v4, shared copy-in components and generated contract types. Registration remains pending API approval. PR #2's contract/database work is integrated; backend HTTP authentication and demo seeds remain unimplemented. See [auth UI implementation](docs/auth-ui-implementation.md) and actual verification output in `sdlc/WORKLOG.md`.
+Current frontend state (2026-10-24): Home/authentication plus Products on `feat/products-ui`; New sale/Receipt follows on `feat/sales-ui` (DM44-DM47). Registration and extended settlement/quote contracts remain pending API approval. See [products/sales UI](docs/products-sales-ui.md), [contract proposals](docs/products-sales-contract-proposal.md) and actual verification output in `sdlc/WORKLOG.md`. Local design exports in `web/Screens/` are ignored, never runtime imports. Backend HTTP implementation remains with the service owners.
 
 ## Commands
 - Database (local): `docker compose up -d db` (healthy: `db ... Started`)

@@ -152,6 +152,17 @@ No registration endpoint, real account, server-authentication implementation or 
 
 Visual-review note: the supplied CSS still hides the headline on mobile. With the description removed, mobile Home has no supporting copy; this is retained as supplied for human review rather than silently changed during publication.
 
+### Products and sales implementation, 2026-10-24
+
+| ID | Date | Decision | Reason | Decided by | Logged by |
+|----|------|----------|--------|------------|-----------|
+| DM44 | 2026-10-24 | Implement Products and New sale/Receipt on separate feat/products-ui and feat/sales-ui branches, with descriptive commits. Defer Sales history. Use updated stock-conflict and corrected store-credit frames for quality control, including bordered quantity controls across cart states | Victor authorized implementation after design reviews and chose the supplied sale/receipt scope | Victor Oyeleke | Codex |
+| DM45 | 2026-10-24 | Ignore web/Screens and remove already tracked references from the index, preserving local copies. Supersedes DM43's versioned-reference policy only | Victor requested keeping design exports out of future commits/checkouts | Victor Oyeleke | Codex |
+| DM46 | 2026-10-24 | Keep v0.1.0 API unchanged; document gaps separately. Use contract-derived models and one RTK Query cache. Exact decimal-to-kobo parsing and checked integer arithmetic; unknown/unsafe amounts block submission. Categories use an editable catalogue-derived combobox. No unsupported archive/edit endpoints | Implement within existing wire shapes without inventing API approval | Codex, implementation choices under Victor's authorization | Codex |
+| DM47 | 2026-10-24 | Development simulation supports product/sale interaction and corrected automatic store credit. Real credit-bearing writes remain blocked pending settlement fields. Persist an immutable pending write before POST; bounded transport retry preserves key/body; reauthentication requires same user and current permitted role; refreshed recovery replays the same POST until a lookup exists | Prevent false success, changed-body retries and fabricated authoritative credit totals | Codex, implementation choices; wire additions remain proposals | Codex |
+
+Details and unresolved API decisions: [UI implementation](docs/products-sales-ui.md), [contract proposal](docs/products-sales-contract-proposal.md). No two-engineer sign-off is invented.
+
 ## 3. Contract change log
 
 | Date | Change | Why | Agreed by (two engineers) |

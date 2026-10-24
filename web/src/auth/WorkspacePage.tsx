@@ -12,6 +12,7 @@ export function WorkspacePage() {
     <p className="micro">STOCKWISE · DEMONSTRATION DATA</p>
     <h1>Welcome, {user.displayName}.</h1>
     <p>You’re signed in to Stockwise.</p>
+    <Link className="primary-link" to="/app/products">Open your shop</Link>
     <p className="session-role">{user.role.toLowerCase()}</p>
     <div className="flex gap-4 items-center"><Link to="/">Home</Link><Button size="lg" onClick={() => {
       clearSession(); store.dispatch(authApi.util.resetApiState()); void navigate('/');

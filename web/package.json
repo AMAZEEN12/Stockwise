@@ -5,7 +5,8 @@
   "type": "module",
   "scripts": {
     "dev": "vite --host 127.0.0.1",
-    "mock": "node scripts/mock-api.mjs",
+    "mock": "node scripts/development-api.mjs",
+    "mock:prism": "node scripts/mock-api.mjs",
     "mock:prepare": "node scripts/mock-api.mjs --prepare-only",
     "check:mock": "node scripts/check-mock.mjs",
     "build": "tsc -b && vite build",

@@ -1,6 +1,6 @@
 import { useEffect, useRef, useState } from 'react';
 import { useFormik } from 'formik';
-import { Link, useNavigate } from 'react-router';
+import { Link, useNavigate, useSearchParams } from 'react-router';
 import { Button } from '../../components/ui/button';
 import { Dialog } from '../../components/ui/dialog';
 import { FormField } from '../../components/ui/form-field';
@@ -20,6 +20,7 @@ export function SignUpPage() { return <AuthOverlay mode="sign-up" />; }
 export function AuthOverlay({ mode }: { mode: 'sign-in' | 'sign-up' }) {
   const isSignUp = mode === 'sign-up';
   const navigate = useNavigate();
+  const [searchParams] = useSearchParams();
   const [status, setStatus] = useState<Status>('idle');
   const [showPassword, setShowPassword] = useState(false);
   const [demoNotice, setDemoNotice] = useState('');
@@ -48,7 +49,8 @@ export function AuthOverlay({ mode }: { mode: 'sign-in' | 'sign-up' }) {
         const session = await request.unwrap();
         if (!mounted.current) return;
         saveSession(session);
-        await navigate('/workspace', { replace: true });
+        const returnTo = searchParams.get('returnTo');
+        await navigate(returnTo?.startsWith('/app/') && !returnTo.includes('//') ? returnTo : '/workspace', { replace: true });
       } catch (caught) {
         if (!mounted.current) return;
         const error = caught as HttpError;
