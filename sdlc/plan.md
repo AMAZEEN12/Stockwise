@@ -2,8 +2,8 @@
 
 Derived from: [intent.md](intent.md) (accepted 2026-10-23), [spec.md](spec.md) (accepted 2026-10-23, revised with DM5-DM16) · Status: accepted
 Accepted by: Nnaemeka Chukwuma (2026-10-23) · Higher-risk sign-off: Isaac Bassey (team lead, DM7). Required for the sale transaction, the store-credit logic and every migration.
-Frontend phase 2 amendment accepted by Victor Oyeleke on 2026-10-24; logged by Codex (logging assistant). See DM32-DM36. Other area approvals are unchanged.
-Decisions in force: [decisions.md](../decisions.md) DM1-DM36 · Deployment: [deploy-plan.md](../deploy-plan.md)
+Frontend amendments DM32–DM40: Victor authorized Home/authentication implementation on 2026-10-24 after the design/API review. Codex logs scope, implementation choices and pending proposals separately. Other area approvals are unchanged.
+Decisions in force: [decisions.md](../decisions.md) DM1–DM40 · Deployment: [deploy-plan.md](../deploy-plan.md)
 Supporting skills: none
 
 All paths are relative to the **Stockwise repository root** (the local `stockwise/` folder, DM19). Java package root: `ng.tesa.stockwise`.
@@ -226,6 +226,16 @@ Each row is confirmed with `EXPLAIN (ANALYZE, BUFFERS)` on the full seed, with t
 | N15 | `ci.yml` runs all three test levels; a failure blocks `deploy.yml` |
 
 ## Plan maintenance
+
+### Authorized Home/authentication implementation (2026-10-24)
+
+- Integrated merged PR #2 on `feat/auth-ui`; preserve backend migrations, tests, and the contract's pending sign-off record. Resolve the work-log merge by retaining both histories and updating current state.
+- Implement the entry/authentication feature from all 16 references using Data Mode nested overlay routes, Tailwind v4's Vite plugin and CSS-first token mapping. Pin resolved dependencies. Copy shared primitives at revision d153611; retain ownership and document additive extensions.
+- Generate API types, alias request/response models, use one Axios-backed RTK Query service and resource endpoint definitions. Sign-in follows v0.1.0 exactly. No registration wire model or endpoint is activated; document the proposed contract separately.
+- Store expiry-checked sessions per tab with memory fallback; validate protected navigation with /me. Demo buttons fill supplied public seed credentials and require explicit submission. No demo password is fabricated. Authenticated /workspace is a welcome handoff, not a fake dashboard.
+- Self-host the specified fonts, keep runtime images in assets/images with named exports, and reconstruct the missing coin as SVG with reduced-motion/mobile behavior. Compare captures to references at 1440×900 and 360×880 at 2×; do not claim the reconstructed artwork is the original.
+- Checks: real ESLint, strict TypeScript, meaningful HTTP/session/form unit tests, production build, contract lint, Playwright flows and axe. Run the repository service check where the local Java/Docker prerequisites permit; record actual limitations without claiming upstream results as this session's checks.
+- Detailed behavior/provenance: [auth UI](../docs/auth-ui-implementation.md); missing contract: [proposal](../docs/auth-contract-proposal.md). Update documentation and actual output in the same feature commit.
 If implementation departs from this plan, update this file in the same commit as the code.
 
 **Departures recorded:**

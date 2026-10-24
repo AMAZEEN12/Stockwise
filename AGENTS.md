@@ -2,9 +2,9 @@
 
 Stock and customer-credit ledger for one demonstration shop (TeSA Cohort 6 capstone, Team 3 main product). Context for any AI agent or new team member. Read it at the start of every session.
 
-> Commands below are **planned** (plan.md, Build stage). The first engineer to scaffold each part replaces "planned" with the verified command and its real healthy output.
+> Frontend commands below are implemented and verified; actual output is in sdlc/WORKLOG.md. Backend run/deployment commands remain planned. Earlier service results are upstream evidence, not this machine's verification.
 
-Current frontend state (2026-10-24): folders and `.gitkeep` placeholders only, plus an empty `web/src/service/http-client.ts`. There is no package manifest, runnable app, service scaffold or OpenAPI contract yet. The application commands below cannot run at this stage; do not report them as passing. Frontend conventions and pending questions are in [docs/frontend-architecture.md](docs/frontend-architecture.md).
+Current frontend state (2026-10-24): runnable Home and authentication UI on `feat/auth-ui`; React Router Data Mode, Tailwind v4, shared copy-in components and generated contract types. Registration remains pending API approval. PR #2's contract/database work is integrated; backend HTTP authentication and demo seeds remain unimplemented. See [auth UI implementation](docs/auth-ui-implementation.md) and actual verification output in `sdlc/WORKLOG.md`.
 
 ## Commands
 - Database (local): `docker compose up -d db` (healthy: `db ... Started`)
@@ -13,7 +13,7 @@ Current frontend state (2026-10-24): folders and `.gitkeep` placeholders only, p
 - Service run: `cd service && ./mvnw spring-boot:run -Dspring-boot.run.profiles=local,demo` (healthy: `Started StockwiseApplication`). `curl localhost:8080/api/v1/health` returns `{"status":"UP"}`.
 - Contract lint **(verified 2026-10-23)**: `npx @redocly/cli@2 lint contract/openapi.yaml --config contract/redocly.yaml` (healthy: `Woohoo! Your API description is valid.`)
 - Mock server **(verified 2026-10-23)**: `npx @stoplight/prism-cli@5 mock contract/openapi.yaml --port 4710` (healthy: `Prism is listening on http://127.0.0.1:4710`)
-- Web: `cd web && npm ci && npm run lint && npm run typecheck && npm test && npm run build`
+- Web (implemented): `cd web && npm ci && npm run lint && npm run typecheck && npm test -- --run && npm run build`. Lint uses ESLint with zero warnings; typecheck uses strict tsc; browser checks use `npx playwright test` after `npx playwright install chromium`. See WORKLOG for actual results.
 - Web dev against the mock: `cd web && VITE_API_BASE_URL=http://127.0.0.1:4710 npm run dev`
 
 ## Conventions
@@ -31,7 +31,7 @@ Current frontend state (2026-10-24): folders and `.gitkeep` placeholders only, p
 - The future `web/src/service/http-client.ts` owns shared Axios configuration, headers and error normalization. Preserve field errors and existing operation-specific headers, including `Idempotency-Key` and `If-Match`. Never generate a new submission key on a retry of the same write.
 - Request/response models belong in `web/src/models/requests/` and `responses/`, derived from generated contract types. Yup form validation belongs in `web/src/schema/`; it does not replace the OpenAPI contract. Do not invent endpoints or wire models before the contract exists.
 - Image files belong in `web/src/assets/images/`, with a central `index.ts` of named exports added when assets exist. Reusable UI belongs in `components/ui/`; feature-specific components stay with their feature. Shared hooks, constants and utilities belong in `shared/`.
-- The cross-team shared-component agreement is **pending**. Neither shadcn nor Radix is selected as a required foundation. The supplied app-wide tokens and login-specific design notes are recorded in `docs/frontend-architecture.md`; no styles or artwork are implemented yet.
+- The **five interface engineers' agreement**, reported by Victor, adopts the shared React/TypeScript/Tailwind/Radix copy-in source (DM37). Stockwise token values are authoritative; retain shared token names and source ownership. Local extensions are documented in `docs/auth-ui-implementation.md`. Shadcn is not required.
 - Work on separate branches: `chore/web-structure` for the starter, `feat/<feature>` for features and `fix/<bug>` for fixes. Use descriptive commit subjects such as `feat(auth): add responsive login screens`. Review and merge gates in REVIEW.md still apply after the explicitly authorized initial documentation baseline on `main` (DM36).
 
 ## Architecture

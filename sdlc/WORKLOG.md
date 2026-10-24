@@ -7,8 +7,8 @@ Source document: `Tesa cohort 6 software engineering capstone project.pdf` (TeSA
 
 ## Resume here
 - **Stage:** Frontend implementation authorized by Victor on 2026-10-24, following review of all 16 references.
-- **In progress:** Home and authentication UI on eat/auth-ui; merged API/database work from PR #2 is retained. PR #1 remains unmerged.
-- **Next action:** Implement and verify reference-matched screens, document proposals and passing checks.
+- **In progress:** Home and authentication UI implemented and verified on `feat/auth-ui`, ready for review. Merged API/database work from PR #2 is retained. PR #1 remains unmerged.
+- **Next action:** Human visual review of the captured screens; API-owner resolution of registration, seed credentials and pending two-engineer sign-off. No automatic main merge or deployment.
 - **Waiting on:** Registration API approval, seeded demo credentials, backend authentication implementation, and the two-engineer contract sign-off still marked pending in the merged log.
 
 ## How to continue without the sdlc skill
@@ -38,7 +38,7 @@ Source document: `Tesa cohort 6 software engineering capstone project.pdf` (TeSA
 ## Conventions and guidelines
 - **Stack and versions:** service: Java 25, Spring Boot 4, Flyway, JUnit + Testcontainers, PostgreSQL (DM1). Hosting: Vercel + Render + Neon, terms to verify (DM2). Auth: email+password, bcrypt, JWT bearer (DM3). Interface constraints from the brief: React interface with React Router (or equivalent) and Tailwind or plain CSS, typed models (no `any`); own HTTP service; free managed Postgres; GitHub Actions deploys both tiers; free tiers only.
 - **Naming:** change slugs `stockwise` and `genie`. Two repositories (DM19): this one is `stockwise/` (code, `sdlc/`, `AGENTS.md`, `decisions.md`, `deploy-plan.md`). Genie is a separate repository. Artifacts are independent (DM20).
-- **Code and docs style:** frontend folder map and conventions are in `docs/frontend-architecture.md` (DM32-DM36). One API file per resource, central endpoints, Axios HTTP client, Formik/Yup, Redux Toolkit/RTK Query and React Router Data Mode. Shared-component foundation pending; shadcn is not required. Use separate feature branches and descriptive commits. Backend conventions remain unchanged.
+- **Code and docs style:** frontend folder map and conventions are in `docs/frontend-architecture.md` (DM32–DM40). One API file per resource, central endpoints, Axios HTTP client, Formik/Yup, Redux Toolkit/RTK Query, React Router Data Mode and Tailwind v4. Five engineers' shared copy-in source adopted as reported by Victor; Stockwise tokens override neutral values. Shadcn is not required. Use feature branches and descriptive commits. Backend conventions remain unchanged.
 - **Versions (verified on Maven Central 2026-10-23):** Spring Boot 4.1.2 parent (manages Flyway 12.4.0, Testcontainers 2.0.5, postgresql 42.7.14, failsafe 3.5.6); exec-maven-plugin 3.6.4; Maven wrapper pinned to 3.9.16. Integration tests are `*IT` classes, run by Failsafe in `./mvnw verify`, against `postgres:17-alpine`.
 - **Docker:** Docker Desktop must be running (per-user install at `%LOCALAPPDATA%/Programs/DockerDesktop`).
 - **Local ports:** the Prism mock runs on **4710**, not its default 4010. Windows on Nnaemeka's machine reserves TCP 3965-4064 (Hyper-V/WSL). The mock serves paths at the root; the real service serves them under `/api/v1` on 8080. Prism returns 422 for invalid requests, while the real service returns 400 `VALIDATION_FAILED`.
@@ -155,3 +155,60 @@ Service verify, contract lint, web lint/typecheck/unit/build, and Playwright: un
 - 2026-10-23 · agent · EXECUTION step 4: started Docker Desktop (it wasn't running). Wrote V1__users, V2__products, V3__customers_sales_ledger with named CHECK and UNIQUE constraints and the indexes for Q1-Q5, plus hand-written U1-U3. Added `service/pom.xml` (Boot 4.1.2), the Maven wrapper, `MigrationUndo`, `MigrationRollbackIT` (an undo script exists for every migration; up/down/up with exact schema snapshots at every step) and `SchemaRulesIT` (no float or numeric columns, *_kobo is bigint, R4 backstop, R5, R8, R9, R12, sale-line total, sale reference). `./mvnw clean verify`: 11 tests, 0 failures. Removal checks: 6 protections removed one at a time, each made its test fail (the first R12 attempt was invalid because of a dangling comma, then redone). Logged in `docs/rule-removal-log.md`. Found and fixed a harness issue (stale .bak in target/classes). Added `.gitattributes` (LF) and the executable bit on mvnw for Linux CI. Recorded the plan departures in plan.md.
 - 2026-10-24 · agent · Committed step 4 (local 164ff63). Remote https://github.com/AMAZEEN12/Stockwise already existed: `main` is one commit by Victor (176fc3a, "planning baseline") holding the same artifacts as local 34f82a0 but with no shared history, plus `chore/web-structure` (PR 1) and an empty `emeka's-branch`. Replayed local commits (.gitignore, log, contract, step 4) onto `emeka's-branch` from `origin/main`. The resulting tree is identical to local `main`. Pushed (head 93882f3). Nothing force-pushed; `main` untouched.
 - 2026-10-24 · agent · Opened PR 2 (`emeka's-branch` → `main`) through the GitHub API with the user's stored Git credential (Chukwuma-Elvis); `gh` isn't installed. No reviewer requested: Isaac isn't a collaborator (collaborators are Victor-430, AMAZEEN12, Chukwuma-Elvis), per the user.
+
+### Home/authentication implementation and verification (2026-10-24)
+
+- Victor supplied the five-engineer shared agreement, screenshots and tokens, requested a read-only review, then authorized implementation. Recorded DM37–DM40 with separate attribution for human scope, reported agreement and Codex implementation defaults/proposals.
+- Created `feat/auth-ui` and merged origin/main (`18151aa`, merged PR #2) as `3497a5e`. Resolved only WORKLOG conflicts, preserving both histories. Backend and contract source remain unchanged from origin/main. PR #1 remains open; no main merge, remote push or deployment was performed.
+- Delivered Home, sign-in/sign-up overlays and all supplied states, Data Mode, Tailwind v4 Vite integration, shared copy-in components, Stockwise tokens, self-hosted fonts, central runtime image exports, generated OpenAPI types, Axios-backed RTK Query and Formik/Yup. Auth routes are lazy-loaded; largest initial JS chunk is 480.46 kB (157.85 kB gzip), auth chunk 118.39 kB (39.37 kB gzip).
+- Registration remains validated UI with an explicit pending adapter; its proposed contract and account-role questions are in `docs/auth-contract-proposal.md`. Demo buttons never invent a seed password. `/workspace` validates `/me` and shows a minimal authenticated welcome. Session lifetime/refresh/logout behavior is explicit in DM40 and implementation docs.
+- Reviewed desktop/mobile captures against reference frames; adjusted wordmark placement, spacing, field-error icons, dialog sizing, close icon, typography and loading treatment. The SVG coin is reconstructed, so original-artwork equivalence is not claimed. Human visual-baseline approval is still pending. References are ignored inputs; browser captures are under ignored web/test-results.
+- Initial browser failures were fixed in UI code without loosening tests. A later manual screenshot review caught lazy-route capture timing; added a readiness assertion and additional server-field/demo/responsive checks. No failed test was skipped or deleted.
+
+Actual final output (Node v24.21.0, npm 11.19.0; Windows):
+
+```text
+npm run generate:api
+openapi-typescript 7.13.0: ../contract/openapi.yaml -> src/api/schema.d.ts
+
+npm run lint
+eslint . --max-warnings 0
+exit 0, no errors or warnings
+
+npm run typecheck
+tsc --noEmit
+exit 0, no diagnostics
+
+npm test -- --run
+RUN v5.0.5
+Test Files 3 passed (3)
+Tests 6 passed (6)
+
+npm run build
+vite v7.3.7 building client environment for production...
+328 modules transformed.
+built in 8.56s
+exit 0, no chunk-size warning
+
+npm run lint:contract
+../contract/openapi.yaml: validated in 165ms
+Woohoo! Your API description is valid.
+exit 0
+
+npx playwright test --workers=2
+Running 12 tests using 2 workers
+12 passed (1.2m)
+axe assertions: zero serious/critical violations in checked auth states
+Captures: 1440x900 desktop and 360x880 mobile at 2x
+Additional viewport checks: 320, 360, 768, 1024 and 1440px; no horizontal overflow
+
+npm dependency audit after patched tooling installation
+found 0 vulnerabilities
+
+service/mvnw.cmd verify
+The JAVA_HOME environment variable is not defined correctly,
+this environment variable is needed to run this program.
+exit 1; service verification unavailable on this machine
+```
+
+The first sandboxed Vitest/Vite attempt could not resolve config paths; rerunning with filesystem permission succeeded. Playwright emits a terminal NO_COLOR/FORCE_COLOR environment warning, unrelated to lint or UI correctness. Backend tests were attempted but could not start without Java; upstream test results are not represented as this session's passing checks. Browser API interception proves UI behavior and wire shapes, not a deployed backend. No database guard or migration changed, so no new rule-removal run applies.

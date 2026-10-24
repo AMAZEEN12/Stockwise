@@ -2,11 +2,11 @@
 
 Derived from: [intent.md](intent.md) (accepted 2026-10-23) · Status: accepted (2026-10-23 by Nnaemeka Chukwuma; revised 2026-10-23 to apply team decisions DM5-DM16)
 
-Frontend amendment: 2026-10-24, decided by Victor Oyeleke and logged by Codex (logging assistant), DM32-DM36. This amendment updates frontend tooling, structure and the shared-component agreement's pending status; it does not approve API or business-rule changes.
+Frontend amendments: 2026-10-24, DM32–DM40. Victor authorized Home/authentication implementation after review; the five-engineer agreement is reported by Victor, with implementation choices and API proposals attributed separately in decisions.md. See [auth UI implementation](../docs/auth-ui-implementation.md). No proposed API or business-rule change is approved by these amendments.
 Product owner: Nnaemeka Chukwuma (acting) · Technical sign-off (if high risk): Isaac Bassey, Team 3 lead (DM7)
 Policies applied: TeSA brief "Shared technical requirements", "Shared rules for fairness", "Delivery and cost", assessment rubric and mentor checklist (PDF pp. 3, 23-26, dated 21 Oct 2026). No separate organisational policy supplied.
 Supporting skills: none
-Pending decisions: tracked in [`decisions.md`](../decisions.md), including `PD5a`-`PD5c`, `PD13` (shared components) and `PD14` (phase 3 interface behavior). The original product decisions are DM1-DM16; frontend amendments are DM32-DM36.
+Pending decisions: tracked in [`decisions.md`](../decisions.md), including `PD5a`–`PD5c` and remaining `PD14` cart/money behavior. PD13 is resolved by DM37. Registration and auth API gaps are [proposals](../docs/auth-contract-proposal.md), pending two-engineer agreement.
 
 ## Summary
 Stockwise is a web app for one demonstration shop. It records products, paid and credit sales, restocks, customer repayments and reversing entries, and answers three questions: what is running low, what we recorded as sold, and what credit is outstanding. The service is Java 25 / Spring Boot 4 over Postgres. The database protects the one rule the product depends on (stock never below zero, even when two devices sell the last unit), and every amount is an integer number of kobo.
@@ -134,7 +134,7 @@ Append-only tables are protected by revoking UPDATE and DELETE from the applicat
 Screens: Login · Dashboard · Products (list, filter, detail, create/edit, archive) · New sale (phone-first cart, paid/credit toggle, customer picker, confirm) · Customers (list, create) · Customer ledger (with "Record repayment") · Restock · Sale detail (with "Reverse") · History.
 - Every screen has the five states. Every figure that might be stale shows "as of HH:MM". The dashboard carries a "Demonstration data" badge.
 - Reversal and archive both ask for confirmation, and a reversal requires a reason.
-- Shared-component reference: `shared-component-set-plan.pdf` is an eight-page proposal, not a concluded agreement (PD13). Its Radix base, copy-in distribution, interfaces, assignments and dates remain proposals. Do not record the four interface engineers as having approved them.
+- Shared-component source: the five engineers' agreement is reported by Victor (DM37); adopt the reviewed copy-in repository, preserve its props/accessibility, and use Stockwise tokens. The earlier PDF remains historical proposal context; upstream names four, so a fifth name is not invented.
 - Victor supplied a design-token image on 2026-10-24. Its foundational colors, typography, spacing, radii and focus styles apply throughout Stockwise; the wordmark, coin and hero layout are login-specific (DM34). See [frontend architecture](../docs/frontend-architecture.md) for the transcription and unresolved phase 3 details. No UI or token stylesheet is implemented in this phase.
 
 ### Integration with the existing system

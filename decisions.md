@@ -68,7 +68,7 @@ Flyway Community has no undo migrations (that is a paid feature). Options: (a) a
 **Who decides:** Data and rules owner. **Status:** resolved → DM16. Proposed: 20 products (including zero-stock, at-threshold and archived), 5 customers (one with credit), 7 days of sales, and one demo account per role. The full volumes (120 / 60 days / 14) come after Monday.
 
 ### PD13: Cross-team shared-component agreement
-**Who decides:** the four interface engineers together. **Status:** UNRESOLVED; Victor confirms the agreement has not concluded (2026-10-24).
+**Who decides:** the five interface engineers together, as reported by Victor. **Status:** resolved on 2026-10-24 → DM37. The earlier pending proposal below is retained as historical context; DM37 records the adopted copy-in source.
 
 The eight-page `shared-component-set-plan.pdf` is a proposal. Radix, copy-in distribution, component interfaces, the work split and dates are not accepted commitments. Shadcn is not a Stockwise requirement (DM35). Record the actual agreed foundation, token names, Formik/Yup compatibility, component interfaces, distribution and approving engineers before adoption. Do not create a shared repository or assign Victor Dialog/Toast based only on the PDF.
 
@@ -116,6 +116,17 @@ Questions include session persistence and expiry during pending writes, recovery
 | DM34 | 2026-10-24 | Images live in `web/src/assets/images/` with central named exports added later. Supplied foundational design tokens apply app-wide; coin, wordmark treatment and hero layout stay login-specific | Central asset imports and consistent product styling; no artwork or stylesheet in phase 2 | Victor Oyeleke | Codex (logging assistant) |
 | DM35 | 2026-10-24 | Shared-component agreement remains pending (PD13). Shadcn is not required; adopt the foundation and dependencies actually agreed by the interface engineers | The PDF describes a proposal and its copy-in approach does not require shadcn | Victor Oyeleke | Codex (logging assistant) |
 | DM36 | 2026-10-24 | Phase 2 creates frontend folders, documentation, `.gitkeep` placeholders and one empty HTTP-client source file only. Publish existing planning docs as the one-time initial `main` baseline, then publish `chore/web-structure` and open a reviewed PR. Later features use separate branches and descriptive commits; no force-push or automatic merge | Make the empty cloned repository useful and visible to teammates without implementing screens or bypassing later review gates | Victor Oyeleke | Codex (logging assistant) |
+
+### Frontend implementation decisions, 2026-10-24
+
+| ID | Date | Decision | Reason | Decided by | Logged by |
+|----|------|----------|--------|------------|-----------|
+| DM37 | 2026-10-24 | Adopt [interface-eng-shared-components](https://github.com/spr-tech/interface-eng-shared-components) as the five engineers' agreed copy-in interface source. React/TypeScript/Tailwind/Radix; preserve component ownership and token names, replace neutral values with Stockwise values. Supersedes DM35's pending status and resolves PD13 | Victor reports the agreement; upstream still names four engineers, so no fifth name or extra approval is invented | Five interface engineers, as reported by Victor Oyeleke | Codex |
+| DM38 | 2026-10-24 | Implement the supplied Home/sign-in/sign-up references as one entry/authentication feature on feat/auth-ui, using React Router Data Mode from react-router, Tailwind v4 with @tailwindcss/vite, central image imports, self-hosted specified fonts, and descriptive commits | Victor requested implementation after the read-only review; screenshots define responsive composition | Victor Oyeleke | Codex |
+| DM39 | 2026-10-24 | Preserve merged v0.1.0 contract and generate frontend types from it. Call POST /auth/sessions and GET /me; registration remains a validated explicit pending adapter. Proposed POST /auth/registrations and additional responses are documented in docs/auth-contract-proposal.md, not activated | Keep UI and approved wire shapes aligned; merged log still marks two-engineer sign-off pending | Victor Oyeleke (scope); Codex (proposal details, pending API approval) | Codex |
+| DM40 | 2026-10-24 | Implementation defaults: expiry-checked tab sessionStorage with memory fallback, no password persistence; /workspace authenticated welcome via /me; sign-out clears tab session/cache; demo buttons fill configured public seed details without auto-submit or invented password. Apply local additive shared component styling/loading slots, reconstruct coin as SVG with reduced-motion behavior, and verify supplied viewports before claiming visual accuracy | Complete the authorized UI while clearly recording missing backend registration/seeds and original artwork. Future money/cart behavior in PD14 remains unresolved | Codex, implementation choices under Victor's authorization | Codex |
+
+Implementation details and remaining limits: [auth UI](docs/auth-ui-implementation.md), [contract proposal](docs/auth-contract-proposal.md). Historical DM32–DM36 remain intact. No proposed endpoint is added to the active contract or counted as two-engineer approval.
 
 ## 3. Contract change log
 | Date | Change | Why | Agreed by (two engineers) |
