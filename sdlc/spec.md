@@ -6,7 +6,7 @@ Frontend amendment: 2026-10-24, decided by Victor Oyeleke and logged by Codex (l
 Product owner: Nnaemeka Chukwuma (acting) · Technical sign-off (if high risk): Isaac Bassey, Team 3 lead (DM7)
 Policies applied: TeSA brief "Shared technical requirements", "Shared rules for fairness", "Delivery and cost", assessment rubric and mentor checklist (PDF pp. 3, 23-26, dated 21 Oct 2026). No separate organisational policy supplied.
 Supporting skills: none
-Pending decisions: tracked in [`decisions.md`](../decisions.md), including `PD5a`-`PD5c`, `PD13` (shared components) and `PD14` (phase 3 interface behavior). The original product decisions are DM1-DM16; frontend amendments are DM32-DM36.
+Pending decisions: tracked in [`decisions.md`](../decisions.md), including `PD5a`-`PD5c` and `PD14` (phase 3 interface behavior). PD13 is resolved by DM37. The original product decisions are DM1-DM16; frontend amendments are DM32-DM38.
 
 ## Summary
 Stockwise is a web app for one demonstration shop. It records products, paid and credit sales, restocks, customer repayments and reversing entries, and answers three questions: what is running low, what we recorded as sold, and what credit is outstanding. The service is Java 25 / Spring Boot 4 over Postgres. The database protects the one rule the product depends on (stock never below zero, even when two devices sell the last unit), and every amount is an integer number of kobo.
@@ -62,7 +62,7 @@ Traceability: S1-S8 refer to the success criteria in intent.md.
 | Component | Location | Responsibility |
 |----|----|----|
 | OpenAPI contract | `stockwise/contract/openapi.yaml` | Single source of the API. The mock server (e.g. Prism) runs from it. |
-| Web interface | `web/` (repository-relative) | React 19 + strict TypeScript + Vite, React Router Data Mode, Tailwind, Axios, Formik/Yup, Redux Toolkit and RTK Query (DM32). API request/response models derive from generated contract types; resource API modules use the shared HTTP client. Shared-component foundation pending (PD13); shadcn is not required. Hosted on Vercel when deployment is implemented. |
+| Web interface | `web/` (repository-relative) | React 19 + strict TypeScript + Vite, React Router Data Mode, Tailwind, Axios, Formik/Yup, Redux Toolkit and RTK Query (DM32). API request/response models derive from generated contract types; resource API modules use the shared HTTP client. The four-engineer shared component set is finalized and copied into `components/ui/`; Stockwise tokens are the styling source of truth. Shadcn is not required. Hosted on Vercel when deployment is implemented. |
 | Service | `stockwise/service/` | Java 25, Spring Boot 4 (Web MVC, Security, Validation, JDBC/JPA), Flyway. Packaged as a container image for Render. |
 | Database | Neon Postgres (free) | Tables, constraints, indexes. Owned by the "Data and rules" area. |
 | Pipeline | `.github/workflows/stockwise-*.yml` | Lint, type-check, test (Testcontainers), contract tests, migrate, deploy both tiers. A failure blocks the deploy. |
@@ -134,7 +134,7 @@ Append-only tables are protected by revoking UPDATE and DELETE from the applicat
 Screens: Login · Dashboard · Products (list, filter, detail, create/edit, archive) · New sale (phone-first cart, paid/credit toggle, customer picker, confirm) · Customers (list, create) · Customer ledger (with "Record repayment") · Restock · Sale detail (with "Reverse") · History.
 - Every screen has the five states. Every figure that might be stale shows "as of HH:MM". The dashboard carries a "Demonstration data" badge.
 - Reversal and archive both ask for confirmation, and a reversal requires a reason.
-- Shared-component reference: `shared-component-set-plan.pdf` is an eight-page proposal, not a concluded agreement (PD13). Its Radix base, copy-in distribution, interfaces, assignments and dates remain proposals. Do not record the four interface engineers as having approved them.
+- Shared component source: [tesa-shared-components](https://github.com/spr-tech/interface-eng-shared-components) is the finalized four-engineer copy-in source. The external repository's own pending comment is outside Stockwise scope. Stockwise tokens override its neutral token values.
 - Victor supplied a design-token image on 2026-10-24. Its foundational colors, typography, spacing, radii and focus styles apply throughout Stockwise; the wordmark, coin and hero layout are login-specific (DM34). See [frontend architecture](../docs/frontend-architecture.md) for the transcription and unresolved phase 3 details. No UI or token stylesheet is implemented in this phase.
 
 ### Integration with the existing system
@@ -190,3 +190,12 @@ New in Design (all in decisions.md):
 ## Measurement
 - Leading: time from the intent.md commit to the spec.md commit.
 - Lagging: commits to spec.md made after plan.md was first committed (requirements rework).
+
+## Phase 3 frontend alignment (2026-10-24)
+
+- Login implementation uses the existing OpenAPI PR #2 contract (`POST /auth/sessions`, `GET /me`) and does not invent a registration endpoint.
+- Sign-up is currently a validated UI flow with an explicit pending adapter until the API owner approves a registration contract.
+- The finalized four-engineer shared component set is a copy-in source; Stockwise does not depend on that repository at runtime.
+- Stockwise supplied design tokens are the single source of truth for every feature and override neutral shared token values.
+- The local `web/Stockwise — Login-png/` design-reference folder is ignored and is not a runtime asset.
+- Decided by: Victor Oyeleke. Logged by: Codex.

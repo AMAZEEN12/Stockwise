@@ -6,7 +6,7 @@ Change slug: `stockwise` · Last updated: 2026-10-24 · Current stage: Build pre
 
 ## Current frontend handoff
 
-Victor Oyeleke accepted the phase 2 folder/documentation plan (DM32-DM36). [Frontend architecture](../docs/frontend-architecture.md) is the folder map and naming reference. `main` contains the initial planning baseline `176fc3a`; the starter was statically verified, committed as `45f49c6` and pushed on `chore/web-structure`. [PR #1](https://github.com/AMAZEEN12/Stockwise/pull/1) targets `main` and remains open for human review; no merge or deployment was performed. The only source file is an empty HTTP-client placeholder. Package setup, routes, screens, generated types and dependencies await later authorization and inputs. The shared-component agreement is pending (PD13); phase 3 behavior questions are PD14. Do not treat the proposed Friday/Saturday schedule below as evidence those tasks are done.
+Victor Oyeleke accepted the phase 2 folder/documentation plan (DM32-DM36). [Frontend architecture](../docs/frontend-architecture.md) is the folder map and naming reference. `main` contains the initial planning baseline `176fc3a`; the starter was statically verified, committed as `45f49c6` and pushed on `chore/web-structure`. [PR #1](https://github.com/AMAZEEN12/Stockwise/pull/1) targets `main`. Phase 3 uses the existing OpenAPI PR #2 head, the canonical Prism mock, and the finalized four-engineer shared-component copy-in source. Registration remains pending API approval. Do not treat the proposed Friday/Saturday schedule below as evidence those tasks are done.
 
 ## Artifact chain
 | Stage | Artifact | Status | Owner | Approved by / date |
@@ -145,3 +145,12 @@ rollback: vercel rollback <prev-url> --token $VERCEL_TOKEN ; Render dashboard �
 | Will the k6 load test stay within Render and Neon free-tier terms? | test-plan.md, spec C8 | Blessing Nwafor | 25 |
 | The exact undo-runner command | release.md | Nnaemeka Chukwuma | 4 |
 | When to resume monitoring, and who owns it | monitoring.md, DM31 | Team 3 | after 29 |
+
+## Phase 3 frontend alignment (2026-10-24)
+
+- Login implementation uses the existing OpenAPI PR #2 contract (`POST /auth/sessions`, `GET /me`) and does not invent a registration endpoint.
+- Sign-up is currently a validated UI flow with an explicit pending adapter until the API owner approves a registration contract.
+- The finalized four-engineer shared component set is a copy-in source; Stockwise does not depend on that repository at runtime.
+- Stockwise supplied design tokens are the single source of truth for every feature and override neutral shared token values.
+- The local `web/Stockwise — Login-png/` design-reference folder is ignored and is not a runtime asset.
+- Decided by: Victor Oyeleke. Logged by: Codex.

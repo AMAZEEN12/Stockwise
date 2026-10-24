@@ -9,8 +9,8 @@ Source document: `Tesa cohort 6 software engineering capstone project.pdf` (TeSA
 - **Stage:** Build preparation, frontend phase 2 delivered for review. The original SDLC artifact chain is accepted; no runnable application exists.
 - **Step:** Existing planning documents published to `main` in baseline commit `176fc3a` on 2026-10-24. Frontend starter committed as `45f49c6`, pushed on `chore/web-structure`, and published as [PR #1](https://github.com/AMAZEEN12/Stockwise/pull/1) into `main` under Victor's approved plan (DM32-DM36).
 - **In progress:** no application implementation. PR #1 is open and unmerged for human review. Folders and documentation only, plus one empty `web/src/service/http-client.ts`; no application code, dependencies or configuration.
-- **Next action:** required human review of PR #1; do not merge automatically. Phase 3 awaits Victor's login prompt/screens and answers to PD14; do not start the runnable foundation automatically. After merge, each feature continues on its own branch with descriptive commits.
-- **Waiting on:** the four interface engineers' shared-component agreement (PD13), the API owner's OpenAPI contract, and phase 3 interface alignment (PD14). Branch protections, CODEOWNERS and CI remain the delivery owners' work; they are not claimed complete.
+- **Next action:** implement the login feature on `feat/login`, using the OpenAPI PR #2 head and the finalized shared-component copy-in source. Each feature continues on its own branch with descriptive commits.
+- **Waiting on:** API approval for a registration endpoint; sign-up remains a validated pending UI flow until then. Branch protections, CODEOWNERS and CI remain the delivery owners' work; they are not claimed complete.
 
 ## How to continue without the sdlc skill
 1. Stages run in order: Plan (intent.md), Design (spec.md), Build (plan.md + repo AGENTS.md), Test (test-plan.md), Deploy (release.md + repo REVIEW.md), Maintain (monitoring.md), then EXECUTION.md.
@@ -39,7 +39,7 @@ Source document: `Tesa cohort 6 software engineering capstone project.pdf` (TeSA
 ## Conventions and guidelines
 - **Stack and versions:** service: Java 25, Spring Boot 4, Flyway, JUnit + Testcontainers, PostgreSQL (DM1). Hosting: Vercel + Render + Neon, terms to verify (DM2). Auth: email+password, bcrypt, JWT bearer (DM3). Interface constraints from the brief: React interface with React Router (or equivalent) and Tailwind or plain CSS, typed models (no `any`); own HTTP service; free managed Postgres; GitHub Actions deploys both tiers; free tiers only.
 - **Naming:** change slugs `stockwise` and `genie`. Two repositories (DM19): this one is `stockwise/` (code, `sdlc/`, `AGENTS.md`, `decisions.md`, `deploy-plan.md`). Genie is a separate repository. Artifacts are independent (DM20).
-- **Code and docs style:** frontend folder map and conventions are in `docs/frontend-architecture.md` (DM32-DM36). One API file per resource, central endpoints, Axios HTTP client, Formik/Yup, Redux Toolkit/RTK Query and React Router Data Mode. Shared-component foundation pending; shadcn is not required. Use separate feature branches and descriptive commits. Backend conventions remain unchanged.
+- **Code and docs style:** frontend folder map and conventions are in `docs/frontend-architecture.md` (DM32-DM36). One API file per resource, central endpoints, Axios HTTP client, Formik/Yup, Redux Toolkit/RTK Query and React Router Data Mode. Copy finalized shared primitives into `components/ui/` and use Stockwise tokens as the single styling source. Shadcn is not required. Use separate feature branches and descriptive commits. Backend conventions remain unchanged.
 - **Source of truth:** the repository. The Markdown artifacts are authoritative; the TeSA PDF brief is the originating record.
 - **Policies in force:** TeSA brief sections "Shared technical requirements", "Shared rules for fairness", "Delivery and cost" and the assessment rubric (PDF pages 3, 23-26). No other organisational policy supplied.
 - **Supporting skills:** none.
@@ -89,7 +89,7 @@ Append-only. To change a decision, add a new entry that supersedes it.
 | Q8 | 2026-10-23 | Plan | How to handle Stockwise's missing design problem? | "Propose one, ask Goodnews" | answered (proposal UNRESOLVED) |
 | Q14 | 2026-10-24 | Frontend phase 2 | Starter scope? | Folders, documentation, `.gitkeep` placeholders and one explicitly requested empty `http-client.ts`; frontend and docs only | answered |
 | Q15 | 2026-10-24 | Frontend phase 2 | API and asset separation? | One file per resource, central endpoint definitions, central image named exports | answered |
-| Q16 | 2026-10-24 | Frontend phase 2 | Components and tokens? | `components/ui/` plus `shared/` utilities; app-wide foundational tokens, login-specific hero/coin/wordmark; shared-component agreement pending, shadcn not required | answered |
+| Q16 | 2026-10-24 | Frontend phase 2 | Components and tokens? | `components/ui/` plus `shared/` utilities; app-wide foundational tokens, login-specific hero/coin/wordmark; finalized shared components are copied in, and Stockwise tokens are authoritative; shadcn not required | answered |
 | Q17 | 2026-10-24 | Frontend phase 2 | Attribution? | Decided by Victor Oyeleke; Codex as logging assistant; no implied cross-team approval | answered |
 | Q18 | 2026-10-24 | Frontend phase 2 | Publish from an empty remote? | One-time docs baseline on main, then separate `chore/web-structure` commit/push and PR; never force-push or merge automatically | answered |
 
@@ -141,3 +141,12 @@ git diff --check: exit 0
 ```
 
 Service verify, contract lint, web lint/typecheck/unit/build, and Playwright: unavailable at this stage, not run. No package manifest, service wrapper or OpenAPI file exists. No rendered UI or business rule was changed.
+
+## Phase 3 frontend alignment (2026-10-24)
+
+- Login implementation uses the existing OpenAPI PR #2 contract (`POST /auth/sessions`, `GET /me`) and does not invent a registration endpoint.
+- Sign-up is currently a validated UI flow with an explicit pending adapter until the API owner approves a registration contract.
+- The finalized four-engineer shared component set is a copy-in source; Stockwise does not depend on that repository at runtime.
+- Stockwise supplied design tokens are the single source of truth for every feature and override neutral shared token values.
+- The local `web/Stockwise — Login-png/` design-reference folder is ignored and is not a runtime asset.
+- Decided by: Victor Oyeleke. Logged by: Codex.

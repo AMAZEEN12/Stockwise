@@ -63,3 +63,12 @@ If a test fails, fix the code, not the test. Never skip, disable or delete a fai
 
 ## Lifecycle work in progress
 Artifacts live in `sdlc/`. Before doing any work, read `sdlc/WORKLOG.md` first: it holds the current state, the next action, every decision made so far, and the agreed conventions. Continue from its "Resume here" section, follow its decisions and conventions, and update it as you work. Then read `sdlc/intent.md`, `sdlc/spec.md` and `sdlc/plan.md` before changing code. Product decisions are in `decisions.md`.
+
+## Phase 3 frontend alignment (2026-10-24)
+
+- Login implementation uses the existing OpenAPI PR #2 contract (`POST /auth/sessions`, `GET /me`) and does not invent a registration endpoint.
+- Sign-up is currently a validated UI flow with an explicit pending adapter until the API owner approves a registration contract.
+- The finalized four-engineer shared component set is a copy-in source; Stockwise does not depend on that repository at runtime.
+- Stockwise supplied design tokens are the single source of truth for every feature and override neutral shared token values.
+- The local `web/Stockwise — Login-png/` design-reference folder is ignored and is not a runtime asset.
+- Decided by: Victor Oyeleke. Logged by: Codex.
