@@ -1,6 +1,6 @@
 # Frontend starter and conventions
 
-Owner and decider: Victor Oyeleke (Interface). Logged by: Codex (logging assistant), 2026-10-24. Decisions: DM32-DM38 in [decisions.md](../decisions.md). Nnaemeka Chukwuma remains the existing decision-log owner; this document does not attribute Victor's decisions to Team 3 or the other interface engineers.
+Owner and decider: Victor Oyeleke (Interface). Logged by: Codex (logging assistant), 2026-10-24. Decisions: DM32-DM36 in [decisions.md](../decisions.md). Nnaemeka Chukwuma remains the existing decision-log owner; this document does not attribute Victor's decisions to Team 3 or the other interface engineers.
 
 ## Current deliverable
 
@@ -113,7 +113,7 @@ Keep the foundational colors, type, spacing, radii and focus treatment app-wide 
 
 ## Pending agreement and phase 3 questions
 
-The finalized four-engineer shared source is [tesa-shared-components](https://github.com/spr-tech/interface-eng-shared-components). Copy required primitives into `src/components/ui/`; do not add it as a runtime dependency. Replace its neutral token values with the Stockwise tokens. Shadcn is not required, and Formik/Yup remains the Stockwise form choice.
+`shared-component-set-plan.pdf` (proposal dated 22 Oct 2026) is context, not an adopted agreement or a request to create another repository. Its 14-piece list, Radix foundation, copy-in repo, assignments (including Dialog/Toast for Victor), interfaces and deadlines remain unconfirmed. Shadcn is not required. Adopt the foundation and dependencies the interface engineers actually agree upon, recording their actual sign-off. The proposed React Hook Form compatibility does not supersede Victor's Formik/Yup selection; compatibility must be discussed in the shared agreement.
 
 Before implementing the affected phase 3 behavior, align on PD14:
 
@@ -130,12 +130,3 @@ Before implementing the affected phase 3 behavior, align on PD14:
 Check the exact folder map, empty `.gitkeep` files, the zero-byte HTTP-client file, absence of application/configuration files, Markdown link targets and consistency of decision references. Review staged diffs and whitespace before commits. After publication compare local commit IDs with remote branch heads and confirm the PR targets `main`.
 
 The service wrapper, OpenAPI contract and web package manifest do not exist, so the application commands in AGENTS.md are unavailable, not passed. This phase changes no business rules or rendered UI. Keep runtime checks planned and run them when a runnable foundation is introduced.
-
-## Phase 3 frontend alignment (2026-10-24)
-
-- Login implementation uses the existing OpenAPI PR #2 contract (`POST /auth/sessions`, `GET /me`) and does not invent a registration endpoint.
-- Sign-up is currently a validated UI flow with an explicit pending adapter until the API owner approves a registration contract.
-- The finalized four-engineer shared component set is a copy-in source; Stockwise does not depend on that repository at runtime.
-- Stockwise supplied design tokens are the single source of truth for every feature and override neutral shared token values.
-- The local `web/Stockwise — Login-png/` design-reference folder is ignored and is not a runtime asset.
-- Decided by: Victor Oyeleke. Logged by: Codex.

@@ -115,12 +115,3 @@ The agent (or engineer) runs these itself and iterates until they pass, before a
 ## Measurement
 - Leading: first-pass CI success rate for agent-written changes; eval pass rate over time.
 - Lagging: review time per PR; change failure rate; regressions caught in CI versus in production.
-
-## Phase 3 frontend alignment (2026-10-24)
-
-- Login implementation uses the existing OpenAPI PR #2 contract (`POST /auth/sessions`, `GET /me`) and does not invent a registration endpoint.
-- Sign-up is currently a validated UI flow with an explicit pending adapter until the API owner approves a registration contract.
-- The finalized four-engineer shared component set is a copy-in source; Stockwise does not depend on that repository at runtime.
-- Stockwise supplied design tokens are the single source of truth for every feature and override neutral shared token values.
-- The local `web/Stockwise — Login-png/` design-reference folder is ignored and is not a runtime asset.
-- Decided by: Victor Oyeleke. Logged by: Codex.

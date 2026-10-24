@@ -2,8 +2,8 @@
 
 Derived from: [intent.md](intent.md) (accepted 2026-10-23), [spec.md](spec.md) (accepted 2026-10-23, revised with DM5-DM16) · Status: accepted
 Accepted by: Nnaemeka Chukwuma (2026-10-23) · Higher-risk sign-off: Isaac Bassey (team lead, DM7). Required for the sale transaction, the store-credit logic and every migration.
-Frontend phase 2 and phase 3 amendment accepted by Victor Oyeleke on 2026-10-24; logged by Codex (logging assistant). See DM32-DM38. Other area approvals are unchanged.
-Decisions in force: [decisions.md](../decisions.md) DM1-DM38 · Deployment: [deploy-plan.md](../deploy-plan.md)
+Frontend phase 2 amendment accepted by Victor Oyeleke on 2026-10-24; logged by Codex (logging assistant). See DM32-DM36. Other area approvals are unchanged.
+Decisions in force: [decisions.md](../decisions.md) DM1-DM36 · Deployment: [deploy-plan.md](../deploy-plan.md)
 Supporting skills: none
 
 All paths are relative to the **Stockwise repository root** (the local `stockwise/` folder, DM19). Java package root: `ng.tesa.stockwise`.
@@ -77,7 +77,7 @@ This is the full build inventory, not a statement that every file already exists
 
 **Publication:** bootstrap the empty remote with the existing planning documents on `main` (`docs: establish Stockwise planning baseline`), then commit this frontend starter on `chore/web-structure` (`chore(web): add frontend starter structure and conventions`), push and open a PR into `main`. This is a one-time initial-baseline exception, not permission to push later feature changes to `main`. Use the existing main baseline instead if another engineer initializes it first; never force-push.
 
-**Runnable foundation:** Vite + React 19 + strict TypeScript, React Router Data Mode (not Framework Mode), Tailwind, Axios, Formik/Yup, Redux Toolkit and RTK Query. RTK Query replaces TanStack Query. The four-engineer shared component set is finalized; copy required primitives into `components/ui/` and override their neutral tokens with Stockwise tokens. Shadcn is not required.
+**Future runnable foundation:** Vite + React 19 + strict TypeScript, React Router Data Mode (not Framework Mode), Tailwind, Axios, Formik/Yup, Redux Toolkit and RTK Query. RTK Query replaces TanStack Query. Versions are to be verified and pinned when setup is authorized. Shared components and supporting dependencies await the interface engineers' agreement (PD13); shadcn is not required.
 
 The following rows describe future implementation, not files delivered by phase 2:
 
@@ -90,7 +90,7 @@ The following rows describe future implementation, not files delivered by phase 
 | `src/app/router/`, `src/app/store/`: Data Mode routing and Redux Toolkit/RTK Query integration; `src/auth/`: authentication UI and session concerns | R15 |
 | `src/schema/`: Yup schemas for Formik forms; `src/assets/images/index.ts`: named exports of image assets; `src/styles/`: app token mapping and styles | R17, N9 |
 | `src/lib/money.ts`: kobo to "₦45,000.00" using integer arithmetic only | R16 |
-| `src/components/ui/`: copied finalized shared primitives; `src/components/layouts/`: reusable layout components. Cover loading, empty, error, success and confirmation | R17 |
+| `src/components/ui/`: agreed reusable UI when PD13 is settled; `src/components/layouts/`: reusable layout components. Cover loading, empty, error, success and confirmation; do not assume a specific StateView interface before agreement | R17 |
 | `src/auth/` for login; `src/features/{dashboard,products,sales,customers,restocks,reversals,history}/` for feature screens and their local components | R1-R15 |
 | `src/features/products/`: optimistic archive with rollback | R18 |
 | `src/**/*.test.tsx` (Vitest), `e2e/*.spec.ts` (Playwright journeys, axe checks, 360 px viewport) | R17, N9, N10 |
@@ -113,7 +113,7 @@ The calendar below is the original planned schedule from Fri 23 Oct, Day 3. Curr
 2. `contract/openapi.yaml` v0.1 with the **Monday paths only** (`/auth/sessions`, `/me`, `/products` GET and POST, `/customers` GET and POST, `/sales` POST and GET, `/health`), plus the Prism mock. Log the change in decisions.md, signed by two engineers. (Isaac + Nnaemeka) Covers N5, R16.
 3. Walking skeleton: Spring Boot app answering `/` and `/api/v1/health`, Dockerfile, `ci.yml`, `deploy.yml` deploying the skeleton to **both** stacks. The Qocent day-1 spike questions are answered in decisions.md (PD5b). (Blessing)
 4. Migrations V1-V3, each with its undo script, plus `MigrationRollbackIT`. (Nnaemeka) Covers N12, R4 backstop.
-5. Frontend folders and documentation first (phase 2, DM33-DM36); phase 3 now adds the runnable login foundation, Prism-backed sign-in and copied finalized shared components. (Victor)
+5. Frontend folders and documentation first (phase 2, DM33-DM36); later, after the mock and shared-component agreement, authorize the runnable foundation, routes, generated types and shared components. (Victor)
 6. **Record the Monday journey run against the deployed skeleton and log any divergences** (the brief's day-4 check).
 
 **Sat 24 Oct: the rule**
@@ -231,12 +231,3 @@ If implementation departs from this plan, update this file in the same commit as
 ## Measurement
 - Leading: share of changes that merge from the first implementation pass; time from plan acceptance to merged PR.
 - Lagging: rework cycles per change; whether the merged diff still matches this plan.
-
-## Phase 3 frontend alignment (2026-10-24)
-
-- Login implementation uses the existing OpenAPI PR #2 contract (`POST /auth/sessions`, `GET /me`) and does not invent a registration endpoint.
-- Sign-up is currently a validated UI flow with an explicit pending adapter until the API owner approves a registration contract.
-- The finalized four-engineer shared component set is a copy-in source; Stockwise does not depend on that repository at runtime.
-- Stockwise supplied design tokens are the single source of truth for every feature and override neutral shared token values.
-- The local `web/Stockwise — Login-png/` design-reference folder is ignored and is not a runtime asset.
-- Decided by: Victor Oyeleke. Logged by: Codex.

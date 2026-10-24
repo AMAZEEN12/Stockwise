@@ -68,7 +68,7 @@ Flyway Community has no undo migrations (that is a paid feature). Options: (a) a
 **Who decides:** Data and rules owner. **Status:** resolved → DM16. Proposed: 20 products (including zero-stock, at-threshold and archived), 5 customers (one with credit), 7 days of sales, and one demo account per role. The full volumes (120 / 60 days / 14) come after Monday.
 
 ### PD13: Cross-team shared-component agreement
-**Who decides:** the four interface engineers together. **Status:** RESOLVED by the merged shared-components repository PR; Stockwise records the finalized copy-in source in DM37. The external repository's pending comment is maintained outside Stockwise.
+**Who decides:** the four interface engineers together. **Status:** UNRESOLVED; Victor confirms the agreement has not concluded (2026-10-24).
 
 The eight-page `shared-component-set-plan.pdf` is a proposal. Radix, copy-in distribution, component interfaces, the work split and dates are not accepted commitments. Shadcn is not a Stockwise requirement (DM35). Record the actual agreed foundation, token names, Formik/Yup compatibility, component interfaces, distribution and approving engineers before adoption. Do not create a shared repository or assign Victor Dialog/Toast based only on the PDF.
 
@@ -114,26 +114,10 @@ Questions include session persistence and expiry during pending writes, recovery
 | DM32 | 2026-10-24 | Frontend: keep Vite, React 19, strict TypeScript, Tailwind, npm and the existing generation/test tools; specify React Router Data Mode, Axios, Formik/Yup, Redux Toolkit and RTK Query. Supersedes DM21's TanStack Query selection only; no Framework Mode | Victor's interface stack; one server-state cache with Axios transport | Victor Oyeleke | Codex (logging assistant) |
 | DM33 | 2026-10-24 | Frontend structure: one API file per resource in `web/src/service/api/`; central URL definitions in `service/endpoints/`; shared `service/http-client.ts`; contract-derived request/response models; Yup schemas; `auth/`; reusable `components/ui/`, layouts and separate shared hooks/constants/utilities. Preserve generated `src/api/schema.d.ts` and `lib/money.ts` locations | Separate transport, URLs, resource operations, models and validation without occupying the Java service folder | Victor Oyeleke | Codex (logging assistant) |
 | DM34 | 2026-10-24 | Images live in `web/src/assets/images/` with central named exports added later. Supplied foundational design tokens apply app-wide; coin, wordmark treatment and hero layout stay login-specific | Central asset imports and consistent product styling; no artwork or stylesheet in phase 2 | Victor Oyeleke | Codex (logging assistant) |
-| DM35 | 2026-10-24 | Shared-component agreement remained pending (PD13) at phase 2 publication. Shadcn is not required; adopt the foundation and dependencies actually agreed by the interface engineers. **Superseded by DM37.** | The PDF described a proposal and its copy-in approach did not require shadcn | Victor Oyeleke | Codex (logging assistant) |
+| DM35 | 2026-10-24 | Shared-component agreement remains pending (PD13). Shadcn is not required; adopt the foundation and dependencies actually agreed by the interface engineers | The PDF describes a proposal and its copy-in approach does not require shadcn | Victor Oyeleke | Codex (logging assistant) |
 | DM36 | 2026-10-24 | Phase 2 creates frontend folders, documentation, `.gitkeep` placeholders and one empty HTTP-client source file only. Publish existing planning docs as the one-time initial `main` baseline, then publish `chore/web-structure` and open a reviewed PR. Later features use separate branches and descriptive commits; no force-push or automatic merge | Make the empty cloned repository useful and visible to teammates without implementing screens or bypassing later review gates | Victor Oyeleke | Codex (logging assistant) |
 
 ## 3. Contract change log
 | Date | Change | Why | Agreed by (two engineers) |
 |------|--------|-----|---------------------------|
 | | | | |
-
-## Phase 3 frontend alignment (2026-10-24)
-
-- Login implementation uses the existing OpenAPI PR #2 contract (`POST /auth/sessions`, `GET /me`) and does not invent a registration endpoint.
-- Sign-up is currently a validated UI flow with an explicit pending adapter until the API owner approves a registration contract.
-- The finalized four-engineer shared component set is a copy-in source; Stockwise does not depend on that repository at runtime.
-- Stockwise supplied design tokens are the single source of truth for every feature and override neutral shared token values.
-- The local `web/Stockwise — Login-png/` design-reference folder is ignored and is not a runtime asset.
-- Decided by: Victor Oyeleke. Logged by: Codex.
-
-### Phase 3 decisions (2026-10-24)
-
-| ID | Date | Decision | Reason | Decided by | Logged by | Status |
-|----|------|----------|--------|------------|-----------|--------|
-| DM37 | 2026-10-24 | Adopt the finalized four-engineer shared component set from [tesa-shared-components](https://github.com/spr-tech/interface-eng-shared-components) as a copy-in source; Stockwise tokens override its neutral token values. Supersedes DM35's pending status | The shared repository PR is merged and its `main` branch contains the agreed primitives | Victor Oyeleke | Codex (logging assistant) | active |
-| DM38 | 2026-10-24 | Phase 3 consumes `POST /auth/sessions` and `GET /me` from OpenAPI PR #2. Sign-up remains a validated UI flow with a pending adapter; no registration endpoint is invented by the frontend | The current contract has sign-in but no approved registration path | Victor Oyeleke | Codex (logging assistant) | active |
