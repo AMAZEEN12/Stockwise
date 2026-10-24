@@ -6,6 +6,7 @@ Source document: `Tesa cohort 6 software engineering capstone project.pdf` (TeSA
 > Any agent opening this project: read this file first, then the "Conventions and guidelines" and "Decisions" sections, then the artifacts in this folder. Continue from "Resume here". Don't re-ask anything already answered below.
 
 ## Resume here
+- **Standing instruction reaffirmed by Victor:** before every new task, read root AGENTS.md, including Mistakes to avoid. DM41's three Tailwind replacements are persistent frontend conventions; the startup reminder, exact mapping and Victor/Codex attribution are now explicit there. Existing component replacements remain applied.
 - **Current alignment follow-up:** Applied/verified canonical Tailwind replacements (DM41). Victor selected contract mock development (DM42); the mock is running on 127.0.0.1:4710, local mock-only configuration is set, and actual browser sign-in/refresh/logout passed. Existing user edits to HomePage.tsx/app.css and untracked web/Screens are preserved. His example D badge is vite.config.ts: current web/vite.config.ts exists, is tracked and unchanged; the precise IDE view cannot be reproduced from Git.
 - **Stage:** Frontend implementation authorized by Victor on 2026-10-24, following review of all 16 references.
 - **In progress:** Home and authentication UI implemented and verified on `feat/auth-ui`, ready for review. Merged API/database work from PR #2 is retained. PR #1 remains unmerged.
@@ -245,3 +246,9 @@ Full development audit: 8 advisories (7 high, 1 moderate), via Prism/Postman dep
 ```
 
 The mock is development-only, binds 127.0.0.1, reads the trusted repository contract and is excluded from the browser build. No forced major dependency overrides or unverified downgrade was applied. The remaining advisory limitation is documented in the implementation notes. Service verification remains unavailable due to the previously observed JAVA_HOME setup; no backend files or business-rule guards changed.
+
+### Persistent agent guidance clarification (2026-10-24)
+
+- Victor reaffirmed that DM41 exists to prevent agents repeating the three class patterns on every future task. Strengthened root AGENTS.md with a startup reminder, exact replacement table, before-edit/before-completion guidance, and explicit Decided by Victor Oyeleke / Logged by Codex attribution. Recorded the clarification beneath DM41 instead of duplicating the decision.
+- Confirmed Button, Input and FormField already use the proposed replacements; no old pattern remains in web/src. This follow-up changes documentation only and preserves the user's independent Home/CSS/Screens work.
+- Verification: exact replacement/attribution checks and git diff --check; no application tests rerun for this documentation-only clarification. The code replacements were verified in the previous round.
