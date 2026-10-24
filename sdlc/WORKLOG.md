@@ -6,10 +6,10 @@ Source document: `Tesa cohort 6 software engineering capstone project.pdf` (TeSA
 > Any agent opening this project: read this file first, then the "Conventions and guidelines" and "Decisions" sections, then the artifacts in this folder. Continue from "Resume here". Don't re-ask anything already answered below.
 
 ## Resume here
-- **Stage:** Build preparation, frontend phase 2. The original SDLC artifact chain is accepted; no runnable application exists.
-- **Step:** Existing planning documents published to `main` in baseline commit `176fc3a` on 2026-10-24. Frontend starter prepared on `chore/web-structure` under Victor's approved plan (DM32-DM36).
-- **In progress:** static verification and publication of the frontend branch/PR. Folders and documentation only, plus one empty `web/src/service/http-client.ts`; no application code, dependencies or configuration.
-- **Next action:** verify the starter, commit and push `chore/web-structure`, then open a PR into `main`. Update this section with publication evidence. Leave merging for the required human review. Phase 3 awaits Victor's login prompt/screens and answers to PD14; do not start the runnable foundation automatically.
+- **Stage:** Build preparation, frontend phase 2 delivered for review. The original SDLC artifact chain is accepted; no runnable application exists.
+- **Step:** Existing planning documents published to `main` in baseline commit `176fc3a` on 2026-10-24. Frontend starter committed as `45f49c6`, pushed on `chore/web-structure`, and published as [PR #1](https://github.com/AMAZEEN12/Stockwise/pull/1) into `main` under Victor's approved plan (DM32-DM36).
+- **In progress:** no application implementation. PR #1 is open and unmerged for human review. Folders and documentation only, plus one empty `web/src/service/http-client.ts`; no application code, dependencies or configuration.
+- **Next action:** required human review of PR #1; do not merge automatically. Phase 3 awaits Victor's login prompt/screens and answers to PD14; do not start the runnable foundation automatically. After merge, each feature continues on its own branch with descriptive commits.
 - **Waiting on:** the four interface engineers' shared-component agreement (PD13), the API owner's OpenAPI contract, and phase 3 interface alignment (PD14). Branch protections, CODEOWNERS and CI remain the delivery owners' work; they are not claimed complete.
 
 ## How to continue without the sdlc skill
@@ -124,6 +124,8 @@ Append-only, newest last.
 - 2026-10-24 · Codex · Confirmed the remote was empty; staged only the 12 existing planning documents, checked the staged diff and created `176fc3a` (`docs: establish Stockwise planning baseline`). Pushed `main` to `origin` successfully using configured Git credentials. No branch protections or CI setup claimed.
 - 2026-10-24 · Codex · Created `chore/web-structure`, 27 empty `.gitkeep` placeholders and a zero-byte HTTP-client file. Added frontend architecture/design-token notes, appended DM32-DM36 and PD13-PD14, and aligned the frontend plan/spec/agent conventions and execution runbook. Static verification and branch publication are next; application checks remain unavailable.
 - 2026-10-24 · Codex · Static verification passed before staging: exact folder/file set, all 28 starter files zero bytes, no unauthorized scaffolding, 29 local Markdown links/fragments resolving, continuous decision tables with unique IDs, historical decision rows and contract log unchanged, and no stale shared-agreement assertion or old API-client path in the current spec/plan. `git diff --check` exited 0. Runtime checks are unavailable because their scaffolds do not exist.
+- 2026-10-24 · Codex · Created starter commit `45f49c6` (`chore(web): add frontend starter structure and conventions`), pushed `chore/web-structure`, and opened [PR #1](https://github.com/AMAZEEN12/Stockwise/pull/1) targeting `main`. The GitHub connector's PR creation returned 403 (integration permissions); creation succeeded through the Git credentials already used for the authorized pushes. No credentials were printed or written to project files. PR creation returned state `open`, base `main`, head `chore/web-structure`, merged `false`.
+- 2026-10-24 · Codex · Verified remote branch heads after the starter push: `main` = `176fc3aa826a0299bacd5ea2139e1d39f90b5e0f`, `chore/web-structure` = `45f49c649b486e9809f50560cbfd2ba99f1ae7db`, matching local refs. A documentation-only follow-up on the same branch records this publication evidence; main and the review gate remain unchanged.
 
 ### Phase 2 verification output (2026-10-24)
 
