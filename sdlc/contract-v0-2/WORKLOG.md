@@ -7,7 +7,7 @@ Parent chain: the main Stockwise artifacts in [sdlc/](../) (intent, spec, plan, 
 > Any agent opening this project: read this file first, then the "Conventions and guidelines" and "Decisions" sections, then the artifacts in this folder. Continue from "Resume here". Don't re-ask anything already answered below.
 
 ## Resume here
-- **Stage:** Build (short path, D3). Proposal **A is implemented and verified** on branch `feat/contract-v0-2` (stacked on `docs/handover-log`, PR #15). B, C and D are not started.
+- **Stage:** Build (short path, D3). Proposal **A is implemented and verified** on branch `feat/contract-v0-2`, in [PR #16](https://github.com/AMAZEEN12/Stockwise/pull/16), stacked on PR #15 (`docs/handover-log`). B, C and D are not started.
 - **Step:** A done:
   - contract v0.2.0 (optional `Idempotency-Key` on `POST /customers`, 422 response);
   - migration V4 with its undo U4;
@@ -105,3 +105,4 @@ Append-only, newest last.
   - `./mvnw clean verify`: **95 tests, 0 failures**;
   - web: `npm ci`, `npm run generate:api` (schema.d.ts +24/-1, additive only: the optional header and the 422), `typecheck` clean, `lint` clean, `vitest` 27 of 27;
   - `check-migrations.sh` and `check-contract-log.sh` OK against `origin/main`.
+- 2026-10-25 · agent · Committed `99bc2c9`, pushed `feat/contract-v0-2`, and opened [PR #16](https://github.com/AMAZEEN12/Stockwise/pull/16) (base `docs/handover-log`, 19 files). The description requests Isaac Bassey's review of V4 (high-risk path) and his half of the v0.2.0 sign-off; he can't be requested formally until AMAZEEN12 invites him as a collaborator.
