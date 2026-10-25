@@ -6,7 +6,7 @@ Frontend amendments: 2026-10-24, DM32–DM42. Victor authorized Home/authenticat
 Product owner: Nnaemeka Chukwuma (acting) · Technical sign-off (if high risk): Isaac Bassey, Team 3 lead (DM7)
 Policies applied: TeSA brief "Shared technical requirements", "Shared rules for fairness", "Delivery and cost", assessment rubric and mentor checklist (PDF pp. 3, 23-26, dated 21 Oct 2026). No separate organisational policy supplied.
 Supporting skills: none
-Pending decisions: tracked in [`decisions.md`](../decisions.md), including `PD5a`-`PD5c`, `PD13` (resolved by DM37; count corrected by DM53) and `PD14` (phase 3 interface behavior). The original product decisions are DM1-DM16; frontend amendments are DM32-DM36.
+Pending decisions: tracked in [`decisions.md`](../decisions.md), including `PD5a`–`PD5c` and remaining `PD14` cart/money behavior. PD13 is resolved by DM37. Registration and auth API gaps are [proposals](../docs/auth-contract-proposal.md), pending two-engineer agreement.
 
 ## Summary
 Stockwise is a web app for one demonstration shop. It records products, paid and credit sales, restocks, customer repayments and reversing entries, and answers three questions: what is running low, what we recorded as sold, and what credit is outstanding. The service is Java 25 / Spring Boot 4 over Postgres. The database protects the one rule the product depends on (stock never below zero, even when two devices sell the last unit), and every amount is an integer number of kobo.

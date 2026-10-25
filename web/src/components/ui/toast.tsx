@@ -69,7 +69,7 @@ const DEFAULT_DURATION = 5000;
 const MAX_VISIBLE = 4;
 
 const focusRing =
-  "focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[var(--color-focus)]";
+  "focus-visible:[outline:var(--focus-ring-width)_solid_var(--color-focus)] focus-visible:outline-offset-(--focus-ring-offset)";
 
 const variantStyles: Record<ToastVariant, { accent: string; icon: string; word: string }> = {
   success: { accent: "border-l-[var(--color-success)]", icon: "text-[var(--color-success)]", word: "Success" },
@@ -118,9 +118,11 @@ export interface ToastProviderProps {
   children: React.ReactNode;
   /** Classes for the viewport that holds the toasts, to reposition it. */
   viewportClassName?: string;
+  /** Stockwise-approved composition slot, shared with the component owner. */
+  toastClassName?: string;
 }
 
-export function ToastProvider({ children, viewportClassName }: ToastProviderProps) {
+export function ToastProvider({ children, viewportClassName, toastClassName }: ToastProviderProps) {
   const [items, setItems] = React.useState<ToastItem[]>([]);
   const nextId = React.useRef(1);
 
@@ -149,6 +151,7 @@ export function ToastProvider({ children, viewportClassName }: ToastProviderProp
               key={item.id}
               // Errors interrupt the screen reader; success and info wait their turn.
               type={item.variant === "error" ? "foreground" : "background"}
+              data-variant={item.variant}
               duration={sticky ? Infinity : (item.duration ?? DEFAULT_DURATION)}
               onOpenChange={(open) => {
                 if (!open) dismiss(item.id);
@@ -156,14 +159,15 @@ export function ToastProvider({ children, viewportClassName }: ToastProviderProp
               className={cn(
                 "flex items-start gap-3 rounded-[var(--radius)] border border-l-4 border-[var(--color-border)] bg-[var(--color-surface)] p-4 text-[var(--color-text)] shadow-lg",
                 styles.accent,
+                toastClassName,
               )}
             >
+              <span className="sr-only">{styles.word}: </span>
               <span className={styles.icon}>
                 <VariantIcon variant={item.variant} />
               </span>
               <div className="flex min-w-0 flex-1 flex-col gap-1">
-                <ToastPrimitive.Title className="text-sm font-semibold">
-                  <span className="sr-only">{styles.word}: </span>
+                <ToastPrimitive.Title data-toast-title className="text-sm font-semibold">
                   {item.title}
                 </ToastPrimitive.Title>
                 {item.description ? (
