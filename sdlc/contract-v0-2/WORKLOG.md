@@ -7,7 +7,7 @@ Parent chain: the main Stockwise artifacts in [sdlc/](../) (intent, spec, plan, 
 > Any agent opening this project: read this file first, then the "Conventions and guidelines" and "Decisions" sections, then the artifacts in this folder. Continue from "Resume here". Don't re-ask anything already answered below.
 
 ## Resume here
-- **Stage:** Build (short path, D3). Proposal **A is implemented and verified** on branch `feat/contract-v0-2`, in [PR #16](https://github.com/AMAZEEN12/Stockwise/pull/16), stacked on PR #15 (`docs/handover-log`). B, C and D are not started.
+- **Stage:** Build (short path, D3). Proposal **A is implemented and verified** on branch `feat/contract-v0-2`. [PR #16](https://github.com/AMAZEEN12/Stockwise/pull/16) merged it into `docs/handover-log`, **not `main`**. [PR #17](https://github.com/AMAZEEN12/Stockwise/pull/17) brings it to `main` and is **open**. B, C and D are not started.
 - **Step:** A done:
   - contract v0.2.0 (optional `Idempotency-Key` on `POST /customers`, 422 response);
   - migration V4 with its undo U4;
@@ -20,7 +20,7 @@ Parent chain: the main Stockwise artifacts in [sdlc/](../) (intent, spec, plan, 
   1. Ask the user to accept (or correct) intent.md, plan.md and test-plan.md, one at a time, with a decided-by question each.
   2. Then implement **B** (customer search/order definition and `CustomerPage.asOf`), **C** (`Kobo` maximum 9007199254740991 plus request validation) and **D** (`GET /product-categories`, the `active` filter on `GET /products`). Each needs a contract edit, a `decisions.md` §3 line, tests, regenerated web types and the checks in test-plan.md.
   3. Then write EXECUTION.md (short path) and add A-D rows to `docs/rule-removal-log.md` as each rule lands.
-- **Waiting on:** the user (acceptance of the three drafts); Isaac Bassey (his half of the v0.2.0 line in `decisions.md` §3, and the migration review for V4, a release.md high-risk path); merging PR #15 first, so this branch's PR can target `main`.
+- **Waiting on:** merging [PR #17](https://github.com/AMAZEEN12/Stockwise/pull/17) into `main`; the user (acceptance of the three drafts); Isaac Bassey (his half of the v0.2.0 line in `decisions.md` §3, and the migration review for V4, a release.md high-risk path).
 
 ## How to continue without the sdlc skill
 1. Stages run in order: Plan (intent.md), Design (spec.md), Build (plan.md), Test (test-plan.md), Deploy (release.md), Maintain (monitoring.md), then EXECUTION.md. If the short path is chosen, write only intent.md, plan.md, test-plan.md and EXECUTION.md. EXECUTION.md then says why spec, release and monitoring aren't repeated: the main Stockwise ones apply.
@@ -106,3 +106,9 @@ Append-only, newest last.
   - web: `npm ci`, `npm run generate:api` (schema.d.ts +24/-1, additive only: the optional header and the 422), `typecheck` clean, `lint` clean, `vitest` 27 of 27;
   - `check-migrations.sh` and `check-contract-log.sh` OK against `origin/main`.
 - 2026-10-25 · agent · Committed `99bc2c9`, pushed `feat/contract-v0-2`, and opened [PR #16](https://github.com/AMAZEEN12/Stockwise/pull/16) (base `docs/handover-log`, 19 files). The description requests Isaac Bassey's review of V4 (high-risk path) and his half of the v0.2.0 sign-off; he can't be requested formally until AMAZEEN12 invites him as a collaborator.
+- 2026-10-25 · user · Reported "my PR has been merged". Checked on GitHub:
+  - PR #15 was merged into `main` at 20:56 UTC by AMAZEEN12.
+  - PR #16 was merged at 21:10 UTC by AMAZEEN12, but into its stacked base `docs/handover-log`: its base wasn't switched to `main` after #15 merged. So `99bc2c9` and `e3a0035` were **not on `main`**.
+  - `main` also gained `3c5a622` "Update deploy.yml" by AMAZEEN12 (adds an `npm ci` step for `web` before the Vercel deploy).
+- 2026-10-25 · agent · Opened [PR #17](https://github.com/AMAZEEN12/Stockwise/pull/17) from `feat/contract-v0-2` into `main` (2 commits, 19 files; merges cleanly with `3c5a622`), with Isaac Bassey's review requested in the description. This entry is the PR's third commit.
+- **Lesson for stacked PRs:** after the lower PR merges, change the upper PR's base to `main` **before** merging it. GitHub does this automatically only when the lower branch is deleted.
