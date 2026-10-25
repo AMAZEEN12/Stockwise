@@ -1,10 +1,12 @@
 openapi: 3.1.0
 info:
   title: Stockwise API
-  version: 0.1.0
+  version: 0.2.0
   summary: Stock and customer-credit ledger for one demonstration shop (TeSA Cohort 6, Team 3).
   description: |
     Contract v0.1 covers the **Monday 26 Oct MVP paths only** (EXECUTION.md step 2).
+    v0.2.0 adds only optional, backward-compatible features (sdlc/contract-v0-2): so far an optional
+    `Idempotency-Key` on `POST /customers`. A v0.1.0 client keeps working unchanged.
     Remaining paths (restocks, repayments, reversals, ledger, dashboard, product edit/archive,
     movements) are added in later versions, each logged in `decisions.md` §3.
 
@@ -16,6 +18,7 @@ info:
     - Send `X-Request-Id` (UUID) on every request; the service echoes it (and generates one if absent).
     - Recording writes (`POST /sales`) require an `Idempotency-Key` (UUID). Replaying the same key with
       the same body returns the original result; the same key with a different body returns 422.
+      `POST /customers` accepts the same header optionally (v0.2.0).
     - All timestamps are UTC (RFC 3339). "Today" filters use the Africa/Lagos day.
     - All data is fictional demonstration data.
   contact:
@@ -259,9 +262,20 @@ paths:
       tags: [customers]
       operationId: createCustomer
       summary: Add a customer
-      description: Neither safe nor idempotent. OWNER or ASSISTANT.
+      description: |
+        OWNER or ASSISTANT. **Idempotent when `Idempotency-Key` is sent** (v0.2.0, optional):
+        - the same key and the same body (after trimming the name, and treating a blank contact as none)
+          return 201 with the **original** customer, and nothing new is created, also when the retries
+          arrive in parallel;
+        - the same key with a different body, or sent by another user, returns 422
+          `IDEMPOTENCY_KEY_REUSED`, and nothing is created;
+        - keys are kept for the life of the customer.
+
+        Without the header, every call creates a new customer (v0.1.0 behaviour). Two customers may
+        share a name; the UUID is the identity.
       parameters:
         - $ref: '#/components/parameters/RequestId'
+        - $ref: '#/components/parameters/IdempotencyKeyOptional'
       requestBody:
         required: true
         content:
@@ -284,6 +298,15 @@ paths:
           $ref: '#/components/responses/Unauthorized'
         '403':
           $ref: '#/components/responses/Forbidden'
+        '422':
+          description: '`IDEMPOTENCY_KEY_REUSED`: this key was already used with a different body or by another user; nothing was created'
+          headers:
+            X-Request-Id:
+              $ref: '#/components/headers/RequestId'
+          content:
+            application/problem+json:
+              schema:
+                $ref: '#/components/schemas/Problem'
 
   /sales:
     get:
@@ -482,6 +505,14 @@ components:
       in: header
       required: true
       description: Client-generated UUID, one per user attempt; reused on retry.
+      schema:
+        type: string
+        format: uuid
+    IdempotencyKeyOptional:
+      name: Idempotency-Key
+      in: header
+      required: false
+      description: Optional client-generated UUID, one per user attempt; reuse it on retry to make the call safe to repeat.
       schema:
         type: string
         format: uuid

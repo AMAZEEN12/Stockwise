@@ -66,6 +66,11 @@ public class ProblemHandler {
         return problem(request, ErrorCode.IDEMPOTENCY_KEY_REUSED, e.getMessage(), null);
     }
 
+    @ExceptionHandler(IdempotencyKeyReused.class)
+    ResponseEntity<Problem> keyReusedGeneric(IdempotencyKeyReused e, HttpServletRequest request) {
+        return problem(request, ErrorCode.IDEMPOTENCY_KEY_REUSED, e.getMessage(), null);
+    }
+
     @ExceptionHandler(SaleExceptions.ReferenceNotFound.class)
     ResponseEntity<Problem> referenceNotFound(SaleExceptions.ReferenceNotFound e, HttpServletRequest request) {
         return problem(request, ErrorCode.NOT_FOUND, e.getMessage(),
