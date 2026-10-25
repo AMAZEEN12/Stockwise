@@ -1,4 +1,4 @@
-# Production deploy (deploy-plan §2-§6, release.md). Order: gate -> approval -> migrate -> deploy -> smoke.
+# Production deploy (deploy-plan §2-§6, release.md). Order: gate -> approval -> migrate -> deploy -> smoke (all after approval, in one job).
 # The single job "deploy-production" uses the GitHub `production` environment, which requires a reviewer
 # (the release manager, never the author of the change). One approval covers migrate AND both stacks.
 name: Deploy
@@ -70,10 +70,27 @@ jobs:
           VERCEL_TOKEN: ${{ secrets.VERCEL_TOKEN }}
           VERCEL_ORG_ID: ${{ secrets.VERCEL_ORG_ID }}
           VERCEL_PROJECT_ID: ${{ secrets.VERCEL_PROJECT_ID }}
+          API_URL: ${{ vars.API_URL }}
         run: |
           set -euo pipefail
+          # The web's API address comes from the API_URL variable (the service root) plus /api/v1,
+          # not from a hand-typed Vercel setting: a base without /api/v1 broke sign-in on 2026-10-25.
+          : "${API_URL:?Set the API_URL variable to the service root, e.g. https://stockwise-yc54.onrender.com}"
+          api="${API_URL%/}"; api="${api%/api/v1}/api/v1"
           npx --yes vercel@latest pull --yes --environment=production --token "$VERCEL_TOKEN"
+          # Overwrite whatever the Vercel project holds, both in the pulled env file and in this process.
+          envfile=.vercel/.env.production.local
+          touch "$envfile"
+          grep -v '^VITE_API_BASE_URL=' "$envfile" > "$envfile.tmp" || true
+          printf 'VITE_API_BASE_URL="%s"\n' "$api" >> "$envfile.tmp"
+          mv "$envfile.tmp" "$envfile"
+          export VITE_API_BASE_URL="$api"
           npx --yes vercel@latest build --prod --token "$VERCEL_TOKEN"
+          # Refuse to deploy a build that doesn't call the service at <api>/api/v1.
+          if ! grep -rqF "\"$api\"" .vercel/output/static/assets; then
+            echo "::error::The built web does not call $api. Not deploying."; exit 1
+          fi
+          echo "Web built against $api"
           url=$(npx --yes vercel@latest deploy --prebuilt --prod --token "$VERCEL_TOKEN")
           echo "Vercel deployment: $url"
           echo "### Vercel deployment: $url" >> "$GITHUB_STEP_SUMMARY"
@@ -106,28 +123,26 @@ jobs:
           git subtree split --prefix service -b tmp-api
           git push --force origin tmp-web:deploy/stockwise-web tmp-api:deploy/stockwise-api
 
-  smoke:
-    name: Smoke check on the live addresses
-    needs: deploy-production
-    runs-on: ubuntu-latest
-    steps:
-      - uses: actions/checkout@v4
-      - name: Smoke
+      # ---- 3. Smoke checks on the live addresses. In this job, so they can read the production secrets
+      #         (the demo password) and need no second approval.
+      - name: Smoke (service, web, the web's API address, demo sign-in)
         env:
           API_URL: ${{ vars.API_URL }}
           WEB_URL: ${{ vars.WEB_URL }}
           EXPECT_VERSION: ${{ github.sha }}
+          LOGIN_EMAIL: ${{ vars.DEMO_OWNER_EMAIL }}
+          LOGIN_PASSWORD: ${{ secrets.DEMO_OWNER_PASSWORD }}
         run: scripts/smoke.sh
-      - uses: actions/setup-node@v4
-        if: ${{ inputs.run_last_unit }}
-        with: { node-version: 22 }
       - name: Last-unit concurrency test against the deployed service
         if: ${{ inputs.run_last_unit }}
         env:
-          API_URL: ${{ vars.API_URL }}/api/v1
+          API_URL: ${{ vars.API_URL }}
           OWNER_EMAIL: ${{ vars.DEMO_OWNER_EMAIL }}
           OWNER_PASSWORD: ${{ secrets.DEMO_OWNER_PASSWORD }}
-        run: node load/concurrency/last-unit.mjs | tee last-unit.log
+        run: |
+          set -o pipefail
+          api="${API_URL%/}"; api="${api%/api/v1}/api/v1"
+          API_URL="$api" node load/concurrency/last-unit.mjs | tee last-unit.log
       - uses: actions/upload-artifact@v4
         if: ${{ always() && inputs.run_last_unit }}
         with: { name: last-unit-log, path: last-unit.log, if-no-files-found: ignore }
