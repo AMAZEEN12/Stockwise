@@ -68,7 +68,7 @@ Flyway Community has no undo migrations (that is a paid feature). Options: (a) a
 **Who decides:** Data and rules owner. **Status:** resolved → DM16. Proposed: 20 products (including zero-stock, at-threshold and archived), 5 customers (one with credit), 7 days of sales, and one demo account per role. The full volumes (120 / 60 days / 14) come after Monday.
 
 ### PD13: Cross-team shared-component agreement
-**Who decides:** the five interface engineers together, as reported by Victor. **Status:** resolved on 2026-10-24 → DM37. The earlier pending proposal below is retained as historical context; DM37 records the adopted copy-in source.
+**Who decides:** the four interface engineers together. Victor Oyeleke confirmed the correct count on 2026-10-25 (DM53). **Status:** resolved on 2026-10-24 → DM37; DM53 corrects the engineer count. The earlier pending proposal below is retained as historical context; DM37 records the adopted copy-in source.
 
 The eight-page `shared-component-set-plan.pdf` is a proposal. Radix, copy-in distribution, component interfaces, the work split and dates are not accepted commitments. Shadcn is not a Stockwise requirement (DM35). Record the actual agreed foundation, token names, Formik/Yup compatibility, component interfaces, distribution and approving engineers before adoption. Do not create a shared repository or assign Victor Dialog/Toast based only on the PDF.
 
@@ -118,6 +118,8 @@ Questions include session persistence and expiry during pending writes, recovery
 | DM36 | 2026-10-24 | Phase 2 creates frontend folders, documentation, `.gitkeep` placeholders and one empty HTTP-client source file only. Publish existing planning docs as the one-time initial `main` baseline, then publish `chore/web-structure` and open a reviewed PR. Later features use separate branches and descriptive commits; no force-push or automatic merge | Make the empty cloned repository useful and visible to teammates without implementing screens or bypassing later review gates | Victor Oyeleke | Codex (logging assistant) |
 
 ### Frontend implementation decisions, 2026-10-24
+
+DM37's original wording is retained as history. DM53 supersedes its reference to five engineers: Victor confirmed that the upstream count of four is correct.
 
 | ID | Date | Decision | Reason | Decided by | Logged by |
 |----|------|----------|--------|------------|-----------|
@@ -174,6 +176,21 @@ Details and unresolved API decisions: [UI implementation](docs/products-sales-ui
 Published: [Products PR #4](https://github.com/AMAZEEN12/Stockwise/pull/4) and [Sales PR #5](https://github.com/AMAZEEN12/Stockwise/pull/5), both open with base main. Authentication [PR #3](https://github.com/AMAZEEN12/Stockwise/pull/3) was still open when checked on 2026-10-25. The descriptions disclose inherited changes, prior local verification, visual differences, service setup limits and pending API proposals. Creating these PRs does not supply human review or contract approval.
 
 Publication follow-up: current main includes merged structure PR #1 (2d170e6). Its only merge conflict with Products was in sdlc/WORKLOG.md. Codex retained the current frontend guidance and appended the incoming historical startup notes, committed the main integration as 8fa08ac on Products, then carried it into Sales. No application files changed, existing feature commits were preserved and neither branch was force-pushed. Decided by: Codex (routine conflict resolution within Victor's publication request). Logged by: Codex.
+### Shared-source documentation correction, 2026-10-25
+
+| ID | Date | Decision | Reason | Decided by | Logged by |
+|----|------|----------|--------|------------|-----------|
+| DM53 | 2026-10-25 | Correct the shared agreement to four interface engineers, matching upstream; supersede DM37's engineer count only. Record that Card supports text-only content when image is omitted, and Select/Checkbox already use shared CSS variables and --color-border-input for their control edges at reviewed revision dbe1cac1f5e6e0838331e35b8da482ab4a1497fc. Update current guidance and retain corrected historical provenance | Victor confirmed upstream is correct and approved recording the resolved Card and Select/Checkbox README discrepancies. Documentation scope only; implementation proposals remain pending | Victor Oyeleke | Codex |
+
+**Approved by:** Victor Oyeleke. **Logged by:** Codex. Details, immutable source links and component ownership: [shared component source clarifications](docs/shared-component-alignment.md). The original copy-in revision remains unchanged; no runtime, dependency or API-contract update is approved by this documentation correction.
+
+### Shared-source documentation publication, 2026-10-25
+
+| ID | Date | Decision | Reason | Decided by | Logged by |
+|----|------|----------|--------|------------|-----------|
+| DM54 | 2026-10-25 | Commit DM53 and its related Markdown guidance on fix/shared-component-documentation, based directly on current origin/main, then push and open a PR into main. Preserve the original customer branch and all unrelated UI edits. Adapt the approved documentation correction to main's older documentation without importing unmerged feature commits | Victor explicitly requested a PR for the recent documentation change and confirmation of a commit | Victor Oyeleke (publication scope); Codex (isolated checkout and documentation adaptation) | Codex |
+
+Publication confirmed: commit `285cf91`, branch `fix/shared-component-documentation`, [PR #6](https://github.com/AMAZEEN12/Stockwise/pull/6), base `main`, state `open`, draft `false`, merged `false`. Documentation checks passed; original working files and branch were preserved. Logged by Codex on 2026-10-25.
 
 ## 3. Contract change log
 
