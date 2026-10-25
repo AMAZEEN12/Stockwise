@@ -11,6 +11,7 @@ import java.util.UUID;
 import org.springframework.jdbc.core.simple.JdbcClient;
 import org.springframework.stereotype.Repository;
 
+import ng.tesa.stockwise.common.IdempotencyKeyReused;
 import ng.tesa.stockwise.common.Page;
 
 /**
@@ -28,20 +29,63 @@ public class CustomerRepository {
         this.jdbc = jdbc;
     }
 
+    static String normalisedName(Customer.New customer) {
+        return customer.displayName().trim();
+    }
+
+    static String normalisedContact(Customer.New customer) {
+        return customer.contactPlaceholder() == null || customer.contactPlaceholder().isBlank()
+                ? null : customer.contactPlaceholder().trim();
+    }
+
     /** Two customers may share a name (a shop knows several "Mama Ngozi"s), so there is no uniqueness rule. */
     public Customer create(Customer.New customer) {
-        String contact = customer.contactPlaceholder() == null || customer.contactPlaceholder().isBlank()
-                ? null : customer.contactPlaceholder().trim();
         UUID id = jdbc.sql("""
                         INSERT INTO customer (display_name, contact_placeholder)
                         VALUES (:name, :contact)
                         RETURNING id
                         """)
-                .param("name", customer.displayName().trim())
-                .param("contact", contact)
+                .param("name", normalisedName(customer))
+                .param("contact", normalisedContact(customer))
                 .query(UUID.class)
                 .single();
         return findById(id).orElseThrow();
+    }
+
+    /**
+     * Contract v0.2.0: a retry-safe create. The INSERT claims the Idempotency-Key through
+     * {@code customer_idempotency_key_uq}; a parallel attempt with the same key waits there until
+     * the first commits, then inserts nothing. A replay returns the original customer only if the
+     * same user sent the same body; anything else is {@link IdempotencyKeyReused}.
+     */
+    public Customer create(Customer.New customer, UUID idempotencyKey, UUID createdBy) {
+        String hash = CustomerRequestHash.of(customer);
+        Optional<UUID> claimed = jdbc.sql("""
+                        INSERT INTO customer (display_name, contact_placeholder, idempotency_key, request_hash, created_by)
+                        VALUES (:name, :contact, :key, :hash, :createdBy)
+                        ON CONFLICT (idempotency_key) DO NOTHING
+                        RETURNING id
+                        """)
+                .param("name", normalisedName(customer))
+                .param("contact", normalisedContact(customer))
+                .param("key", idempotencyKey)
+                .param("hash", hash)
+                .param("createdBy", createdBy)
+                .query(UUID.class)
+                .optional();
+        if (claimed.isPresent()) {
+            return findById(claimed.get()).orElseThrow();
+        }
+        return jdbc.sql("SELECT id, request_hash, created_by FROM customer WHERE idempotency_key = :key")
+                .param("key", idempotencyKey)
+                .query((rs, row) -> {
+                    boolean same = hash.equals(rs.getString("request_hash"))
+                            && createdBy.equals(rs.getObject("created_by", UUID.class));
+                    return same ? rs.getObject("id", UUID.class) : null;
+                })
+                .optional()
+                .map(id -> findById(id).orElseThrow())
+                .orElseThrow(() -> new IdempotencyKeyReused(idempotencyKey));
     }
 
     public Optional<Customer> findById(UUID id) {
