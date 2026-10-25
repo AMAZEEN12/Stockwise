@@ -4,7 +4,7 @@
 
 ## Reference and visual acceptance
 
-All 16 PNGs were inspected during implementation. Victor subsequently placed the versioned design inputs under `web/Screens/` (token sheet plus `login/` frames), replacing the earlier local `web/Stockwise — Login-png/` location. They are not application backgrounds or runtime assets. Desktop Home is 1440×900 at 1×; desktop auth/interactive frames are 2880×1800, treated as 1440×900 at 2×. Mobile frames are 720×1760, treated as 360×880 at 2×. Intermediate widths interpolate responsively. A white strip at the export edge is not page artwork.
+All 16 PNGs were inspected during implementation. Victor subsequently placed the design inputs under `web/Screens/` (token sheet plus `login/` frames), replacing the earlier local `web/Stockwise — Login-png/` location. DM45 now ignores/untracks these references while preserving local files. They are not application backgrounds or runtime assets. Desktop Home is 1440×900 at 1×; desktop auth/interactive frames are 2880×1800, treated as 1440×900 at 2×. Mobile frames are 720×1760, treated as 360×880 at 2×. Intermediate widths interpolate responsively. A white strip at the export edge is not page artwork.
 
 DM43 preserves Victor's supplied refinements for publication: remove headline-ending periods and the Home description, move the desktop coin offset from 350px to 320px, and retain expanded CSS formatting. The existing mobile rule hides the headline, so mobile Home now has no supporting copy. This consequence is noted for visual review; publication does not silently override his changes.
 
@@ -20,7 +20,7 @@ Local additive extensions: Dialog exposes styling slots and close-focus restorat
 
 ## Routes and data
 
-DM42 local development update: run `npm run mock` with the web dev server. The pinned Prism launcher derives an ignored example-only contract copy without changing OpenAPI, ensuring a fixed OWNER response and future expiry. Local `.env.local` uses the public mock inputs from `.env.example`. These are simulated inputs, not backend seeds; other role buttons still receive the OWNER fixture. See auth-contract-proposal.md and web/README.md for switching to real authentication. `npm run check:mock` verifies actual browser integration and canonical computed styles without request interception.
+DM42's original contract-only mock remains available as `npm run mock:prism`; it derives an ignored example-only contract copy without changing OpenAPI. DM47 now makes `npm run mock` the stateful in-memory development simulation for Products and Sales, with a fixed configured role and future expiry. Local `.env.local` uses the public mock inputs from `.env.example`. These are simulated inputs, not backend seeds. See auth-contract-proposal.md and web/README.md for real authentication. `npm run check:mock` verifies actual browser integration and canonical computed styles without request interception.
 
 Dependency note for this development tool: Prism 5.16.0 brings eight transitive audit advisories (seven high, one moderate in the final audit). Compatible `npm audit fix` did not resolve them. They are development-only; `npm audit --omit=dev` reports zero vulnerabilities. No forced major overrides or unverified downgrade was applied. The mock binds only 127.0.0.1 and reads this repository's trusted contract; it is not included in the browser build or intended for public hosting.
 

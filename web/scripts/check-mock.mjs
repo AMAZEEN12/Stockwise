@@ -1,7 +1,7 @@
 import assert from 'node:assert/strict';
 import { chromium, expect } from '@playwright/test';
 
-// Uses the actual local Prism instance and browser UI, without intercepted requests.
+// Uses the actual local mock/simulation and browser UI, without intercepted requests.
 const apiBase = 'http://127.0.0.1:4710';
 const login = await fetch(`${apiBase}/auth/sessions`, {
   method: 'POST', headers: { 'Content-Type': 'application/json' },
@@ -34,5 +34,5 @@ try {
   await expect(page.getByRole('heading', { name: 'Welcome, Demo Owner.' })).toBeVisible();
   await page.getByRole('button', { name: 'Sign out' }).click();
   await expect(page).toHaveURL(/\/$/);
-  console.log('PASS: actual Prism 201/200, future session, demo autofill, canonical styles, browser sign-in, refresh and sign-out.');
+  console.log('PASS: actual mock 201/200, future session, demo autofill, canonical styles, browser sign-in, refresh and sign-out.');
 } finally { await browser.close(); }

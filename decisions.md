@@ -154,6 +154,28 @@ No registration endpoint, real account, server-authentication implementation or 
 
 Visual-review note: the supplied CSS still hides the headline on mobile. With the description removed, mobile Home has no supporting copy; this is retained as supplied for human review rather than silently changed during publication.
 
+### Products and sales implementation, 2026-10-24
+
+| ID | Date | Decision | Reason | Decided by | Logged by |
+|----|------|----------|--------|------------|-----------|
+| DM44 | 2026-10-24 | Implement Products and New sale/Receipt on separate feat/products-ui and feat/sales-ui branches, with descriptive commits. Defer Sales history. Use updated stock-conflict and corrected store-credit frames for quality control, including bordered quantity controls across cart states | Victor authorized implementation after design reviews and chose the supplied sale/receipt scope | Victor Oyeleke | Codex |
+| DM45 | 2026-10-24 | Ignore web/Screens and remove already tracked references from the index, preserving local copies. Supersedes DM43's versioned-reference policy only | Victor requested keeping design exports out of future commits/checkouts | Victor Oyeleke | Codex |
+| DM46 | 2026-10-24 | Keep v0.1.0 API unchanged; document gaps separately. Use contract-derived models and one RTK Query cache. Exact decimal-to-kobo parsing and checked integer arithmetic; unknown/unsafe amounts block submission. Categories use an editable catalogue-derived combobox. No unsupported archive/edit endpoints | Implement within existing wire shapes without inventing API approval | Codex, implementation choices under Victor's authorization | Codex |
+| DM47 | 2026-10-24 | Development simulation supports product/sale interaction and corrected automatic store credit. Real credit-bearing writes remain blocked pending settlement fields. Persist an immutable pending write before POST; bounded transport retry preserves key/body; reauthentication requires same user and current permitted role; refreshed recovery replays the same POST until a lookup exists | Prevent false success, changed-body retries and fabricated authoritative credit totals | Codex, implementation choices; wire additions remain proposals | Codex |
+
+Details and unresolved API decisions: [UI implementation](docs/products-sales-ui.md), [contract proposal](docs/products-sales-contract-proposal.md). No two-engineer sign-off is invented.
+
+| DM48 | 2026-10-25 | Keep unsubmitted carts in per-user tab storage as well as immutable pending writes. Bind pending recovery to the original service base URL and user, recheck current role, reject unsafe customer money, and retain the original preview during recovery. Use one browser worker on this Windows machine. Decorative error icons use SVG; keep exact-copy assertions intact | Continuation safety and concrete browser/lint findings during implementation; no backend business-rule change | Codex, implementation choices under Victor's authorization | Codex |
+
+### Products and sales publication, 2026-10-25
+
+| ID | Date | Decision | Reason | Decided by | Logged by |
+|----|------|----------|--------|------------|-----------|
+| DM49 | 2026-10-25 | Confirm the feature commits, push feat/products-ui and feat/sales-ui, and open both PRs against main. Products is PR #4 (86fb5ea); Sales is PR #5 (74d6eef). Preserve the existing stacked history and document review order: authentication PR #3, Products PR #4, then Sales PR #5. No automatic merge or deployment | Victor explicitly requested a PR to main for both branches and confirmation that the commits exist | Victor Oyeleke | Codex |
+
+Published: [Products PR #4](https://github.com/AMAZEEN12/Stockwise/pull/4) and [Sales PR #5](https://github.com/AMAZEEN12/Stockwise/pull/5), both open with base main. Authentication [PR #3](https://github.com/AMAZEEN12/Stockwise/pull/3) was still open when checked on 2026-10-25. The descriptions disclose inherited changes, prior local verification, visual differences, service setup limits and pending API proposals. Creating these PRs does not supply human review or contract approval.
+
+Publication follow-up: current main includes merged structure PR #1 (2d170e6). Its only merge conflict with Products was in sdlc/WORKLOG.md. Codex retained the current frontend guidance and appended the incoming historical startup notes, committed the main integration as 8fa08ac on Products, then carried it into Sales. No application files changed, existing feature commits were preserved and neither branch was force-pushed. Decided by: Codex (routine conflict resolution within Victor's publication request). Logged by: Codex.
 ### Shared-source documentation correction, 2026-10-25
 
 | ID | Date | Decision | Reason | Decided by | Logged by |
