@@ -22,15 +22,6 @@ The agent (or engineer) runs these itself and iterates until they pass, before a
 
 ## Done-targets
 
-**Home/authentication implementation (2026-10-24, DM37–DM40)**
-
-- DM41–DM42 follow-up: verify canonical utility output still gives 10px radius, Inter Tight and 2px focus offset. Run `npm run mock` plus `npm run dev`, then `npm run check:mock` for actual, un-intercepted HTTP/browser session creation, /me, autofill, refresh and logout. Lint both the authoritative contract and generated mock copy. Keep fixture credentials explicitly simulated and source OpenAPI unchanged.
-
-- Run real ESLint, strict typecheck, unit tests, production build, generated API types and contract lint under web; never substitute typecheck for lint.
-- Playwright at 1440×900 and 360×880, 2×: capture Home, default auth, validation, loading, waking, 401, network failure and sign-up; verify no horizontal overflow, keyboard dismissal/focus return, duplicate-submit protection, exact request body, /me bearer header, tab refresh/logout and no unapproved registration writes.
-- Axe: zero serious/critical violations in auth states. Network interceptions are contract-shaped test doubles, not proof of deployed service integration.
-- Visual captures are review artifacts, not automatically approved baselines. Reconstructed coin and unverified interpolation must be reported honestly. Actual output is recorded in WORKLOG.
-
 **Frontend phase 2 (2026-10-24, DM36)**
 
 - Compare the folder tree with `docs/frontend-architecture.md`; all 27 `.gitkeep` placeholders and `web/src/service/http-client.ts` must be zero-byte files.

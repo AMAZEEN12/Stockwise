@@ -2,9 +2,11 @@
 
 Derived from: [intent.md](intent.md) (accepted 2026-10-23), [spec.md](spec.md) (accepted 2026-10-23, revised with DM5-DM16) · Status: accepted
 Accepted by: Nnaemeka Chukwuma (2026-10-23) · Higher-risk sign-off: Isaac Bassey (team lead, DM7). Required for the sale transaction, the store-credit logic and every migration.
-Frontend amendments DM32–DM40: Victor authorized Home/authentication implementation on 2026-10-24 after the design/API review. Codex logs scope, implementation choices and pending proposals separately. Other area approvals are unchanged.
-Decisions in force: [decisions.md](../decisions.md) DM1–DM43 · Deployment: [deploy-plan.md](../deploy-plan.md)
+Frontend phase 2 amendment accepted by Victor Oyeleke on 2026-10-24; logged by Codex (logging assistant). See DM32-DM36. Other area approvals are unchanged.
+Decisions in force: [decisions.md](../decisions.md) DM1-DM36 · Deployment: [deploy-plan.md](../deploy-plan.md)
 Supporting skills: none
+
+Shared-source documentation amendment, 2026-10-25 (DM53): four interface engineers, confirmed and approved by Victor Oyeleke; logged by Codex. Use [shared component source clarifications](../docs/shared-component-alignment.md) for Card's optional image area and the resolved Select/Checkbox token/border README notes at the reviewed revision. This amendment records source behavior; component migrations remain separate proposals.
 
 All paths are relative to the **Stockwise repository root** (the local `stockwise/` folder, DM19). Java package root: `ng.tesa.stockwise`.
 
