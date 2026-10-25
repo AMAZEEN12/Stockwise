@@ -4,13 +4,19 @@ import java.sql.ResultSet;
 import java.sql.SQLException;
 import java.time.LocalDate;
 import java.time.OffsetDateTime;
+import java.util.ArrayList;
+import java.util.HashMap;
+import java.util.LinkedHashMap;
 import java.util.List;
+import java.util.Map;
 import java.util.Optional;
 import java.util.OptionalLong;
 import java.util.UUID;
 
 import org.springframework.jdbc.core.simple.JdbcClient;
 import org.springframework.stereotype.Repository;
+
+import ng.tesa.stockwise.common.Page;
 
 /**
  * SQL for the sale transaction (spec "Data flow: recording a sale"). Every rule-bearing
@@ -173,6 +179,67 @@ public class SaleRepository {
                 .param("id", saleId)
                 .query((rs, row) -> mapSale(rs, lines))
                 .optional();
+    }
+
+    /** Contract query parameters of {@code GET /sales}; a null filter is not applied. Dates are Lagos days (DM14). */
+    public record Filter(LocalDate from, LocalDate to, PaymentType paymentType, UUID customerId) {
+    }
+
+    /**
+     * {@code GET /sales}: newest first. {@code from} and {@code to} are inclusive Africa/Lagos
+     * calendar days, so "today" in Lagos is right even when the server runs in UTC. Lines are
+     * fetched for the whole page in one query.
+     */
+    public Page<Sale> list(Filter filter, Page.Request page) {
+        List<String> where = new ArrayList<>();
+        Map<String, Object> params = new HashMap<>();
+        if (filter.from() != null) {
+            where.add("created_at >= (CAST(:from AS date)::timestamp AT TIME ZONE 'Africa/Lagos')");
+            params.put("from", filter.from());
+        }
+        if (filter.to() != null) {
+            where.add("created_at < ((CAST(:to AS date) + 1)::timestamp AT TIME ZONE 'Africa/Lagos')");
+            params.put("to", filter.to());
+        }
+        if (filter.paymentType() != null) {
+            where.add("payment_type = :paymentType");
+            params.put("paymentType", filter.paymentType().name());
+        }
+        if (filter.customerId() != null) {
+            where.add("customer_id = :customerId");
+            params.put("customerId", filter.customerId());
+        }
+        String whereClause = where.isEmpty() ? "" : " WHERE " + String.join(" AND ", where);
+
+        long total = jdbc.sql("SELECT count(*) FROM sale" + whereClause).params(params).query(Long.class).single();
+        Map<UUID, List<Sale.Line>> lines = new LinkedHashMap<>();
+        List<Sale> headers = jdbc.sql("""
+                        SELECT id, reference, payment_type, customer_id, due_date, total_kobo, created_by, created_at
+                        FROM sale""" + whereClause + " ORDER BY created_at DESC, id LIMIT :limit OFFSET :offset")
+                .params(params)
+                .param("limit", page.size())
+                .param("offset", page.offset())
+                .query((rs, row) -> {
+                    List<Sale.Line> saleLines = new ArrayList<>();
+                    lines.put(rs.getObject("id", UUID.class), saleLines);
+                    return mapSale(rs, saleLines);
+                })
+                .list();
+        if (!lines.isEmpty()) {
+            jdbc.sql("""
+                            SELECT l.sale_id, l.product_id, p.name, l.quantity, l.unit_price_kobo, l.line_total_kobo
+                            FROM sale_line l JOIN product p ON p.id = l.product_id
+                            WHERE l.sale_id IN (:ids)
+                            ORDER BY l.sale_id, l.product_id
+                            """)
+                    .param("ids", List.copyOf(lines.keySet()))
+                    .query(rs -> {
+                        lines.get(rs.getObject("sale_id", UUID.class)).add(new Sale.Line(rs.getObject("product_id", UUID.class),
+                                rs.getString("name"), rs.getInt("quantity"), rs.getLong("unit_price_kobo"),
+                                rs.getLong("line_total_kobo")));
+                    });
+        }
+        return new Page<>(headers, page.page(), page.size(), total);
     }
 
     private static Sale mapSale(ResultSet rs, List<Sale.Line> lines) throws SQLException {

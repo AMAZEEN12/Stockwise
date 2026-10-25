@@ -1,0 +1,107 @@
+# Stockwise
+
+Know your stock. Trust your credit. Stockwise keeps one small shop's stock and its customers' credit in one ledger. Its key rule: **stock never falls below zero, even when two phones sell the last unit at the same moment.** TeSA Cohort 6 capstone, Team 3 main product.
+
+- **Problem:** a shopkeeper loses track of what is left on the shelf and who owes what. Two assistants can sell the same last item, and credit lives in a notebook nobody can reconcile.
+- **Users:** the **owner** (adds products, sees everything), the **assistant** at the till (records sales, adds customers), and an **admin** (reads everything; reversals come after the MVP).
+- **What the MVP does:** log in by role, add and find products, add customers, and record paid and credit sales. Each sale takes stock in one guarded database transaction, and safe retries mean a dropped connection never records a sale twice.
+
+Requirements: [sdlc/intent.md](sdlc/intent.md) and [sdlc/spec.md](sdlc/spec.md). Build plan: [sdlc/plan.md](sdlc/plan.md). Decisions: [decisions.md](decisions.md). Hosting: [deploy-plan.md](deploy-plan.md).
+
+## Live addresses
+| Stack | Web | Service |
+|----|----|----|
+| V: Vercel + Render + Neon (official, DM9) | _to be added at deploy_ | _to be added at deploy_ |
+| Q: Qocent + Neon (parallel, pending funding, PD5a) | _to be added at deploy_ | _to be added at deploy_ |
+
+The free Render service sleeps after 15 minutes idle, and the first request after that takes about a minute.
+
+## Demo credentials
+All data is fictional demonstration data (Monday seed, DM16). The three accounts share one password: **`Stockwise-Demo-2026`**.
+
+| Role | Email | Can |
+|----|----|----|
+| Owner | `owner@stockwise.test` | everything in the MVP, including adding products |
+| Assistant | `assistant@stockwise.test` | record sales, add customers, read everything |
+| Admin | `admin@stockwise.test` | read everything (reversals after the MVP) |
+
+These accounts exist only where the service runs with the `demo` profile. The web app's own development simulation (`npm run mock`) uses different, simulated accounts; see [web/README.md](web/README.md).
+
+The seed holds 20 products, 5 customers and 33 sales over the last 7 days. It also has every awkward case: sold out, exactly at threshold, low, archived, a very long name, a customer who owes ₦22,800, a fully repaid customer, and a customer holding ₦6,000 of store credit after a reversal (the design problem, DM5).
+
+## Simulated or not yet built
+Labelled honestly, as the brief requires (R20):
+- **Sign-up (registration):** there is no registration endpoint yet; the proposal is still pending API approval. Use the demo accounts.
+- **Restocks, repayments, reversals, the customer ledger, movement history and the dashboard:** after the MVP (plan steps 15-17). In the seed, the repayments and the one reversal exist only as ledger and stock-movement rows.
+- **Store credit spending:** the seeded store credit shows on the customer, but sales don't draw it down yet (plan step 16).
+- **Web development simulation:** `npm run mock` in `web/` keeps fictional data in memory and accepts any valid login shape. It is not the real service and is not security or concurrency evidence.
+
+## The key rule, proved
+`SaleConcurrencyIT` sends 10 sales of the last unit at once against real Postgres: exactly one is recorded, and nine get `409 INSUFFICIENT_STOCK`. On the branch `evidence/no-stock-guard`, which removes the guarded update and its CHECK constraint, the same test fails: all 10 sell the last unit. Both logs: [docs/evidence/concurrency/](docs/evidence/concurrency/README.md). Every rule test was also seen failing with its protection removed: [docs/rule-removal-log.md](docs/rule-removal-log.md).
+
+## Layout
+| Folder | What |
+|----|----|
+| `service/` | Spring Boot 4.1.2 HTTP service: Java 25, Maven wrapper, JdbcClient with plain SQL (no JPA), Flyway with hand-written undo scripts, PostgreSQL 17 |
+| `web/` | React 19 + TypeScript (strict) + Vite + Tailwind 4 + RTK Query |
+| `contract/` | OpenAPI 3.1 contract v0.1.0, lint rules, mock |
+| `tools/seed/` | Generator for the demo seed |
+| `docs/` | Evidence, rule-removal log, design notes |
+
+## Run it locally
+You need Java 25, Node 24 and Docker Desktop.
+
+1. Start a database (any Postgres 17). For example:
+
+   ```bash
+   docker run -d --name stockwise-db -p 5432:5432 -e POSTGRES_DB=stockwise -e POSTGRES_USER=stockwise -e POSTGRES_PASSWORD=stockwise postgres:17-alpine
+   ```
+
+2. Start the service with the demo data. `JWT_SECRET` is required, at least 32 bytes:
+
+   ```bash
+   cd service && JWT_SECRET="$(openssl rand -base64 48)" ./mvnw spring-boot:run -Dspring-boot.run.profiles=demo
+   ```
+
+   It listens on http://localhost:8080. `curl localhost:8080/api/v1/health` answers `{"service":"stockwise","status":"UP",...}`.
+
+3. Start the web app against it:
+
+   ```bash
+   cd web && npm ci && VITE_API_BASE_URL=http://localhost:8080/api/v1 npm run dev
+   ```
+
+## Configuration
+| Variable | Default | Notes |
+|----|----|----|
+| `PORT` | `8080` | Set by the host |
+| `DATABASE_JDBC_URL` | `jdbc:postgresql://localhost:5432/stockwise` | Neon: the **pooled** endpoint, `jdbc:postgresql://<host>/<db>?sslmode=require` |
+| `DATABASE_JDBC_URL_DIRECT` | same as above | Neon: the **direct** endpoint, used only by Flyway migrations |
+| `DATABASE_USERNAME`, `DATABASE_PASSWORD` | `stockwise` / `stockwise` | Secrets in deployment |
+| `JWT_SECRET` | none: **required** | At least 32 bytes. The service refuses to start without it |
+| `CORS_ALLOWED_ORIGINS` | `http://127.0.0.1:5173,http://localhost:5173` | Comma-separated deployed web addresses |
+| `SPRING_PROFILES_ACTIVE` | none | `demo` adds the Monday seed. It does nothing if the database already has data |
+| `LOGGING_STRUCTURED_FORMAT_CONSOLE` | none | `ecs` for JSON logs in deployment; every line carries the `requestId` |
+| `VITE_API_BASE_URL` (web, build time) | `http://127.0.0.1:4710` (mock) | The service's `/api/v1` address. Public, not a secret |
+
+## Checks
+```bash
+cd service && ./mvnw verify
+```
+
+That runs 88 tests against real Postgres 17 in Docker: migrations up, down and up; schema rules; the sale transaction and its concurrency and idempotency; repositories; the seed; and every endpoint over HTTP, including the role checks. For the web checks, see [web/README.md](web/README.md).
+
+## Free tier terms checked
+From [deploy-plan.md](deploy-plan.md) §1. Each provider's own pages were read on **2026-10-23**.
+
+| Provider | What it says |
+|----|----|
+| Render | Free web service sleeps after 15 min idle and takes about 1 min to wake. 750 free instance hours per workspace per month. Free Postgres expires after 30 days, so **we don't use it**. |
+| Neon | Free plan is permanent with no card. 1 GB storage and 100 CU-hours per project per month; scales to zero after 5 min. |
+| Vercel | Hobby is for personal, non-commercial use, with hard usage caps. |
+| Qocent | Not free: prepaid credits only. Used only if the programme supplies them (PD5a). |
+
+## Known limitations
+- No sign-up, password reset or email (see "Simulated or not yet built").
+- Tokens last 8 hours and can't be revoked early, although removing a user or changing their role takes effect on their next request (DM15).
+- No rate limit on login yet.
