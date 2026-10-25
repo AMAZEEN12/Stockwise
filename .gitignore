@@ -35,3 +35,6 @@ Thumbs.db
 /web/*Login-png/
 web/*.tsbuildinfo
 web/.mock/
+
+# Local agent skills (kept out of the repository)
+.claude/skills/shared-components/
