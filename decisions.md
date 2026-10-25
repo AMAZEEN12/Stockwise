@@ -68,7 +68,7 @@ Flyway Community has no undo migrations (that is a paid feature). Options: (a) a
 **Who decides:** Data and rules owner. **Status:** resolved → DM16. Proposed: 20 products (including zero-stock, at-threshold and archived), 5 customers (one with credit), 7 days of sales, and one demo account per role. The full volumes (120 / 60 days / 14) come after Monday.
 
 ### PD13: Cross-team shared-component agreement
-**Who decides:** the five interface engineers together, as reported by Victor. **Status:** resolved on 2026-10-24 → DM37. The earlier pending proposal below is retained as historical context; DM37 records the adopted copy-in source.
+**Who decides:** the four interface engineers together. **Status:** UNRESOLVED; Victor confirms the agreement has not concluded (2026-10-24).
 
 The eight-page `shared-component-set-plan.pdf` is a proposal. Radix, copy-in distribution, component interfaces, the work split and dates are not accepted commitments. Shadcn is not a Stockwise requirement (DM35). Record the actual agreed foundation, token names, Formik/Yup compatibility, component interfaces, distribution and approving engineers before adoption. Do not create a shared repository or assign Victor Dialog/Toast based only on the PDF.
 

@@ -6,8 +6,6 @@ Change slug: `stockwise` · Last updated: 2026-10-24 · Current stage: Build pre
 
 ## Current frontend handoff
 
-**2026-10-24 update:** Victor authorized implementation after review. Home/authentication is being implemented on `feat/auth-ui`, integrating merged PR #2. DM37 resolves the shared agreement for five engineers as reported by Victor; DM38–DM40 record implementation choices. The phase 2 paragraph below is historical. See [implementation](../docs/auth-ui-implementation.md), [registration proposal](../docs/auth-contract-proposal.md) and WORKLOG for actual checks. Backend auth/seeds and contract sign-off remain pending; no deployment or main merge is performed.
-
 Victor Oyeleke accepted the phase 2 folder/documentation plan (DM32-DM36). [Frontend architecture](../docs/frontend-architecture.md) is the folder map and naming reference. `main` contains the initial planning baseline `176fc3a`; the starter was statically verified, committed as `45f49c6` and pushed on `chore/web-structure`. [PR #1](https://github.com/AMAZEEN12/Stockwise/pull/1) targets `main` and remains open for human review; no merge or deployment was performed. The only source file is an empty HTTP-client placeholder. Package setup, routes, screens, generated types and dependencies await later authorization and inputs. The shared-component agreement is pending (PD13); phase 3 behavior questions are PD14. Do not treat the proposed Friday/Saturday schedule below as evidence those tasks are done.
 
 ## Artifact chain

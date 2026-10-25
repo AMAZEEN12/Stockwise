@@ -146,12 +146,6 @@ git diff --check: exit 0
 ```
 
 Service verify, contract lint, web lint/typecheck/unit/build, and Playwright: unavailable at this stage, not run. No package manifest, service wrapper or OpenAPI file exists. No rendered UI or business rule was changed.
-
-### Requested rollback (2026-10-24)
-
-- Victor requested reverting all changes just made. Codex reverted login/home implementation commit `78f6363`, restoring the tracked starter state from `b49d07a`, with this rollback record as the only addition.
-- Removed generated frontend dependencies, `web/package-lock.json` and `web/install.log`; stopped the project's Vite/esbuild processes to release locked files. Local design-reference images were preserved.
-- Verification: staged files matched `b49d07a` before this log entry; `git diff --check` passed. Application checks remain unavailable because the restored starter has no package manifest, service scaffold or OpenAPI contract.
 - 2026-10-23 · agent · EXECUTION step 1 (local part): `git init -b main` in `stockwise/`, added `.gitignore`, committed the artifacts one commit per stage (first commit 4de3402). No remote, nothing pushed (user: "local only for now").
 - 2026-10-23 · agent · EXECUTION step 2: drafted `contract/openapi.yaml` v0.1.0 (Monday paths), `redocly.yaml` (recommended rules plus a custom `money-is-integer-kobo` rule) and the contract README. Redocly lint: 0 errors, 0 warnings after fixing a missing 4xx on /health and an if/then conflict with additionalProperties (the CREDIT → customerId rule moved to the description, enforced by service and DB). Proved the money rule fails on a deliberate `priceKobo: number`. Prism mock failed on port 4010 (EACCES, Windows reserved range 3965-4064) and moved to 4710. Smoke test: health 200, login 201, products 401 without token and 200 with, sale 201, missing Idempotency-Key 422, float quantity 422, forced 409 returns the INSUFFICIENT_STOCK example. Logged as DRAFT in decisions.md §3, pending Isaac Bassey and Nnaemeka Chukwuma.
 - 2026-10-23 · agent · Committed the contract draft (Stockwise 199f70b) and the Genie port note (Genie 491ea43).
