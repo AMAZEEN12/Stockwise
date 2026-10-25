@@ -166,6 +166,11 @@ export interface paths {
          *     Client's part: generate one UUID when the user taps Confirm, keep it until a 201, 409
          *     or 422 arrives, and resend the **same** key on timeout or network loss. Show "Not
          *     confirmed" (never "Saved") until 201.
+         *
+         *     Further rules: a product may appear in only one line, and `dueDate` is allowed only on a
+         *     CREDIT sale (both 400 `VALIDATION_FAILED`); an unknown or archived product, or an unknown customer, is 404 `NOT_FOUND` naming the field;
+         *     the response lists lines ordered by `productId`; a replay with the same lines in a
+         *     different order counts as the same body.
          */
         post: operations["createSale"];
         delete?: never;
@@ -220,10 +225,12 @@ export interface components {
             status: number;
             detail?: string;
             /**
-             * @description Machine-readable error code the interface acts on.
+             * @description Machine-readable error code the interface acts on. `VALIDATION_FAILED` is also sent
+             *     with status 405 (method not allowed) and 415 (unsupported content type).
+             *     `INTERNAL_ERROR` (500) means an unexpected failure; quote the `requestId` when reporting it.
              * @enum {string}
              */
-            code: "VALIDATION_FAILED" | "UNAUTHENTICATED" | "FORBIDDEN" | "NOT_FOUND" | "DUPLICATE_REFERENCE" | "INSUFFICIENT_STOCK" | "IDEMPOTENCY_KEY_REUSED" | "DATABASE_UNAVAILABLE";
+            code: "VALIDATION_FAILED" | "UNAUTHENTICATED" | "FORBIDDEN" | "NOT_FOUND" | "DUPLICATE_REFERENCE" | "INSUFFICIENT_STOCK" | "IDEMPOTENCY_KEY_REUSED" | "DATABASE_UNAVAILABLE" | "INTERNAL_ERROR";
             /** Format: uuid */
             requestId: string;
             errors?: {
@@ -543,6 +550,7 @@ export interface operations {
                 /** @description Keyword matched against name or reference (case-insensitive). */
                 q?: string;
                 category?: string;
+                /** @description Omit to list every product, archived ones included. */
                 stockState?: components["schemas"]["StockState"];
                 /** @description Zero-based page number. */
                 page?: components["parameters"]["Page"];

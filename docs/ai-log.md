@@ -2,6 +2,15 @@
 
 Record actual AI use, human decisions and verification. Do not include credentials, tokens, passwords or real customer data.
 
+## 2026-10-25: API and access review, request-ID logging and contract additions
+
+- Engineer and decision maker: Isaac Bassey (API and access). Assistant: Claude, used through a chat session; no AI runs in CI.
+- Request: an intake of Stockwise from the API and access side, a review of the API layer merged in PR #12, then a first small PR in this area.
+- Human decisions: Isaac reviewed and commented on PR #12, chose the request-ID logging fix and the contract documentation additions as his first PR, made the edits himself in IntelliJ, and signs off contract v0.1.0. When v0.2.0 (PR #17) merged first, he folded his additions into v0.2.0 instead of a separate v0.1.1.
+- Work: the assistant read the SDLC chain, decisions, contract and every class in the API layer, then drafted the `RequestIdFilter` request log line, the logging settings, `RequestLogIT` and the contract wording.
+- Checked-and-found-wrong: the review comment listed the `GET /` body as a contract gap, but PR #13 had already aligned it, and `/` sits outside the `/api/v1` contract, so it was left out. While writing the `POST /sales` rules against `SaleService`, a missing rule (`dueDate` only on a CREDIT sale) was added. The Spring Boot 4.1.2 logging settings were confirmed in the official reference rather than from memory. A YAML indentation slip (`pattern:` nested under `level:`) was caught in review before running.
+- Verification on Isaac's machine: `./mvnw verify` BUILD SUCCESS, 87 integration tests including the 2 new `RequestLogIT` cases; `redocly lint` valid; `npm run generate:api` clean.
+
 ## 2026-10-25: Shared-component implementation (DM55)
 
 - Victor Oyeleke authorized implementing the seven reviewed alignment proposals; Codex logs his approval separately from technical choices and proposed shared-owner APIs. Implemented on feat/shared-component-alignment, preserving the current product/CSS refinements and recording starting files in ignored local storage.
