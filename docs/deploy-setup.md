@@ -35,11 +35,11 @@ New Web Service → this repo → **Runtime: Docker**, root directory `service`,
 Check that deploy hooks and rollback exist on the free plan (open question in `release.md`) and record the answer.
 
 ## 4. Vercel (interface)
-Create project `stockwise-web` with root directory `web`. Set `VITE_API_BASE_URL` = `https://<render-address>/api/v1` for Production. `web/vercel.json` already turns Git deployments off, so only the workflow deploys.
+Create project `stockwise-web` with root directory `web`. You don't need to set `VITE_API_BASE_URL`: `deploy.yml` builds the web with the `API_URL` variable plus `/api/v1`, overriding any Vercel value, and refuses to deploy a build that doesn't call that address. `web/vercel.json` already turns Git deployments off, so only the workflow deploys.
 
 ## 5. First run
 1. Merge to `main`; `deploy.yml` waits at **production**. The release manager approves.
-2. The job migrates Neon, deploys Vercel and Render, then `smoke` checks `/`, `/api/v1/health` (reporting the commit) and the web root.
+2. The job migrates Neon, deploys Vercel and Render, then smoke-checks, in the same approved job: `/`, `/api/v1/health` (reporting the commit), the web root, that the web's JavaScript calls `<API_URL>/api/v1`, and a demo sign-in at `/api/v1/auth/sessions` (`DEMO_OWNER_EMAIL` and `DEMO_OWNER_PASSWORD`).
 3. Add a row to `docs/releases.md`.
 4. Rehearse rollback once and record it in `sdlc/release.md` (Vercel `vercel rollback`, Render dashboard Rollback, database `./mvnw -Pundo -Dundo.target=<n-1> exec:java`).
 
