@@ -23,9 +23,6 @@ import org.springframework.security.oauth2.jwt.JwtValidators;
 import org.springframework.security.oauth2.jwt.NimbusJwtDecoder;
 import org.springframework.security.oauth2.server.resource.InvalidBearerTokenException;
 import org.springframework.security.web.SecurityFilterChain;
-import org.springframework.web.cors.CorsConfiguration;
-import org.springframework.web.cors.CorsConfigurationSource;
-import org.springframework.web.cors.UrlBasedCorsConfigurationSource;
 
 import ng.tesa.stockwise.auth.CurrentUser;
 import ng.tesa.stockwise.auth.TokenService;
@@ -33,7 +30,8 @@ import ng.tesa.stockwise.auth.UserRepository;
 
 /**
  * R15: who may do what. Roles are checked here, in the service, never only in the interface.
- * Stateless bearer tokens (no cookies), so CSRF protection is not needed.
+ * Stateless bearer tokens (no cookies), so CSRF protection is not needed. CORS comes from
+ * {@link CorsConfig} and is applied before authentication.
  *
  * <table>
  *   <tr><th>Request</th><th>Roles</th></tr>
@@ -107,19 +105,5 @@ public class SecurityConfig {
     @Bean
     Clock clock() {
         return Clock.systemUTC();
-    }
-
-    /** The web app's origins (Vercel, Qocent, local dev) from CORS_ALLOWED_ORIGINS. */
-    @Bean
-    CorsConfigurationSource corsConfigurationSource(AppProperties properties) {
-        CorsConfiguration cors = new CorsConfiguration();
-        cors.setAllowedOrigins(properties.cors().allowedOrigins());
-        cors.setAllowedMethods(List.of("GET", "POST", "PUT", "PATCH", "DELETE", "OPTIONS"));
-        cors.setAllowedHeaders(List.of("Authorization", "Content-Type", "Accept", "Idempotency-Key", "X-Request-Id", "If-Match"));
-        cors.setExposedHeaders(List.of("X-Request-Id", "Location", "ETag"));
-        cors.setMaxAge(3600L);
-        UrlBasedCorsConfigurationSource source = new UrlBasedCorsConfigurationSource();
-        source.registerCorsConfiguration("/**", cors);
-        return source;
     }
 }

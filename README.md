@@ -51,16 +51,16 @@ Labelled honestly, as the brief requires (R20):
 ## Run it locally
 You need Java 25, Node 24 and Docker Desktop.
 
-1. Start a database (any Postgres 17). For example:
+1. Start the database (Postgres 17):
 
    ```bash
-   docker run -d --name stockwise-db -p 5432:5432 -e POSTGRES_DB=stockwise -e POSTGRES_USER=stockwise -e POSTGRES_PASSWORD=stockwise postgres:17-alpine
+   docker compose up -d db
    ```
 
 2. Start the service with the demo data. `JWT_SECRET` is required, at least 32 bytes:
 
    ```bash
-   cd service && JWT_SECRET="$(openssl rand -base64 48)" ./mvnw spring-boot:run -Dspring-boot.run.profiles=demo
+   cd service && JWT_SECRET="$(openssl rand -base64 48)" ./mvnw spring-boot:run -Dspring-boot.run.profiles=local,demo
    ```
 
    It listens on http://localhost:8080. `curl localhost:8080/api/v1/health` answers `{"service":"stockwise","status":"UP",...}`.
@@ -76,20 +76,35 @@ You need Java 25, Node 24 and Docker Desktop.
 |----|----|----|
 | `PORT` | `8080` | Set by the host |
 | `DATABASE_JDBC_URL` | `jdbc:postgresql://localhost:5432/stockwise` | Neon: the **pooled** endpoint, `jdbc:postgresql://<host>/<db>?sslmode=require` |
-| `DATABASE_JDBC_URL_DIRECT` | same as above | Neon: the **direct** endpoint, used only by Flyway migrations |
+| `DATABASE_JDBC_URL_DIRECT` | same as above | Neon: the **direct** endpoint, used only by Flyway migrations (in prod, `deploy.yml` migrates) |
+| `FLYWAY_ON_STARTUP` | `false` in `prod` | `true` makes the service migrate at start-up instead of `deploy.yml` |
+| `APP_VERSION` / `RENDER_GIT_COMMIT` | project version | Reported by `/api/v1/health`; `deploy.yml` waits for its commit |
 | `DATABASE_USERNAME`, `DATABASE_PASSWORD` | `stockwise` / `stockwise` | Secrets in deployment |
 | `JWT_SECRET` | none: **required** | At least 32 bytes. The service refuses to start without it |
-| `CORS_ALLOWED_ORIGINS` | `http://127.0.0.1:5173,http://localhost:5173` | Comma-separated deployed web addresses |
-| `SPRING_PROFILES_ACTIVE` | none | `demo` adds the Monday seed. It does nothing if the database already has data |
+| `CORS_ALLOWED_ORIGINS` | none (`local` adds the Vite dev server) | Comma-separated deployed web addresses |
+| `SPRING_PROFILES_ACTIVE` | `prod` in the image | `local` allows the Vite dev server origin; `demo` adds the Monday seed at start-up (does nothing if data exists). On Render the seed comes from `deploy.yml` with `SEED_DEMO=true` |
+| `DB_POOL_SIZE` | `10` | Connection pool size |
 | `LOGGING_STRUCTURED_FORMAT_CONSOLE` | none | `ecs` for JSON logs in deployment; every line carries the `requestId` |
 | `VITE_API_BASE_URL` (web, build time) | `http://127.0.0.1:4710` (mock) | The service's `/api/v1` address. Public, not a secret |
 
 ## Checks
-```bash
-cd service && ./mvnw verify
-```
+| What | Command |
+|----|----|
+| Service (needs Docker) | `cd service && ./mvnw verify` |
+| Web | `cd web && npm run lint && npm run typecheck && npm test -- --run && npm run build` |
+| Contract | `npx @redocly/cli@2 lint contract/openapi.yaml --config contract/redocly.yaml` |
+| Smoke a live deploy | `API_URL=… WEB_URL=… scripts/smoke.sh` |
+| Last-unit test, deployed | `API_URL=…/api/v1 OWNER_PASSWORD=… node load/concurrency/last-unit.mjs` |
+| Load | see [load/README.md](load/README.md) |
 
-That runs 88 tests against real Postgres 17 in Docker: migrations up, down and up; schema rules; the sale transaction and its concurrency and idempotency; repositories; the seed; and every endpoint over HTTP, including the role checks. For the web checks, see [web/README.md](web/README.md).
+GitHub Actions:
+- `ci.yml` is the gate: guards, secret scan, contract lint, service tests and web checks. A red job means nothing deploys.
+- `deploy.yml` runs the gate, waits for the `production` approval, migrates Neon, deploys Vercel and Render, then smoke-checks.
+- `concurrency-evidence.yml` is manual: it passes with the guard and fails without it.
+
+Setup of secrets and hosts: [docs/deploy-setup.md](docs/deploy-setup.md). The Monday demo script: [docs/demo-runbook.md](docs/demo-runbook.md). Backend layout: [BACKEND-STRUCTURE.md](BACKEND-STRUCTURE.md).
+
+`./mvnw verify` runs 88 tests against real Postgres 17 in Docker: migrations up, down and up; schema rules; the sale transaction and its concurrency and idempotency; repositories; the seed; and every endpoint over HTTP, including the role checks. For the web checks, see [web/README.md](web/README.md).
 
 ## Free tier terms checked
 From [deploy-plan.md](deploy-plan.md) §1. Each provider's own pages were read on **2026-10-23**.
@@ -101,7 +116,18 @@ From [deploy-plan.md](deploy-plan.md) §1. Each provider's own pages were read o
 | Vercel | Hobby is for personal, non-commercial use, with hard usage caps. |
 | Qocent | Not free: prepaid credits only. Used only if the programme supplies them (PD5a). |
 
+## Performance and load
+| Measure | Target (DM12) | Result |
+|----|----|----|
+| `POST /sales` p95 (warm) | ≤ 500 ms | **TBD** |
+| Dashboard p95 (warm) | ≤ 800 ms | **TBD** (no dashboard yet) |
+| Saturation point | reported | **TBD** |
+| Cold start (Render) | reported separately | **TBD** |
+| Last-unit test, 10 devices | one 201, nine 409, stock 0 | Passed 3 of 3 rounds against the service image locally (2026-10-25); **TBD on the deployed service** |
+
 ## Known limitations
 - No sign-up, password reset or email (see "Simulated or not yet built").
 - Tokens last 8 hours and can't be revoked early, although removing a user or changing their role takes effect on their next request (DM15).
 - No rate limit on login yet.
+- Render's free service sleeps; open the service address about 2 minutes before a demo.
+- Free-tier compute caps limit the load figures; they will be reported as measured, with the date.

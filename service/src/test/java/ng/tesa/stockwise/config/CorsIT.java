@@ -1,10 +1,11 @@
-package ng.tesa.stockwise.web;
+package ng.tesa.stockwise.config;
 
 import static org.assertj.core.api.Assertions.assertThat;
 
 import org.junit.jupiter.api.Test;
 
 import ng.tesa.stockwise.support.ApiTestSupport;
+
 
 /** The web app on another origin can call the API with its headers; other origins can't (deploy-plan §2). */
 class CorsIT extends ApiTestSupport {

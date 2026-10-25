@@ -35,7 +35,8 @@ public abstract class DatabaseTestSupport {
         registry.add("spring.datasource.password", POSTGRES::getPassword);
         // Enough connections for the parallel tests to really overlap.
         registry.add("spring.datasource.hikari.maximum-pool-size", () -> "20");
-        registry.add("app.security.jwt-secret", () -> TEST_JWT_SECRET);
+        registry.add("stockwise.security.jwt-secret", () -> TEST_JWT_SECRET);
+        registry.add("stockwise.cors.allowed-origins", () -> "http://localhost:5173");
     }
 
     /** Test-only signing key (never used outside tests). */

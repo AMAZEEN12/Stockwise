@@ -1,4 +1,4 @@
-package ng.tesa.stockwise.api;
+package ng.tesa.stockwise.web;
 
 import static org.assertj.core.api.Assertions.assertThat;
 

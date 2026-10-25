@@ -1,6 +1,7 @@
-# Stockwise service configuration. Every secret comes from the environment (deploy-plan §2); none is committed.
+# Stockwise service configuration (deploy-plan §2). No secrets here: everything secret comes from the environment.
 server:
   port: ${PORT:8080}
+  shutdown: graceful
   # Render and Qocent terminate TLS in front of the service.
   forward-headers-strategy: framework
 
@@ -8,18 +9,23 @@ spring:
   application:
     name: stockwise
   datasource:
-    # JDBC form. Neon: jdbc:postgresql://<host>/<db>?sslmode=require. Local default: docker compose.
+    # JDBC form of the Neon POOLED endpoint, e.g. jdbc:postgresql://<host>-pooler.<region>.neon.tech/<db>?sslmode=require
     url: ${DATABASE_JDBC_URL:jdbc:postgresql://localhost:5432/stockwise}
     username: ${DATABASE_USERNAME:stockwise}
     password: ${DATABASE_PASSWORD:stockwise}
     hikari:
-      maximum-pool-size: ${DATABASE_POOL_SIZE:10}
+      maximum-pool-size: ${DB_POOL_SIZE:10}
+      connection-timeout: 10000
   flyway:
+    # Applied migrations only. The demo profile adds the seed location.
     locations: classpath:db/migration
-    # Neon: migrations need the DIRECT endpoint; the pooled one breaks Flyway's session lock (deploy-plan §2).
+    # When the service migrates at start-up, it uses the Neon DIRECT endpoint: the pooled one
+    # breaks Flyway's session lock (deploy-plan §2). In prod, deploy.yml migrates instead.
     url: ${DATABASE_JDBC_URL_DIRECT:${spring.datasource.url}}
     user: ${spring.datasource.username}
     password: ${spring.datasource.password}
+  lifecycle:
+    timeout-per-shutdown-phase: 20s
   jackson:
     # N1: money and quantities are integers. 1.5, "2" or an unknown field is a 400, never a guess.
     default-property-inclusion: non_null
@@ -30,21 +36,52 @@ spring:
     mapper:
       allow-coercion-of-scalars: false
 
-app:
-  version: "@project.version@"
+stockwise:
+  # Render sets RENDER_GIT_COMMIT; deploy.yml waits for /api/v1/health to report the commit it deployed.
+  version: ${APP_VERSION:${RENDER_GIT_COMMIT:@project.version@}}
   timezone: Africa/Lagos
   security:
     # HS256 signing key, at least 32 bytes. Required: the service refuses to start without it.
     jwt-secret: ${JWT_SECRET:}
     token-lifetime: 8h
   cors:
-    allowed-origins: ${CORS_ALLOWED_ORIGINS:http://127.0.0.1:5173,http://localhost:5173}
+    # Comma-separated deployed web addresses only. The local profile adds the Vite dev server.
+    allowed-origins: ${CORS_ALLOWED_ORIGINS:}
+
+logging:
+  level:
+    root: INFO
+    ng.tesa.stockwise: INFO
 
 ---
-# Demo data (DM16, R19): adds the Monday seed as a Flyway repeatable migration.
+# Local development: docker compose up -d db, then run with -Dspring-boot.run.profiles=local,demo
+spring:
+  config:
+    activate:
+      on-profile: local
+stockwise:
+  cors:
+    allowed-origins: http://localhost:5173,http://127.0.0.1:5173
+
+---
+# Demo data (Monday seed, DM16). The seed does nothing if the database already holds data.
 spring:
   config:
     activate:
       on-profile: demo
   flyway:
     locations: classpath:db/migration,classpath:db/seed
+
+---
+# Production (Render / Qocent): logs go to stdout only, no stack traces in responses.
+spring:
+  config:
+    activate:
+      on-profile: prod
+  flyway:
+    # deploy.yml migrates against the Neon DIRECT endpoint before the service starts.
+    enabled: ${FLYWAY_ON_STARTUP:false}
+server:
+  error:
+    include-stacktrace: never
+    include-message: never
