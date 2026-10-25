@@ -11,7 +11,7 @@ Requirements: [sdlc/intent.md](sdlc/intent.md) and [sdlc/spec.md](sdlc/spec.md).
 ## Live addresses
 | Stack | Web | Service |
 |----|----|----|
-| V: Vercel + Render + Neon (official, DM9) | _to be added at deploy_ | _to be added at deploy_ |
+| V: Vercel + Render + Neon (official, DM9) | https://stockwise-smoky.vercel.app/ | https://stockwise-yc54.onrender.com |
 | Q: Qocent + Neon (parallel, pending funding, PD5a) | _to be added at deploy_ | _to be added at deploy_ |
 
 The free Render service sleeps after 15 minutes idle, and the first request after that takes about a minute.
