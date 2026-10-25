@@ -53,6 +53,7 @@ Current frontend state (2026-10-25): Home/authentication plus Products on `feat/
 
 ## Mistakes to avoid
 Rule: when an agent makes the same mistake twice, the correction goes here.
+- UI capture checks must verify computed layout as well as interaction: an existing Vite preview can retain an earlier plugin configuration after branch switching. Use a separate PLAYWRIGHT_PORT for current-config QA, preserve user-owned servers, and check fixed dialogs remain within the viewport. Tailwind v4 uses individual translate properties; mobile overrides need translate:none as well as transform:none (Customer Picker, 2026-10-25; logged by Codex).
 - Decorative error icons must use aria-hidden SVG rather than literal exclamation-mark text. Literal decoration contaminates exact visible-copy checks even when hidden from assistive technology; preserve the message and fix the icon instead of weakening assertions (auth and Sales checks, 2026-10-24; logged by Codex).
 - Removing a CHECK that is the last item in a `CREATE TABLE` leaves a dangling comma. When proving a rule test fails, make sure it fails on the rule, not on a syntax error (rule-removal log, R12).
 - Never leave backup or scratch files under `src/main/resources/db/`. `MigrationRollbackIT` treats every file there as a migration, and stale copies survive in `target/` until `./mvnw clean`.

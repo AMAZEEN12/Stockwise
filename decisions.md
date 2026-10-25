@@ -175,6 +175,17 @@ Published: [Products PR #4](https://github.com/AMAZEEN12/Stockwise/pull/4) and [
 
 Publication follow-up: current main includes merged structure PR #1 (2d170e6). Its only merge conflict with Products was in sdlc/WORKLOG.md. Codex retained the current frontend guidance and appended the incoming historical startup notes, committed the main integration as 8fa08ac on Products, then carried it into Sales. No application files changed, existing feature commits were preserved and neither branch was force-pushed. Decided by: Codex (routine conflict resolution within Victor's publication request). Logged by: Codex.
 
+### Customer Picker and Customers, 2026-10-25
+
+| ID | Date | Decision | Reason | Decided by | Logged by |
+|----|------|----------|--------|------------|-----------|
+| DM50 | 2026-10-25 | Implement the 14 Customer Picker and 22 Customers references using root Screens tokens; separate feat/customer-picker and feat/customers-ui branches and descriptive completed-feature commits. Keep the selected-customer reference message exactly as supplied | Victor authorized implementation after the read-only review and explicitly chose unchanged reference text | Victor Oyeleke | Codex |
+| DM51 | 2026-10-25 | Reuse current GET/POST customers contract and one form/cache. Keep real store-credit writes gated. Preserve server order, load every collection page, use last successful client retrieval for WAT freshness, and use UUID identity even for duplicate names. Handle unsafe amounts and non-idempotent create uncertainty explicitly; proposed API changes stay separate | Complete the supplied flows without inventing approved endpoints, retry guarantees or authoritative balance snapshots | Codex, implementation choices under Victor's authorization | Codex |
+
+| DM52 | 2026-10-25 | Use PLAYWRIGHT_PORT=5184 for current-config QA while preserving the user's existing 5173 preview. Register Tailwind sources explicitly, ignore generated .vite/.mock for lint, and assert dialog positioning/bounds. Override individual translate for the mobile sheet. Keep optional contact valid after Formik normalization | Visual inspection caught missing utilities and offscreen mobile content that interaction-only checks did not detect | Codex, implementation/verification choices | Codex |
+
+Details: [customer UI](docs/customers-ui.md) and [pending contract proposals](docs/customers-contract-proposal.md). No new two-engineer sign-off is recorded.
+
 ## 3. Contract change log
 
 | Date | Change | Why | Agreed by (two engineers) |

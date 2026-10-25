@@ -10,6 +10,8 @@ const token = 'stockwise-contract-mock-token';
 const customers = [
   {id:'22222222-2222-4222-8222-222222222221',displayName:'Mama Chidi',balanceKobo:450000,storeCreditKobo:0,createdAt:'2026-10-24T08:41:00Z'},
   {id:'22222222-2222-4222-8222-222222222222',displayName:'Bolu Adeyemi',balanceKobo:0,storeCreditKobo:600000,createdAt:'2026-10-24T08:41:00Z'},
+  {id:'22222222-2222-4222-8222-222222222223',displayName:'Ngozi Okoro',balanceKobo:85000,storeCreditKobo:0,createdAt:'2026-10-24T08:41:00Z'},
+  {id:'22222222-2222-4222-8222-222222222224',displayName:'Tunde Bakare',balanceKobo:0,storeCreditKobo:0,createdAt:'2026-10-24T08:41:00Z'},
 ];
 const sales = [];
 const submissions = new Map();
@@ -71,6 +73,16 @@ const server = createServer(async (request,response) => {
     if (!Number.isInteger(page) || page < 0 || !Number.isInteger(size) || size < 1 || size > 100) {problem(400,'VALIDATION_FAILED','Invalid pagination.'); return;}
     const q = (url.searchParams.get('q') || '').toLowerCase(); const items = customers.filter((person) => person.displayName.toLowerCase().includes(q));
     send(200,{items:items.slice(page*size,(page+1)*size),page,size,totalItems:items.length}); return;
+  }
+  if (url.pathname === '/customers' && request.method === 'POST') {
+    if (!['OWNER','ASSISTANT'].includes(user.role)) {problem(403,'FORBIDDEN','Admins cannot add customers.'); return;}
+    const errors = [];
+    if (typeof body.displayName !== 'string' || !body.displayName.trim() || [...body.displayName.trim()].length > 120) errors.push({field:'displayName',message:'Enter a display name, up to 120 characters.'});
+    if (body.contactPlaceholder !== undefined && (typeof body.contactPlaceholder !== 'string' || [...body.contactPlaceholder].length > 60)) errors.push({field:'contactPlaceholder',message:'Use at most 60 characters.'});
+    if (Object.keys(body).some((key) => !['displayName','contactPlaceholder'].includes(key))) errors.push({field:'body',message:'Unexpected property.'});
+    if (errors.length) {problem(400,'VALIDATION_FAILED','Check customer fields.',errors); return;}
+    const customer = {...body,displayName:body.displayName.trim(),id:randomUUID(),balanceKobo:0,storeCreditKobo:0,createdAt:new Date().toISOString()};
+    customers.push(customer);send(201,customer);return;
   }
   if (url.pathname === '/sales' && request.method === 'POST') {
     if (user.role === 'ADMIN') {problem(403,'FORBIDDEN','Admins cannot record sales.'); return;}

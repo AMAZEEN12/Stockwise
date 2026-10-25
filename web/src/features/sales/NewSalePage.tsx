@@ -5,6 +5,8 @@ import {Dialog} from '../../components/ui/dialog';
 import {StatusPanel} from '../../components/ui/status-panel';
 import {useProductsQuery} from '../../service/api/products.api';
 import {useCustomersQuery} from '../../service/api/customers.api';
+import {CustomerPicker} from '../customers/CustomerPicker';
+import type {Customer} from '../../models/responses/customers.response';
 import {useCreateSaleMutation} from '../../service/api/sales.api';
 import {httpClient,normalizeHttpError} from '../../service/http-client';
 import type {HttpError} from '../../service/http-client';
@@ -29,6 +31,7 @@ export function NewSalePage() {
   const [query,setQuery] = useState('');
   const [paymentType,setPaymentType] = useState<'PAID'|'CREDIT'>(owned?.body.paymentType || draft?.paymentType || 'PAID');
   const [customerId,setCustomerId] = useState(owned?.body.customerId || draft?.customerId || '');
+  const [selectedCustomer,setSelectedCustomer] = useState<Customer | undefined>(owned?.customer);
   const [dueDate,setDueDate] = useState(owned?.body.dueDate || draft?.dueDate || '');
   const [state,setState] = useState<State>(owned ? 'recovery' : 'idle');
   const [message,setMessage] = useState('');
@@ -40,7 +43,7 @@ export function NewSalePage() {
   const search = useProductsQuery({q:query,size:20},{skip:!query.trim()});
   const [createSale] = useCreateSaleMutation();
   useEffect(() => {if (!pending) saveCartDraft(user.id,{cart,paymentType,customerId,dueDate});},[cart,paymentType,customerId,dueDate,pending,user.id]);
-  const customer = pending?.customer || customers.data?.find((item) => item.id === customerId) || owned?.customer;
+  const customer = pending?.customer || customers.data?.find((item) => item.id === customerId) || (selectedCustomer?.id === customerId ? selectedCustomer : undefined);
   const simulation = import.meta.env.DEV && readSession()?.accessToken === 'stockwise-contract-mock-token';
   const busy = ['checking','sending','retrying'].includes(state);
   const frozen = busy || pending !== null;
@@ -138,7 +141,7 @@ export function NewSalePage() {
         {(line.issue || line.quantity > 10000) && <p className="line-error"><span className="error-symbol" aria-hidden="true">!</span>{line.quantity > 10000 ? 'Quantity cannot exceed 10,000.' : line.issue}</p>}
       </article>)}
     </section><aside className="sale-checkout" aria-label="Payment and total"><div className="payment-card"><div className="payment-toggle" role="group" aria-label="Payment type"><button aria-pressed={paymentType === 'PAID'} disabled={frozen} onClick={() => setPaymentType('PAID')}>Paid</button><button aria-pressed={paymentType === 'CREDIT'} disabled={frozen} onClick={() => setPaymentType('CREDIT')}>On credit</button></div>
-      {(paymentType === 'CREDIT' || customerId) && <><select className="shop-input" aria-label={paymentType === 'CREDIT' ? 'Choose customer (required)' : 'Customer (optional)'} aria-invalid={paymentType === 'CREDIT' && !customerId ? true : undefined} value={customerId} disabled={frozen || customers.isLoading} onChange={(event) => setCustomerId(event.target.value)}><option value="">{customers.isLoading ? 'Loading customers…' : 'Choose customer (required)'}</option>{customers.data?.map((person) => <option key={person.id} value={person.id}>{person.displayName} · {person.balanceKobo ? `Owes ${displayMoney(person.balanceKobo)}` : 'Settled'}</option>)}</select>
+      {(paymentType === 'CREDIT' || customerId) && <><CustomerPicker user={user} customer={customer} required={paymentType === 'CREDIT'} disabled={frozen || invalidRecovery} onSelect={(person) => {setCustomerId(person?.id || '');setSelectedCustomer(person);}}/>
       {customers.isError && <p role="alert">Could not load customers. <button onClick={() => void customers.refetch()}>Retry</button></p>}
       {customer && customer.storeCreditKobo > 0 && <span className="credit-badge micro">Store credit {displayMoney(customer.storeCreditKobo)}</span>}
       {paymentType === 'CREDIT' && <input className="shop-input due-date" aria-label="Due date (optional)" type={dueDate ? 'date' : 'text'} placeholder="Due date (optional)" value={dueDate} disabled={frozen} onFocus={(event) => {event.currentTarget.type = 'date';}} onBlur={(event) => {if (!event.target.value) event.currentTarget.type = 'text';}} onChange={(event) => setDueDate(event.target.value)}/>}</>}

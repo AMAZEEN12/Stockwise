@@ -72,6 +72,7 @@ This is the full build inventory, not a statement that every file already exists
 | `…/contract/ContractIT.java`: every response is validated against `contract/openapi.yaml` | N5 |
 
 ### Interface (`web/`), owned by Victor (DM32-DM36)
+Customer UI amendment, 2026-10-25 (DM50-DM51): implement Customer Picker first on feat/customer-picker, then Customers on feat/customers-ui with separate descriptive commits. Shared customer Formik/Yup form and generated models, one resource API/cache, existing GET/POST contract, user/service-bound uncertain-create recovery and no automatic customer POST retry. Reference inventory, exact-copy choice, safe current adapters and API proposals are in docs/customers-ui.md and docs/customers-contract-proposal.md. Verify desktop/mobile states, keyboard/axe, selection by UUID, pagination, creation/cache refresh, role/session changes and lost responses. Decided by Victor Oyeleke (scope/copy); Codex (implementation defaults). Logged by Codex.
 
 **Phase 2 deliverable:** create the exact folder tree in [docs/frontend-architecture.md](../docs/frontend-architecture.md), track empty leaf folders with `.gitkeep`, and create only one empty source file, `src/service/http-client.ts`. No package manifest, configuration, dependencies, API implementations, generated types, styles or screens are created yet. The root Java service, contract and delivery scaffolds remain with their area owners.
 
