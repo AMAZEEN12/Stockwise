@@ -1,4 +1,5 @@
-import {Button} from '../../components/ui/button';
+import {ErrorState} from '../../components/ui/error-state';
+import {Skeleton} from '../../components/ui/skeleton';
 import type {HttpError} from '../../service/http-client';
 
 export function CustomerIcon({kind='info'}:{kind?:'info'|'error'|'empty'|'check'|'search'}) {
@@ -7,8 +8,12 @@ export function CustomerIcon({kind='info'}:{kind?:'info'|'error'|'empty'|'check'
   </svg>;
 }
 export function CustomerLoading({count=4}:{count?:number}) {
-  return <div aria-busy="true" aria-label="Loading customers"><div aria-hidden="true" className="customer-skeletons">{Array.from({length:count},(_,index) => <div className="customer-skeleton" key={index}><span/><span/></div>)}</div><p role="status" className="customer-micro">Loading customers…</p></div>;
+  return <div aria-busy="true" aria-label="Loading customers"><div className="customer-skeletons">{Array.from({length:count},(_,index) => <Skeleton lines={2} className="customer-skeleton" key={index}/>)}</div><p role="status" className="customer-micro">Loading customers…</p></div>;
 }
-export function CustomerLoadError({error,onRetry,stale=false}:{error?:HttpError;onRetry:()=>void;stale?:boolean}) {
-  return <div className="customer-state customer-load-error" role="alert"><h3><CustomerIcon kind="error"/>{stale ? 'Couldn’t refresh customers' : "Couldn't load customers"}</h3><p>{error?.status === 401 ? 'Your session ended. Sign in again to load customers.' : stale ? 'Previously loaded balances may be out of date. Check your connection and try again.' : 'Check your connection and try again.'}</p>{error?.requestId && <p className="customer-micro">Request ID {error.requestId}</p>}<Button size="lg" variant="secondary" onClick={onRetry}>Retry</Button></div>;
+export function CustomerLoadError({error,onRetry,stale=false,retrying=false}:{error?:HttpError;onRetry:()=>void;stale?:boolean;retrying?:boolean}) {
+  return <ErrorState layout="panel" headingLevel="h3" className="customer-state customer-load-error" titleClassName="customer-state-title"
+    icon={<CustomerIcon kind="error"/>} title={stale ? 'Couldn’t refresh customers' : "Couldn't load customers"}
+    description={error?.status === 401 ? 'Your session ended. Sign in again to load customers.' : stale ? 'Previously loaded balances may be out of date. Check your connection and try again.' : 'Check your connection and try again.'}
+    details={error?.requestId && <p className="customer-micro">Request ID {error.requestId}</p>}
+    onRetry={onRetry} retrying={retrying} retryLabel="Retry" actionProps={{variant:"secondary",size:"lg"}}/>;
 }

@@ -9,9 +9,10 @@ import '@fontsource/inter-tight/latin-600.css';
 import '@fontsource/instrument-serif/latin-400-italic.css';
 import '@fontsource/jetbrains-mono/latin-400.css';
 import './styles/app.css';
+import { ToastProvider } from './components/ui/toast';
 import { store } from './app/store/store';
 import { router } from './app/router/router';
 
 ReactDOM.createRoot(document.getElementById('root')!).render(
-  <React.StrictMode><Provider store={store}><RouterProvider router={router} /></Provider></React.StrictMode>,
+  <React.StrictMode><Provider store={store}><ToastProvider viewportClassName="shop-toast-viewport" toastClassName="shop-toast"><RouterProvider router={router} /></ToastProvider></Provider></React.StrictMode>,
 );

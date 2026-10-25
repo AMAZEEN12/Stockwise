@@ -4,6 +4,8 @@ Home/authentication, Products, New sale/Receipt, Customer Picker and Customers, 
 
 ## Run locally
 
+Shared-component alignment (DM55) is implemented on `feat/shared-component-alignment`. Read the root AGENTS.md and [shared component adaptations](../docs/shared-component-alignment.md) before UI work. The shared set supplies states, filters, controls, dialogs, notifications, cards and badges; Stockwise token values remain authoritative. Additive APIs are approved locally by Victor Oyeleke and documented for shared-owner review.
+
 Node 24 is the verified runtime. From this folder:
 
 ```powershell
@@ -37,6 +39,10 @@ npx playwright test
 With dev server and simulation running, `npm run check:mock` checks actual HTTP/browser authentication without interception. `npm run check:shop` checks product persistence, sale replay, changed-body refusal and simulated credit allocation; `npm run check:shop:browser` checks the actual sign-in → add product → catalogue → sale → receipt journey. These checks add fictional test records. Prism remains development-only with the previously recorded transitive audit advisories; see the implementation document for that audit's date and limits.
 
 Use `npx playwright test --workers=1` on this Windows machine; tests start a server if none is running. Captures under ignored `test-results/` use 1440×900 desktop and 360×880 auth / 360×1000 sales at 2×. Run `node scripts/compare-designs.mjs` after the Sales captures to measure differences against the newest local references. It writes ignored `.mock/design-comparison.json`; this reports differences, not visual approval. Reference PNGs remain local in ignored `Screens/`. Protected routes include `/app/products`, `/app/products/new`, `/app/sell`, `/app/receipts/:saleId`; `/workspace` remains the authentication handoff. Static hosting needs SPA fallback for deep links.
+
+For an isolated, warmed QA server, run `npm run check:ui`. It owns port 5186 by default (override with PLAYWRIGHT_PORT), compiles the UI modules/fonts before timed tests, preserves all existing timeouts/assertions, refuses an occupied port, and stops its server afterwards. On this machine the long picker capture/axe flow also passed with `$env:PLAYWRIGHT_CHANNEL='chromium'` (full Chromium). Freeze input files during browser runs: editing this README while Vite watches it can refresh an open dialog. Keep expensive builds separate from browser QA.
+
+Customer reference comparison accepts capture folders in priority order, for example `node scripts/compare-customer-designs.mjs test-results-chromium-final test-results`. This allows a fresh targeted capture to override its earlier full-run state without discarding the other states or treating differences as approval.
 
 ## Integration limits
 

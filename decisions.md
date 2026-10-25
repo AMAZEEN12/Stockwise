@@ -68,7 +68,7 @@ Flyway Community has no undo migrations (that is a paid feature). Options: (a) a
 **Who decides:** Data and rules owner. **Status:** resolved → DM16. Proposed: 20 products (including zero-stock, at-threshold and archived), 5 customers (one with credit), 7 days of sales, and one demo account per role. The full volumes (120 / 60 days / 14) come after Monday.
 
 ### PD13: Cross-team shared-component agreement
-**Who decides:** the five interface engineers together, as reported by Victor. **Status:** resolved on 2026-10-24 → DM37. The earlier pending proposal below is retained as historical context; DM37 records the adopted copy-in source.
+**Who decides:** the four interface engineers together. Victor Oyeleke confirmed the correct count on 2026-10-25 (DM53). **Status:** resolved on 2026-10-24 → DM37; DM53 corrects the engineer count. The earlier pending proposal below is retained as historical context; DM37 records the adopted copy-in source.
 
 The eight-page `shared-component-set-plan.pdf` is a proposal. Radix, copy-in distribution, component interfaces, the work split and dates are not accepted commitments. Shadcn is not a Stockwise requirement (DM35). Record the actual agreed foundation, token names, Formik/Yup compatibility, component interfaces, distribution and approving engineers before adoption. Do not create a shared repository or assign Victor Dialog/Toast based only on the PDF.
 
@@ -118,6 +118,8 @@ Questions include session persistence and expiry during pending writes, recovery
 | DM36 | 2026-10-24 | Phase 2 creates frontend folders, documentation, `.gitkeep` placeholders and one empty HTTP-client source file only. Publish existing planning docs as the one-time initial `main` baseline, then publish `chore/web-structure` and open a reviewed PR. Later features use separate branches and descriptive commits; no force-push or automatic merge | Make the empty cloned repository useful and visible to teammates without implementing screens or bypassing later review gates | Victor Oyeleke | Codex (logging assistant) |
 
 ### Frontend implementation decisions, 2026-10-24
+
+DM37's original wording is retained as history. DM53 supersedes its reference to five engineers: Victor confirmed that the upstream count of four is correct.
 
 | ID | Date | Decision | Reason | Decided by | Logged by |
 |----|------|----------|--------|------------|-----------|
@@ -186,6 +188,30 @@ Publication follow-up: current main includes merged structure PR #1 (2d170e6). I
 Details: [customer UI](docs/customers-ui.md) and [pending contract proposals](docs/customers-contract-proposal.md). No new two-engineer sign-off is recorded.
 
 Implementation follow-up, 2026-10-25: confirmed customer creations update the existing shared cache; the directory uses semantic row headers, matching responsive cards and a persistent dismissible success notice. The last retrieval time is displayed in Africa/Lagos. Independent verification owns temporary API/Vite ports 4711/5185 and stops them afterwards; the user's preview is preserved. All 36 supplied customer frames were compared, remaining differences disclosed, and current OpenAPI/generated types left unchanged. Decided by: Codex (technical choices within DM50 scope). Logged by: Codex.
+
+### Shared-source documentation correction, 2026-10-25
+
+| ID | Date | Decision | Reason | Decided by | Logged by |
+|----|------|----------|--------|------------|-----------|
+| DM53 | 2026-10-25 | Correct the shared agreement to four interface engineers, matching upstream; supersede DM37's engineer count only. Record that Card supports text-only content when image is omitted, and Select/Checkbox already use shared CSS variables and --color-border-input for their control edges at reviewed revision dbe1cac1f5e6e0838331e35b8da482ab4a1497fc. Update current guidance and retain corrected historical provenance | Victor confirmed upstream is correct and approved recording the resolved Card and Select/Checkbox README discrepancies. Documentation scope only; implementation proposals remain pending | Victor Oyeleke | Codex |
+
+**Approved by:** Victor Oyeleke. **Logged by:** Codex. Details, immutable source links and component ownership: [shared component source clarifications](docs/shared-component-alignment.md). The original copy-in revision remains unchanged; no runtime, dependency or API-contract update is approved by this documentation correction.
+
+### Shared-source documentation publication, 2026-10-25
+
+| ID | Date | Decision | Reason | Decided by | Logged by |
+|----|------|----------|--------|------------|-----------|
+| DM54 | 2026-10-25 | Commit DM53 and its related Markdown guidance on fix/shared-component-documentation, based directly on current origin/main, then push and open a PR into main. Preserve the original customer branch and all unrelated UI edits. Adapt the approved documentation correction to main's older documentation without importing unmerged feature commits | Victor explicitly requested a PR for the recent documentation change and confirmation of a commit | Victor Oyeleke (publication scope); Codex (isolated checkout and documentation adaptation) | Codex |
+
+Publication confirmed: commit `285cf91`, branch `fix/shared-component-documentation`, [PR #6](https://github.com/AMAZEEN12/Stockwise/pull/6), base `main`, state `open`, draft `false`, merged `false`. Documentation checks passed; original working files and branch were preserved. Logged by Codex on 2026-10-25.
+
+### Shared-component implementation alignment, 2026-10-25
+
+| ID | Date | Decision | Reason | Decided by | Logged by |
+|----|------|----------|--------|------------|-----------|
+| DM55 | 2026-10-25 | Implement the seven reviewed shared-component alignment proposals on feat/shared-component-alignment. Adopt reviewed primitives, visible search labels, shared notifications, state components, cards/badges and guarded Dialog/ConfirmDialog composition; complete token usage and persistent agent guidance. Preserve supplied designs, current Victor refinements, integer-kobo calculations, sale submission/recovery and non-idempotent customer-create safeguards. Document additive shared API proposals and their owners; local implementation approval does not claim cross-team acceptance | Victor explicitly requested proceeding with implementation after approving DM53 and publishing the documentation PR. Scope includes the proposed visible labels and five-second success toasts; active API contracts remain unchanged | Victor Oyeleke (implementation scope); Codex (technical adaptations) | Codex |
+
+**Approved by:** Victor Oyeleke. **Logged by:** Codex. Implementation, source provenance, owner-review proposals and validation are tracked in [shared component alignment](docs/shared-component-alignment.md).
 
 ## 3. Contract change log
 

@@ -6,13 +6,19 @@ import {fileURLToPath} from 'node:url';
 const require=createRequire(import.meta.url);
 const {PNG}=require(resolve(dirname(require.resolve('playwright-core/package.json')),'lib/utilsBundle.js'));
 const root=resolve(dirname(fileURLToPath(import.meta.url)),'..');
-const directories=await readdir(resolve(root,'test-results'),{withFileTypes:true});
+// Prefer the first supplied capture folder, then fall back to earlier full-run states.
+const captureFolders=process.argv.slice(2);
+if(!captureFolders.length)captureFolders.push('test-results');
+const directories=(await Promise.all(captureFolders.map(async(folder)=>{
+  const base=resolve(root,folder);
+  return (await readdir(base,{withFileTypes:true})).map((entry)=>({entry,base}));
+}))).flat();
 const groups={picker:{folder:'customer picker',states:{list:'Customer list',add:'Add new customer','name-required':'Name required',selected:'Customer selected',loading:'Loading',error:'Error with retry',empty:'Empty (no customers)'}},customers:{folder:'customers',states:{list:'Customer list',add:'Add customer dialog','name-required':'Name required',saving:'Saving','save-error':'Save error',success:'Success toast',admin:'Admin read-only',loading:'Loading',error:'Error with retry',empty:'Empty (no customers)','no-match':'No search match'}}};
 const report=[];
 for (const [group,{folder,states}] of Object.entries(groups)) for (const kind of ['desktop','mobile']) for (const [state,referenceState] of Object.entries(states)) {
   const file=`${group}-${state}.png`;let capturePath;
-  for (const entry of directories) if (entry.isDirectory() && entry.name.endsWith(kind)) {
-    const candidate=resolve(root,'test-results',entry.name,file);
+  for (const {entry,base} of directories) if (entry.isDirectory() && entry.name.endsWith(kind)) {
+    const candidate=resolve(base,entry.name,file);
     try {await readFile(candidate);capturePath=candidate;break;} catch { /* This case captures a different state. */ }
   }
   if (!capturePath) continue;

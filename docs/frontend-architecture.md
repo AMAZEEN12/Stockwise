@@ -1,6 +1,6 @@
 # Frontend starter and conventions
 
-Owner: Victor Oyeleke (Interface). Logged by: Codex, 2026-10-24. Decisions DM32–DM40 in [decisions.md](../decisions.md). Shared agreement is attributed to the five interface engineers as reported by Victor; implementation choices and proposals are identified separately. Nnaemeka remains the existing decision-log owner.
+Owner: Victor Oyeleke (Interface). Logged by: Codex, 2026-10-24; shared-source clarification approved by Victor Oyeleke on 2026-10-25 (DM53). Decisions are in [decisions.md](../decisions.md). The shared agreement covers four interface engineers; implementation choices and proposals are identified separately. Nnaemeka remains the existing decision-log owner.
 
 ## Current deliverable
 
@@ -115,7 +115,9 @@ Keep the foundational colors, type, spacing, radii and focus treatment app-wide 
 
 ## Shared agreement and remaining questions
 
-DM37 adopts the five engineers' shared copy-in source as reported by Victor. The earlier PDF is historical context; current upstream source and README define component APIs. Shadcn is not required. Formik/Yup remains Stockwise's form stack; native Input props and FormField render props support it. The upstream decision file still names four engineers, so a fifth name is not invented. See the implementation document for revision, dependencies and local extensions.
+DM55 implementation amendment (2026-10-25), approved by Victor Oyeleke and logged by Codex: reuse the shared screen states, controls, notifications, dialogs, cards and badges on feat/shared-component-alignment. Read [local adaptations and owner proposals](shared-component-alignment.md#implementation-authorized-2026-10-25-dm55) before changing a component. Stockwise's visible search labels and five-second success notices are intentional approved adjustments; API and money behavior remain governed by the existing contract.
+
+DM37 adopts the four engineers' shared copy-in source; Victor confirmed the upstream count and approved this correction in DM53. The earlier PDF is historical context. Use the pinned source for actual component behavior where README notes conflict with it: Card supports text-only content, and Select/Checkbox already use shared CSS variables and input-border tokens. See [approved shared-source clarifications](shared-component-alignment.md) for exact behavior and revision. Shadcn is not required. Formik/Yup remains Stockwise's form stack; native Input props and FormField render props support it. See the implementation document for the copied revision, dependencies and local extensions.
 
 DM40 settles the current auth defaults; [the proposal](auth-contract-proposal.md) records remaining registration/API questions. Before future cart/money features, align on the remaining PD14 items:
 

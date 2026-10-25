@@ -117,6 +117,10 @@ The agent (or engineer) runs these itself and iterates until they pass, before a
 - Gate: none (informational). Record the pass rate in `evals/RESULTS.md` with the date.
 - Rule: every bug an AI tool introduced and the team caught adds one eval **and** an AI-log entry (the brief requires at least one "checked it and found it wrong" case).
 
+## Shared-component alignment coverage, 2026-10-25 (DM55)
+
+Approved by Victor Oyeleke; logged by Codex. Keep existing auth/product/customer/sale/recovery assertions. Add unit coverage for ConfirmDialog's disabled acceptance, same-tick duplicate submission, asynchronous failure and caller-owned close transition. Add desktop/mobile browser checks for Select keyboard selection and clear-focus restoration, Checkbox Space toggling with disabled confirmation and token-based focus, and automatic success-toast expiry. Continue axe, narrow/short viewport and actual local API checks; captures are evidence for human comparison, not automatic design approval. The active API contract and backend rule-removal tests are unchanged.
+
 ## Open questions
 - [ ] Is a Spring Boot 4-compatible `swagger-request-validator` (or an alternative contract validator) available? Verify in plan step 3; fallback: Schemathesis run from CI against the deployed service. (owner: Isaac Bassey) · UNRESOLVED
 - [ ] Will the k6 load test against Render free and Neon free stay within their terms? (spec C8; owner: Blessing Nwafor) · UNRESOLVED

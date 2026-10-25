@@ -1,7 +1,15 @@
 import {useEffect,useState} from 'react';
 import {Link, useNavigate, useOutletContext} from 'react-router';
 import {Button} from '../../components/ui/button';
-import {Dialog} from '../../components/ui/dialog';
+import {ConfirmDialog} from '../../components/ui/dialog';
+import {FilterBar} from '../../components/ui/filter-bar';
+import {FormField} from '../../components/ui/form-field';
+import {Input} from '../../components/ui/input';
+import {Checkbox} from '../../components/ui/checkbox';
+import {EmptyState} from '../../components/ui/empty-state';
+import {LoadingState} from '../../components/ui/loading-state';
+import {StatusBadge} from '../../components/ui/status-badge';
+import {useToast} from '../../components/ui/toast';
 import {StatusPanel} from '../../components/ui/status-panel';
 import {useProductsQuery} from '../../service/api/products.api';
 import {useCustomersQuery} from '../../service/api/customers.api';
@@ -39,6 +47,7 @@ export function NewSalePage() {
   const [changes,setChanges] = useState<string[]>([]);
   const [accepted,setAccepted] = useState(false);
   const navigate = useNavigate();
+  const {toast} = useToast();
   const customers = useCustomersQuery();
   const search = useProductsQuery({q:query,size:20},{skip:!query.trim()});
   const [createSale] = useCreateSaleMutation();
@@ -96,7 +105,7 @@ export function NewSalePage() {
       if (!validSale(sale)) {setState('error'); setMessage('The receipt could not be verified. This sale remains unconfirmed here. Retry the same submission.'); return;}
       const simulatedCredit = snapshot.simulated && snapshot.customer ? Math.min(sale.totalKobo,snapshot.customer.storeCreditKobo) : 0;
       persistReceipt({sale,customerName:snapshot.customer?.displayName,creditApplied:simulatedCredit,simulated:snapshot.simulated},user.id);
-      clearPending(); setPending(null); setCart([]); await navigate(`/app/receipts/${sale.id}`,{state:{sale}});
+      clearPending(); setPending(null); setCart([]); toast({variant:"success",title:"Sale recorded"}); await navigate(`/app/receipts/${sale.id}`,{state:{sale}});
     } catch (caught) {
       // The Axios preflight may throw before RTK's normalized error; handle both.
       const error = caught && typeof caught === 'object' && 'status' in caught ? caught as HttpError : normalizeHttpError(caught);
@@ -130,21 +139,24 @@ export function NewSalePage() {
       {invalidRecovery && <StatusPanel error title="An unfinished sale needs attention"><p>{initial === 'other-user' ? 'Sign in with the original account to recover its sale.' : 'The saved submission could not be read. Do not submit a replacement until its outcome is checked.'}</p></StatusPanel>}
       {state === 'session' && <StatusPanel error title="Your session ended. This sale is NOT confirmed."><p>Your cart is still here. Sign in again, then retry this sale with the same submission.</p><Button size="lg" onClick={signIn}>Sign in again</Button></StatusPanel>}
       {state === 'recovery' && <StatusPanel title="You have a sale that may not have been recorded"><p>Check and retry sends the original submission safely. Discard doesn’t undo anything already recorded.</p><Button size="lg" onClick={() => pending && void send(pending)}>Check and retry</Button><Button variant="secondary" size="lg" onClick={() => setMessage('Resolve this unconfirmed sale before starting another. Discard cannot undo a recorded sale.')}>Discard</Button></StatusPanel>}
-      {['sending','retrying'].includes(state) && <StatusPanel title={state === 'retrying' ? 'Not confirmed, retrying…' : 'Recording, not confirmed yet…'}><p>Don’t tap again. It’s safe to wait.</p></StatusPanel>}
+      {['sending','retrying'].includes(state) && <LoadingState label={state === 'retrying' ? 'Not confirmed, retrying…' : 'Recording, not confirmed yet…'}><p>Don’t tap again. It’s safe to wait.</p></LoadingState>}
       {message && state !== 'session' && <StatusPanel error={['error','conflict','forbidden'].includes(state)} title={state === 'conflict' ? 'Someone else just sold this.' : state === 'forbidden' ? 'Read-only access' : pending ? 'This sale is not confirmed' : 'Check this sale'}><p>{message}</p>{requestId && state === 'error' && <p className="micro">Request ID {requestId}</p>}{pending && state === 'error' && <Button variant="secondary" size="lg" onClick={() => void send(pending)}>Retry</Button>}</StatusPanel>}
-      <div className="sale-search"><span aria-hidden="true">⌕</span><input className="shop-input" aria-label="Search products to add" placeholder="Search products to add" value={query} disabled={frozen || invalidRecovery} onChange={(event) => setQuery(event.target.value)}/></div>
-      {query && <div className="sale-search-results">{search.isFetching ? <StatusPanel title="Searching products…"/> : search.isError ? <StatusPanel error title="Could not search products"><Button variant="secondary" size="lg" onClick={() => void search.refetch()}>Retry search</Button></StatusPanel> : !search.data?.items.filter((p) => p.active).length ? <StatusPanel title="No matching products"/> : search.data.items.filter((p) => p.active).map((product) => <button className="search-result" disabled={frozen || product.quantity === 0} key={product.id} onClick={() => add(product)}><span><strong>{product.name}</strong><small className="micro">{product.quantity > 0 ? `${product.quantity} in stock` : 'Out of stock'}</small></span><span>{Number.isSafeInteger(product.priceKobo) && product.priceKobo >= 0 ? formatMoney(product.priceKobo) : 'Amount unavailable'}</span></button>)}</div>}
-      {!cart.length && <div className="empty-cart">Add a product to start a sale</div>}
+      <FilterBar className="sale-filter-bar" searchLabel="Search products to add" searchPlaceholder="Search products to add"
+        query={query} onQueryChange={setQuery} activeCount={0} onClearAll={()=>setQuery('')}
+        searchInputProps={{type:'text',className:'shop-input',disabled:frozen || invalidRecovery}}
+        resultMessage={query && search.data && !search.isFetching ? `${search.data.items.filter((p)=>p.active).length} products found` : undefined}/>
+      {query && <div className="sale-search-results">{search.isFetching ? <LoadingState label="Searching products…"/> : search.isError ? <StatusPanel error title="Could not search products"><Button variant="secondary" size="lg" onClick={() => void search.refetch()}>Retry search</Button></StatusPanel> : !search.data?.items.filter((p) => p.active).length ? <EmptyState layout="panel" className="status-panel" title="No matching products" description="Try a different name or reference."/> : search.data.items.filter((p) => p.active).map((product) => <Button variant="ghost" contentClassName="search-result-content" className="search-result" disabled={frozen || product.quantity === 0} key={product.id} onClick={() => add(product)}><span><strong>{product.name}</strong><small className="micro">{product.quantity > 0 ? `${product.quantity} in stock` : 'Out of stock'}</small></span><span>{Number.isSafeInteger(product.priceKobo) && product.priceKobo >= 0 ? formatMoney(product.priceKobo) : 'Amount unavailable'}</span></Button>)}</div>}
+      {!cart.length && <EmptyState layout="inline" className="empty-cart" title="Add a product to start a sale" description=""/>}
       {cart.map((line) => <article className={`cart-line${line.issue || line.quantity === 0 || line.quantity > 10000 ? ' cart-line-error' : ''}`} key={line.product.id}>
         <div className="cart-line-heading"><strong>{line.product.name}</strong><span>{total === null ? '—' : formatMoney(sumKobo([{priceKobo:line.product.priceKobo,quantity:line.quantity}]))}</span></div><p className="micro">{Number.isSafeInteger(line.product.priceKobo) && line.product.priceKobo >= 0 ? formatMoney(line.product.priceKobo) : '—'} each</p>
-        <div className="quantity-controls"><button className="icon-button" aria-label={`Decrease ${line.product.name}`} disabled={frozen || line.quantity <= 0} onClick={() => editQuantity(line.product.id,Math.max(0,line.quantity-1))}>−</button><input aria-label={`Quantity for ${line.product.name}`} inputMode="numeric" value={line.quantity} disabled={frozen} onChange={(event) => {if (/^\d{0,7}$/.test(event.target.value)) editQuantity(line.product.id,Number(event.target.value));}}/><button className="icon-button" aria-label={`Increase ${line.product.name}`} disabled={frozen || line.quantity >= Math.min(line.product.quantity,10000)} onClick={() => editQuantity(line.product.id,line.quantity+1)}>＋</button><button className="remove-line" aria-label={`Remove ${line.product.name}`} disabled={frozen} onClick={() => {setCart((current) => current.filter((item) => item.product.id !== line.product.id));}}>×</button></div>
+        <div className="quantity-controls"><Button variant="ghost" className="icon-button" iconOnly aria-label={`Decrease ${line.product.name}`} disabled={frozen || line.quantity <= 0} onClick={() => editQuantity(line.product.id,Math.max(0,line.quantity-1))}>−</Button><FormField label="Quantity" className="quantity-field">{(field)=><Input {...field} aria-label={`Quantity for ${line.product.name}`} inputMode="numeric" value={line.quantity} disabled={frozen} onChange={(event) => {if (/^\d{0,7}$/.test(event.target.value)) editQuantity(line.product.id,Number(event.target.value));}}/>}</FormField><Button variant="ghost" className="icon-button" iconOnly aria-label={`Increase ${line.product.name}`} disabled={frozen || line.quantity >= Math.min(line.product.quantity,10000)} onClick={() => editQuantity(line.product.id,line.quantity+1)}>＋</Button><Button variant="ghost" className="remove-line" iconOnly aria-label={`Remove ${line.product.name}`} disabled={frozen} onClick={() => {setCart((current) => current.filter((item) => item.product.id !== line.product.id));}}>×</Button></div>
         {(line.issue || line.quantity > 10000) && <p className="line-error"><span className="error-symbol" aria-hidden="true">!</span>{line.quantity > 10000 ? 'Quantity cannot exceed 10,000.' : line.issue}</p>}
       </article>)}
-    </section><aside className="sale-checkout" aria-label="Payment and total"><div className="payment-card"><div className="payment-toggle" role="group" aria-label="Payment type"><button aria-pressed={paymentType === 'PAID'} disabled={frozen} onClick={() => setPaymentType('PAID')}>Paid</button><button aria-pressed={paymentType === 'CREDIT'} disabled={frozen} onClick={() => setPaymentType('CREDIT')}>On credit</button></div>
+    </section><aside className="sale-checkout" aria-label="Payment and total"><div className="payment-card"><div className="payment-toggle" role="group" aria-label="Payment type"><Button variant="ghost" aria-pressed={paymentType === 'PAID'} disabled={frozen} onClick={() => setPaymentType('PAID')}>Paid</Button><Button variant="ghost" aria-pressed={paymentType === 'CREDIT'} disabled={frozen} onClick={() => setPaymentType('CREDIT')}>On credit</Button></div>
       {(paymentType === 'CREDIT' || customerId) && <><CustomerPicker user={user} customer={customer} required={paymentType === 'CREDIT'} disabled={frozen || invalidRecovery} onSelect={(person) => {setCustomerId(person?.id || '');setSelectedCustomer(person);}}/>
-      {customers.isError && <p role="alert">Could not load customers. <button onClick={() => void customers.refetch()}>Retry</button></p>}
-      {customer && customer.storeCreditKobo > 0 && <span className="credit-badge micro">Store credit {displayMoney(customer.storeCreditKobo)}</span>}
-      {paymentType === 'CREDIT' && <input className="shop-input due-date" aria-label="Due date (optional)" type={dueDate ? 'date' : 'text'} placeholder="Due date (optional)" value={dueDate} disabled={frozen} onFocus={(event) => {event.currentTarget.type = 'date';}} onBlur={(event) => {if (!event.target.value) event.currentTarget.type = 'text';}} onChange={(event) => setDueDate(event.target.value)}/>}</>}
+      {customers.isError && <p role="alert">Could not load customers. <Button variant="ghost" onClick={() => void customers.refetch()}>Retry</Button></p>}
+      {customer && customer.storeCreditKobo > 0 && <StatusBadge tone="info" appearance="outline" className="credit-badge micro">Store credit {displayMoney(customer.storeCreditKobo)}</StatusBadge>}
+      {paymentType === 'CREDIT' && <FormField label="Due date (optional)" className="due-date-field">{(field)=><Input {...field} className="shop-input due-date" aria-label="Due date (optional)" type={dueDate ? 'date' : 'text'} placeholder="Due date (optional)" value={dueDate} disabled={frozen} onFocus={(event) => {event.currentTarget.type = 'date';}} onBlur={(event) => {if (!event.target.value) event.currentTarget.type = 'text';}} onChange={(event) => setDueDate(event.target.value)}/>}</FormField>}</>}
     </div><div className="sale-total" aria-live="polite">
       {credit > 0 && total !== null && <div className="credit-breakdown"><p><span>Subtotal</span><span>{formatMoney(total)}</span></p><p><span>Store credit applied</span><span>−{formatMoney(credit)}</span></p></div>}
       <div className="sale-total-heading"><span className="micro">{quantity} items</span><strong>{total === null ? '—' : formatMoney(total-credit)}</strong></div>
@@ -152,11 +164,13 @@ export function NewSalePage() {
       {hasZero ? <p className="micro">Remove the out-of-stock item to continue.</p> : invalidQuantity ? <p className="micro">Use whole quantities from 1 to 10,000.</p> : !cart.length ? <p className="micro">Add at least one item to continue.</p> : paymentType === 'CREDIT' && !customerId ? <p className="micro">Choose a customer to continue on credit.</p> : total === null ? <p className="micro">Fix the amount to continue.</p> : unavailableCredit ? <p className="micro">Store-credit recording is awaiting service support. No sale has been sent.</p> : state === 'session' ? <p className="micro">Sign in again to continue.</p> : null}
       {credit > 0 && simulation && <small className="settlement-note">Simulated demonstration · credit allocation</small>}
     </div></aside></div>
-    <Dialog open={state === 'confirm'} onOpenChange={(open) => {if (!open) setState('idle');}} title="Confirm this sale" description="Review the items, total and payment type before recording." descriptionClassName="sr-only" closeClassName="hidden" overlayClassName="shop-confirm-backdrop" className="sale-confirm shop-confirm" footer={<><Button size="lg" disabled={changes.length > 0 && !accepted} onClick={confirm}>Confirm</Button><Button size="lg" variant="secondary" onClick={() => setState('idle')}>Back to cart</Button></>}>
+    <ConfirmDialog open={state === 'confirm'} onOpenChange={(open) => {if (!open) setState('idle');}} title="Confirm this sale" description="Review the items, total and payment type before recording." descriptionClassName="sr-only" closeClassName="hidden" overlayClassName="shop-confirm-backdrop" className="sale-confirm shop-confirm"
+      confirmLabel="Confirm" cancelLabel="Back to cart" confirmDisabled={changes.length > 0 && !accepted} actionOrder="confirm-first" closeOnConfirm={false} onConfirm={confirm}
+      confirmButtonProps={{size:'lg'}} cancelButtonProps={{size:'lg'}}>
       <div className="receipt-lines">{cart.map((line) => <div key={line.product.id}><span>{line.product.name} <small className="micro">× {line.quantity}</small></span><span>{total === null ? '—' : formatMoney(sumKobo([{priceKobo:line.product.priceKobo,quantity:line.quantity}]))}</span></div>)}</div><div className="receipt-total"><strong>Total</strong><strong>{total === null ? '—' : formatMoney(total-credit)}</strong></div>
-      {changes.length > 0 && <div className="changes-notice"><p className="micro">▲ Changed since you added these</p>{changes.map((change) => <p key={change}>{change}</p>)}<label><input type="checkbox" checked={accepted} onChange={(event) => setAccepted(event.target.checked)}/> I accept these changes</label></div>}
+      {changes.length > 0 && <div className="changes-notice"><p className="micro">▲ Changed since you added these</p>{changes.map((change) => <p key={change}>{change}</p>)}<Checkbox checked={accepted} onCheckedChange={setAccepted} label="I accept these changes"/></div>}
       <p className="micro">{paymentType === 'CREDIT' ? 'On credit' : 'Paid'}{customer ? ` · ${customer.displayName}` : ''}</p>
-    </Dialog>
+    </ConfirmDialog>
     <p className="sale-demo-note">Demonstration data · {simulation ? 'Simulated shop' : 'Prices confirmed on receipt'}. <Link to="/app/products">View products</Link></p>
   </div>;
 }

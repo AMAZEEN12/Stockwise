@@ -2,6 +2,13 @@
 
 Record actual AI use, human decisions and verification. Do not include credentials, tokens, passwords or real customer data.
 
+## 2026-10-25: Shared-component implementation (DM55)
+
+- Victor Oyeleke authorized implementing the seven reviewed alignment proposals; Codex logs his approval separately from technical choices and proposed shared-owner APIs. Implemented on feat/shared-component-alignment, preserving the current product/CSS refinements and recording starting files in ignored local storage.
+- Copied the reviewed primitives and agent guidance, added locally approved composition slots, migrated feature usage and token literals, and kept free-entry product categories, current endpoint/model shapes, integer kobo and uncertain-write recovery. Upstream owners are identified in docs/shared-component-alignment.md; no cross-team acceptance, upstream message or PR is claimed.
+- Checked-and-found-wrong: the first mobile Card composition inherited list-item padding and drew two borders; shared Button padding also wrapped selected-customer text. Corrected the composition CSS and reviewed fresh desktop/mobile captures. Windows QA also exposed locked trace files crashing Vite's watcher; excluded generated artifacts rather than loosening tests. Recorded UTF-8 pipe handling and explicit working-directory guidance after source-edit scripts exposed those pitfalls.
+- Added four unit cases for disabled, duplicate, failed and caller-controlled confirmation, plus browser cases for keyboard Select clearing/focus, Checkbox acceptance/focus and success-toast expiry. Existing tests and timeouts remain unchanged. Actual results and service/environment limits are in WORKLOG.
+
 ## 2026-10-25: Customer Picker and Customers
 
 - Victor requested a read-only review, then authorized implementation on separate committed feature branches. Reviewed all 36 supplied 2x desktop/mobile frames and the root token sheet. Victor chose to preserve the exact contradictory selected-customer message; validation still uses the actual UUID and existing sale guards. DM50-DM52 separate human scope/copy from technical defaults and unapproved API proposals.
@@ -21,6 +28,8 @@ Record actual AI use, human decisions and verification. Do not include credentia
 - Publication: baseline `176fc3a` on main; starter `45f49c6` on `chore/web-structure`; [PR #1](https://github.com/AMAZEEN12/Stockwise/pull/1) opened into main for human review. Initial remote heads matched local refs. The connector could read but not create the PR (403); the Git credentials that successfully pushed the branches were used for the authorized PR creation without displaying or storing credential values in the project. A docs-only follow-up records this outcome; no merge or deployment was performed.
 
 ## 2026-10-24: Home/authentication implementation after rollback and review
+
+Historical engineer-count wording below is superseded by DM53 (2026-10-25): Victor Oyeleke confirmed and approved four interface engineers. See [shared-source clarifications](shared-component-alignment.md) for the approved Card and Select/Checkbox documentation correction. Logged by Codex.
 
 - Victor first requested reverting the earlier login work; commit 3632ae0 records that rollback. The later request supplied the five-engineer agreement, Tailwind v4 setup and all reference states, requested a read-only review, then explicitly authorized implementation. New work is on feat/auth-ui, not a restoration of the reverted implementation.
 - Read all 16 PNGs, token notes, shared source and merged API PR #2. Integrated origin/main with a merge preserving backend files and both work-log histories. Used the Sites skill's local-only workflow for this existing repository; no Site registration, publication, remote push or main merge was performed.

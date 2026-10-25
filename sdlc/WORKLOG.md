@@ -6,8 +6,10 @@ Source document: `Tesa cohort 6 software engineering capstone project.pdf` (TeSA
 > Any agent opening this project: read this file first, then the "Conventions and guidelines" and "Decisions" sections, then the artifacts in this folder. Continue from "Resume here". Don't re-ask anything already answered below.
 
 ## Resume here
+- **Shared-component implementation completed, 2026-10-25 (DM55):** implemented the seven reviewed proposals on feat/shared-component-alignment, carrying Victor's current Product/CSS refinements forward. Shared states, controls, cards/badges, notifications, dialogs/confirmations and token usage are integrated; additive APIs are documented for their original owners. Eighteen unit tests passed; all 56 browser scenarios passed across the full run and targeted reruns, with the Windows headless-shell timing limitation disclosed below. API simulation journey passed; backend verification still cannot start because JAVA_HOME is invalid. No cross-team acceptance or pixel-perfect approval is invented. Approved by Victor Oyeleke; logged by Codex.
+- **Shared-source documentation correction, 2026-10-25 (DM53):** Victor confirmed and approved four interface engineers, matching upstream. Current guidance is corrected; earlier references to five are historical and superseded. Approved Card and Select/Checkbox source clarifications, immutable revision links and owners are in docs/shared-component-alignment.md. This round updates Markdown only; component migration proposals remain pending. Decided by and approved by Victor Oyeleke; logged by Codex.
 - **Customer features completed, 2026-10-25 (DM50-DM52):** Customer Picker committed as de97504 on feat/customer-picker; Customers implemented on stacked feat/customers-ui with its own descriptive feature commit. Exact selected-customer copy preserved. Final lint/typecheck passed; unit 7 files/14 tests; contract valid; browser 50 passed (5.0m), plus final icon/layout journey 2 passed (33.8s). Unintercepted customer-create-to-credit-sale journey passed. Build 353 modules, final CSS build 15.87s; main chunk warning 526.47 kB / 173.24 kB gzip retained. Service verify still blocked by JAVA_HOME. All 36 customer frames compared; 98 local references preserved, none tracked. See docs/customers-ui.md and docs/customers-contract-proposal.md for measured visual differences and pending API proposals. No pixel-perfect approval, backend proof, new PR or deployment is claimed. Decided by Victor Oyeleke (scope/copy); Codex (technical choices). Logged by Codex.
-- **Current handoff:** Work is on feat/customers-ui, based on feat/customer-picker and the Sales foundation. Authentication is merged on origin/main (c3633df, last fetched for this task); Products/Sales history is preserved. Current-config QA used owned port 5184; the user's existing preview on 5173 was preserved. Restart existing dev/mock processes after switching branches to load current plugins and handlers. Next: human visual review and API-owner decisions; publish customer branches/PRs when requested. Current source verification and exact outputs are recorded below.
+- **Current handoff:** Implementation is on feat/shared-component-alignment, based on feat/customers-ui (cb19935) and the existing picker/sales/products history. DM55 records Victor’s implementation approval; docs/shared-component-alignment.md lists copied sources, approved local APIs and proposals for their original owners. Current QA used an owned server on port 5186 and preserved user-owned previews. Human visual/shared-owner review is next; publish this feature branch when requested. Detailed verification and the Windows timing/Java limitations are recorded below.
 - **Earlier task (DM44-DM48):** Products implemented and committed as 86fb5ea on feat/products-ui; New sale/Receipt implemented on stacked feat/sales-ui. Final frontend/API/browser checks passed; actual outputs below. Sales history is deferred. Latest stock-conflict frames and corrected 6000-credit/150-due frames were compared at normalized sizes; remaining visual differences are explicitly recorded, not approved as pixel-perfect. Contract proposals remain separate, active OpenAPI/generated schema unchanged. Screens ignored/untracked with all then-current 62 local PNGs preserved. See docs/products-sales-ui.md and docs/products-sales-contract-proposal.md.
 - **Publication (DM49, verified 2026-10-25):** Products commit 86fb5ea pushed on feat/products-ui, [PR #4](https://github.com/AMAZEEN12/Stockwise/pull/4); Sales commit 74d6eef pushed on feat/sales-ui, [PR #5](https://github.com/AMAZEEN12/Stockwise/pull/5). Both PRs are open against main as Victor requested. Authentication PR #3 remains open. Review order is #3, #4, #5 because the branches are stacked. No main merge or deployment was performed. Decided by Victor Oyeleke; logged by Codex.
 - **Standing instruction reaffirmed by Victor:** before every new task, read root AGENTS.md, including Mistakes to avoid. DM41's three Tailwind replacements are persistent frontend conventions; the startup reminder, exact mapping and Victor/Codex attribution are now explicit there. Existing component replacements remain applied.
@@ -44,7 +46,7 @@ Source document: `Tesa cohort 6 software engineering capstone project.pdf` (TeSA
 ## Conventions and guidelines
 - **Stack and versions:** service: Java 25, Spring Boot 4, Flyway, JUnit + Testcontainers, PostgreSQL (DM1). Hosting: Vercel + Render + Neon, terms to verify (DM2). Auth: email+password, bcrypt, JWT bearer (DM3). Interface constraints from the brief: React interface with React Router (or equivalent) and Tailwind or plain CSS, typed models (no `any`); own HTTP service; free managed Postgres; GitHub Actions deploys both tiers; free tiers only.
 - **Naming:** change slugs `stockwise` and `genie`. Two repositories (DM19): this one is `stockwise/` (code, `sdlc/`, `AGENTS.md`, `decisions.md`, `deploy-plan.md`). Genie is a separate repository. Artifacts are independent (DM20).
-- **Code and docs style:** frontend folder map and conventions are in `docs/frontend-architecture.md` (DM32–DM40). One API file per resource, central endpoints, Axios HTTP client, Formik/Yup, Redux Toolkit/RTK Query, React Router Data Mode and Tailwind v4. Five engineers' shared copy-in source adopted as reported by Victor; Stockwise tokens override neutral values. Shadcn is not required. Use feature branches and descriptive commits. Backend conventions remain unchanged.
+- **Code and docs style:** frontend folder map and conventions are in `docs/frontend-architecture.md` (DM32–DM40, DM53). One API file per resource, central endpoints, Axios HTTP client, Formik/Yup, Redux Toolkit/RTK Query, React Router Data Mode and Tailwind v4. Four engineers' shared copy-in source adopted; count confirmed and approved by Victor under DM53. Stockwise tokens override neutral values. Read docs/shared-component-alignment.md for approved source clarifications. Shadcn is not required. Use feature branches and descriptive commits. Backend conventions remain unchanged.
 - **Versions (verified on Maven Central 2026-10-23):** Spring Boot 4.1.2 parent (manages Flyway 12.4.0, Testcontainers 2.0.5, postgresql 42.7.14, failsafe 3.5.6); exec-maven-plugin 3.6.4; Maven wrapper pinned to 3.9.16. Integration tests are `*IT` classes, run by Failsafe in `./mvnw verify`, against `postgres:17-alpine`.
 - **Docker:** Docker Desktop must be running (per-user install at `%LOCALAPPDATA%/Programs/DockerDesktop`).
 - **Local ports:** the Prism mock runs on **4710**, not its default 4010. Windows on Nnaemeka's machine reserves TCP 3965-4064 (Hyper-V/WSL). The mock serves paths at the root; the real service serves them under `/api/v1` on 8080. Prism returns 422 for invalid requests, while the real service returns 400 `VALIDATION_FAILED`.
@@ -165,6 +167,8 @@ Service verify, contract lint, web lint/typecheck/unit/build, and Playwright: un
 - 2026-10-24 · agent · Opened PR 2 (`emeka's-branch` → `main`) through the GitHub API with the user's stored Git credential (Chukwuma-Elvis); `gh` isn't installed. No reviewer requested: Isaac isn't a collaborator (collaborators are Victor-430, AMAZEEN12, Chukwuma-Elvis), per the user.
 
 ### Home/authentication implementation and verification (2026-10-24)
+
+Historical engineer-count wording in this section is superseded by DM53: Victor confirmed and approved four interface engineers on 2026-10-25.
 
 - Victor supplied the five-engineer shared agreement, screenshots and tokens, requested a read-only review, then authorized implementation. Recorded DM37–DM40 with separate attribution for human scope, reported agreement and Codex implementation defaults/proposals.
 - Created `feat/auth-ui` and merged origin/main (`18151aa`, merged PR #2) as `3497a5e`. Resolved only WORKLOG conflicts, preserving both histories. Backend and contract source remain unchanged from origin/main. PR #1 remains open; no main merge, remote push or deployment was performed.
@@ -320,3 +324,59 @@ Git: no active OpenAPI, generated schema, backend or migration diff;
 ```
 
 The final implementation notes include measured differences and explicit remaining visual/API limitations. Local checks do not substitute for human approval, backend tests or CI. Generated comparison/capture artifacts stay outside feature commits.
+
+### Shared-source documentation clarification, 2026-10-25
+
+- DM53 records Victor's correction to four interface engineers and his approval of the Card and Select/Checkbox source notes. Updated current AGENTS, architecture, provenance, spec, plan and execution guidance; retained the original DM37 and historical logs with explicit correction notices.
+- Added docs/shared-component-alignment.md with immutable source links at reviewed revision dbe1cac1f5e6e0838331e35b8da482ab4a1497fc. Card omits its image area when image is omitted; Select/Checkbox already read shared CSS variables and use the input-border token for their control edges. Their obsolete README warnings do not require additional utility mappings or a border repair. The actual older copy-in revision is preserved separately.
+- Verification: git diff --check passed; documentation checks confirmed approval/logger attribution, relative link targets, unique DM53 and corrected current guidance. SHA-256 checks confirmed all four pre-existing application edits (ProductsPage.tsx and customers/sales/shop CSS) are byte-for-byte unchanged by this task. No application tests rerun for Markdown-only changes.
+- Decided by: Victor Oyeleke. Approved by: Victor Oyeleke. Logged by: Codex. Component migration proposals remain pending; no runtime, API-contract or upstream repository change was made.
+
+### Shared-component implementation verification, 2026-10-25 (DM55)
+
+- Approved by Victor Oyeleke; logged by Codex. Implemented the seven reviewed proposals on feat/shared-component-alignment. Imported eight primitives and persistent shared guidance at dbe1cac, retained earlier provenance for existing primitives, and recorded additive APIs by owner. Shared notifications use the five-second success duration; unresolved writes retain their persistent record and original request semantics.
+- All three starting customer/sales/shop CSS refinements were compared with saved input: they are retained with only value-preserving literal-to-token substitutions. Products retains the current formatting/refinements while adopting shared controls/states. Existing test assertions/timeouts, API models/transport, OpenAPI, generated types, backend files and migrations are unchanged. No local design PNG is tracked.
+- QA corrections: preserve compact empty-cart composition, mobile single-border cards and selected-customer action spacing; exclude generated trace/report/mock/reference files from Vite watchers on Windows. check:ui owns and warms an isolated server before unchanged timed tests, supports the existing browser-channel setting and stops only its own processes. Reference comparison now accepts capture folders in priority order.
+
+```text
+Final npm run lint: exit 0, zero warnings
+Final npm run typecheck: exit 0
+npm test -- --run:
+  Test Files  8 passed (8)
+       Tests  18 passed (18)
+npm run lint:contract:
+  openapi.yaml: validated in 531ms
+  Woohoo! Your API description is valid.
+Final npm run build:
+  2295 modules transformed
+  index-g2pyT9U_.js 555.23 kB | gzip: 182.68 kB
+  built in 41.24s
+  Existing >500 kB chunk warning retained
+npm audit --omit=dev: total vulnerabilities 0
+Development dependency install/audit: 8 advisories (7 high, 1 moderate)
+20 token contrast pairs: PASS; minimum ratio 5.56:1
+DM41 canonical-class scan: PASS
+npm run check:customers:
+  PASS: actual local API rejects invalid names; browser sign-in, customer
+  creation/contact, directory search/refresh, picker UUID selection, credit
+  sale and resulting integer-kobo customer balance. No request interception.
+  Development simulation only.
+Playwright full final run: 54 passed, 2 failed (11.7m)
+  Desktop picker UUID case lost its dialog when a web README edit caused
+  navigation 73ms later; confirmed with trace/document-write timestamps.
+  Mobile picker capture/axe flow exceeded the original 30-second deadline.
+Earlier focused auth/products/customers/shared-controls verification:
+  14 passed (3.2m)
+Targeted UUID selection rerun: desktop and mobile passed
+Final long picker flow, PLAYWRIGHT_CHANNEL=chromium, npm run check:ui:
+  desktop 26.9s, mobile 16.8s; 2 passed (1.5m)
+All 56 distinct browser cases passed across full/focused reruns;
+  no claim that one uninterrupted 56-case run was green.
+  Headless-shell timing remains variable; original assertions/timeouts kept.
+Customer Picker/Customers comparisons: all 36 states; 1.97%-13.32% changed pixels
+Updated stock/corrected credit comparisons: 4 states; 3.93%-16.67% changed pixels
+Service mvnw.cmd verify: cannot start, JAVA_HOME is not defined correctly
+Guidance links, decision IDs, whitespace and protected-scope checks: PASS
+```
+
+Captures and comparison reports remain ignored local artifacts. Stock conflict uses the supplied updated 2x frames; corrected store-credit inputs currently supplied are 1x and normalized to logical dimensions. Visible labels/counts and transient success notices are approved adjustments; measured nonzero differences are disclosed rather than called pixel-perfect. No manual screen-reader, backend, cross-team API acceptance, new PR, merge or deployment is claimed. The feature is ready for its descriptive commit; publication remains by request.

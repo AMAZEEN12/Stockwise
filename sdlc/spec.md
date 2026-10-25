@@ -2,7 +2,7 @@
 
 Derived from: [intent.md](intent.md) (accepted 2026-10-23) · Status: accepted (2026-10-23 by Nnaemeka Chukwuma; revised 2026-10-23 to apply team decisions DM5-DM16)
 
-Frontend amendments: 2026-10-24, DM32–DM42. Victor authorized Home/authentication implementation after review; the five-engineer agreement is reported by Victor, with implementation choices and API proposals attributed separately in decisions.md. DM41 adopts canonical Tailwind utilities; DM42 selects local contract-mock development with explicit simulated account examples. See [auth UI implementation](../docs/auth-ui-implementation.md). No proposed API or business-rule change is approved by these amendments.
+Frontend amendments: 2026-10-24, DM32–DM42. Victor authorized Home/authentication implementation after review; the shared agreement covers four interface engineers, with the count corrected and approved by Victor on 2026-10-25 (DM53). Implementation choices and API proposals are attributed separately in decisions.md. DM41 adopts canonical Tailwind utilities; DM42 selects local contract-mock development with explicit simulated account examples. See [auth UI implementation](../docs/auth-ui-implementation.md) and [approved shared-source clarifications](../docs/shared-component-alignment.md). No proposed API or business-rule change is approved by these amendments.
 Product owner: Nnaemeka Chukwuma (acting) · Technical sign-off (if high risk): Isaac Bassey, Team 3 lead (DM7)
 Policies applied: TeSA brief "Shared technical requirements", "Shared rules for fairness", "Delivery and cost", assessment rubric and mentor checklist (PDF pp. 3, 23-26, dated 21 Oct 2026). No separate organisational policy supplied.
 Supporting skills: none
@@ -134,7 +134,7 @@ Append-only tables are protected by revoking UPDATE and DELETE from the applicat
 Screens: Login · Dashboard · Products (list, filter, detail, create/edit, archive) · New sale (phone-first cart, paid/credit toggle, customer picker, confirm) · Customers (list, create) · Customer ledger (with "Record repayment") · Restock · Sale detail (with "Reverse") · History.
 - Every screen has the five states. Every figure that might be stale shows "as of HH:MM". The dashboard carries a "Demonstration data" badge.
 - Reversal and archive both ask for confirmation, and a reversal requires a reason.
-- Shared-component source: the five engineers' agreement is reported by Victor (DM37); adopt the reviewed copy-in repository, preserve its props/accessibility, and use Stockwise tokens. The earlier PDF remains historical proposal context; upstream names four, so a fifth name is not invented.
+- Shared-component source: the four engineers' agreement is adopted in DM37, with the count confirmed by Victor in DM53; preserve the reviewed copy-in APIs/accessibility and use Stockwise tokens. The earlier PDF remains historical proposal context. Card and Select/Checkbox source behavior is clarified in the approved alignment notes; component migrations remain separate proposals.
 - Victor supplied a design-token image on 2026-10-24. Its foundational colors, typography, spacing, radii and focus styles apply throughout Stockwise; the wordmark, coin and hero layout are login-specific (DM34). See [frontend architecture](../docs/frontend-architecture.md) for the transcription and unresolved phase 3 details. No UI or token stylesheet is implemented in this phase.
 
 ### Integration with the existing system

@@ -6,6 +6,10 @@ Frontend amendments DM32–DM40: Victor authorized Home/authentication implement
 Decisions in force: [decisions.md](../decisions.md) DM1–DM43 · Deployment: [deploy-plan.md](../deploy-plan.md)
 Supporting skills: none
 
+Shared-component implementation amendment, 2026-10-25 (DM55), approved by Victor Oyeleke and logged by Codex: implement the seven reviewed alignment proposals on feat/shared-component-alignment. Reuse shared states, controls, notifications, dialogs, cards and badges; preserve current product/category, customer-create and sale/recovery contracts. Verify existing frontend, browser/axe and local API journeys, token contrast, new select/checkbox keyboard behavior, toast dismissal and confirmation guards. Additive shared API proposals and their owners are recorded in docs/shared-component-alignment.md.
+
+Shared-source documentation amendment, 2026-10-25 (DM53): four interface engineers, confirmed and approved by Victor Oyeleke; logged by Codex. Use [shared component source clarifications](../docs/shared-component-alignment.md) for Card's optional image area and the resolved Select/Checkbox token/border README notes at the reviewed revision. This amendment records source behavior; component migrations remain separate proposals.
+
 All paths are relative to the **Stockwise repository root** (the local `stockwise/` folder, DM19). Java package root: `ng.tesa.stockwise`.
 
 ## Area owners (DM8, DM21)

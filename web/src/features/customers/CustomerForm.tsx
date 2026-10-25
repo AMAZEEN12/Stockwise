@@ -3,6 +3,9 @@ import {useFormik} from 'formik';
 import {Button} from '../../components/ui/button';
 import {Input} from '../../components/ui/input';
 import {FormField} from '../../components/ui/form-field';
+import {Checkbox} from '../../components/ui/checkbox';
+import {ErrorState} from '../../components/ui/error-state';
+import {ConfirmDialog} from '../../components/ui/dialog';
 import {customerSchema} from '../../schema/customer.schema';
 import {customersApi,useCreateCustomerMutation,validCustomer} from '../../service/api/customers.api';
 import {store} from '../../app/store/store';
@@ -56,13 +59,18 @@ export const CustomerForm = forwardRef<CustomerFormHandle,Props>(function Custom
   useImperativeHandle(ref,() => ({requestClose}));
   const check = () => {try {markCustomerListChecked(user.id); onCheck();} catch {setFailure('Could not preserve recovery details. Restore browser storage before continuing.');}};
   return <form className="customer-form" noValidate onSubmit={form.handleSubmit}>
-    {(failure || attempt) && <div role="alert" className="customer-save-error"><CustomerIcon kind="error"/><strong>{failure || (attempt === 'other' ? 'An unfinished customer save belongs to another account or service. Restore that connection to check it.' : attempt === 'invalid' ? 'The unfinished customer save cannot be read. Check its outcome before creating again.' : 'This customer is not confirmed. Check the customer list before creating again.')}</strong>{requestId && <p className="customer-micro">Request ID {requestId}</p>}</div>}
-    <FormField label="Display name (required)" error={form.touched.displayName ? form.errors.displayName : undefined} className="customer-field">
-      {(field) => <Input {...field} {...form.getFieldProps('displayName')} className="shop-input" aria-required="true" autoComplete="off" disabled={form.isSubmitting || !!attempt}/>}
+    {(failure || attempt) && <ErrorState layout="inline" className="customer-save-error" headingLevel="h3" titleClassName="customer-save-error-title" icon={<CustomerIcon kind="error"/>}
+      title={failure || (attempt === 'other' ? 'An unfinished customer save belongs to another account or service. Restore that connection to check it.' : attempt === 'invalid' ? 'The unfinished customer save cannot be read. Check its outcome before creating again.' : 'This customer is not confirmed. Check the customer list before creating again.')} description=""
+      details={requestId && <p className="customer-micro">Request ID {requestId}</p>}/>}
+    <FormField label="Display name (required)" required requiredIndicator={false} error={form.touched.displayName ? form.errors.displayName : undefined} className="customer-field">
+      {(field) => <Input {...field} {...form.getFieldProps('displayName')} className="shop-input" required autoComplete="off" disabled={form.isSubmitting || !!attempt}/>}
     </FormField>
     <FormField label="Contact (optional)" error={form.touched.contactPlaceholder ? form.errors.contactPlaceholder : undefined} className="customer-field">
       {(field) => <Input {...field} {...form.getFieldProps('contactPlaceholder')} className="shop-input" placeholder="Phone or note" autoComplete="off" disabled={form.isSubmitting || !!attempt}/>}
     </FormField>
-    {attempt ? <><Button size="lg" variant="secondary" onClick={check}>Check customer list</Button>{ownAttempt?.checked && <div className="customer-recovery-ack"><label><input type="checkbox" checked={acknowledged} onChange={(event) => setAcknowledged(event.target.checked)}/> I checked the list and understand creating again may add a duplicate.</label><Button size="lg" variant="secondary" disabled={!acknowledged} onClick={() => {clearCustomerAttempt();setAttempt(null);setFailure('');setAcknowledged(false);}}>Start a new attempt</Button></div>}</> : discard ? <div className="customer-discard" role="group" aria-label="Discard unsaved customer"><p>You have unsaved changes.</p><Button size="lg" onClick={() => setDiscard(false)}>Keep editing</Button><Button size="lg" variant="secondary" onClick={onCancel}>Discard changes</Button></div> : <div className="customer-form-actions"><Button size="lg" type="submit" loading={form.isSubmitting} loadingLabel="Saving…" className={form.isSubmitting ? 'customer-saving' : ''}>{failure ? 'Try again' : select ? 'Save and select' : 'Save customer'}</Button><Button size="lg" variant="secondary" disabled={form.isSubmitting} onClick={requestClose}>Cancel</Button></div>}
+    {attempt ? <><Button size="lg" variant="secondary" onClick={check}>Check customer list</Button>{ownAttempt?.checked && <div className="customer-recovery-ack"><Checkbox checked={acknowledged} onCheckedChange={setAcknowledged} label="I checked the list and understand creating again may add a duplicate."/><Button size="lg" variant="secondary" disabled={!acknowledged} onClick={() => {clearCustomerAttempt();setAttempt(null);setFailure('');setAcknowledged(false);}}>Start a new attempt</Button></div>}</> : <div className="customer-form-actions"><Button size="lg" type="submit" loading={form.isSubmitting} loadingLabel="Saving…" className={form.isSubmitting ? 'customer-saving' : ''}>{failure ? 'Try again' : select ? 'Save and select' : 'Save customer'}</Button><Button size="lg" variant="secondary" disabled={form.isSubmitting} onClick={requestClose}>Cancel</Button></div>}
+    <ConfirmDialog open={discard} onOpenChange={setDiscard} title="Discard unsaved customer" description="You have unsaved changes." confirmLabel="Discard changes" cancelLabel="Keep editing" tone="danger"
+      className="shop-confirm" overlayClassName="shop-confirm-backdrop customer-confirm-backdrop" closeClassName="hidden" onConfirm={onCancel}
+      confirmButtonProps={{variant:"secondary",size:"lg"}} cancelButtonProps={{variant:"primary",size:"lg"}}/>
   </form>;
 });

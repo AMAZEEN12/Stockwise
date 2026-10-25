@@ -30,6 +30,8 @@ export type FormFieldProps = {
   hint?: string;
   error?: string;
   required?: boolean;
+  /** Suppress a duplicate asterisk when the visible label already says required. */
+  requiredIndicator?: boolean;
   /** Pass your own id if the control needs a stable one; otherwise one is generated. */
   id?: string;
   className?: string;
@@ -41,6 +43,7 @@ export function FormField({
   hint,
   error,
   required = false,
+  requiredIndicator = true,
   id,
   className,
   children,
@@ -65,7 +68,7 @@ export function FormField({
     <div className={cn("flex flex-col gap-1.5 font-sans", className)}>
       <label htmlFor={controlId} className="text-sm font-medium text-[var(--color-text)]">
         {label}
-        {required && (
+        {required && requiredIndicator && (
           <span aria-hidden="true" className="ml-0.5 text-[var(--color-danger)]">
             *
           </span>
