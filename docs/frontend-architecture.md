@@ -129,6 +129,8 @@ DM40 settles the current auth defaults; [the proposal](auth-contract-proposal.md
 
 ## Verification
 
+Customer UI amendment (2026-10-25, DM50-DM52): Customer Picker and Customers reuse `features/customers/CustomerForm.tsx`, resource-specific customer request/response aliases, `schema/customer.schema.ts` and `service/api/customers.api.ts`. Directory route `/app/customers` uses the existing Data Mode shop loader/layout; creation remains OWNER/ASSISTANT and server-enforced. Customer attempts persist separately from immutable sale submissions; account/service mismatches never expose saved form values or auto-submit. See [customer UI](customers-ui.md) and [API proposals](customers-contract-proposal.md). Scope/reference wording decided by Victor Oyeleke; technical defaults/proposals by Codex; logged by Codex.
+
 Check the exact folder map, empty `.gitkeep` files, the zero-byte HTTP-client file, absence of application/configuration files, Markdown link targets and consistency of decision references. Review staged diffs and whitespace before commits. After publication compare local commit IDs with remote branch heads and confirm the PR targets `main`.
 
 Phase 2 checks above are historical. The service wrapper, OpenAPI and web manifest now exist. Run frontend lint/typecheck/unit/build, contract lint, and Playwright/axe as documented in auth-ui-implementation.md. Record actual output and environment limitations in WORKLOG. This frontend feature changes no database business rule or migration.

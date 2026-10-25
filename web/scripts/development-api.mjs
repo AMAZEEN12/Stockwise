@@ -122,4 +122,6 @@ const server = createServer(async (request,response) => {
   }
   problem(404,'NOT_FOUND','This operation is not available in this simulation.');
 });
-server.listen(4710,'127.0.0.1',() => console.log(`Development simulation listening on http://127.0.0.1:4710 (${user.role}). In-memory demonstration data only; no credential or backend-rule proof.`));
+const port=Number(process.env.DEVELOPMENT_API_PORT || 4710);
+if(!Number.isInteger(port) || port<1024 || port>65535)throw new Error('Invalid DEVELOPMENT_API_PORT');
+server.listen(port,'127.0.0.1',() => console.log(`Development simulation listening on http://127.0.0.1:${port} (${user.role}). In-memory demonstration data only; no credential or backend-rule proof.`));

@@ -11,6 +11,7 @@
     "check:mock": "node scripts/check-mock.mjs",
     "check:shop": "node scripts/check-shop.mjs",
     "check:shop:browser": "node scripts/check-shop-browser.mjs",
+    "check:customers": "node scripts/check-customers.mjs",
     "build": "tsc -b && vite build",
     "lint": "eslint . --max-warnings 0",
     "typecheck": "tsc --noEmit",

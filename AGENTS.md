@@ -6,7 +6,7 @@ Stock and customer-credit ledger for one demonstration shop (TeSA Cohort 6 capst
 
 > Frontend commands below are implemented and verified; actual output is in sdlc/WORKLOG.md. Backend run/deployment commands remain planned. Earlier service results are upstream evidence, not this machine's verification.
 
-Current frontend state (2026-10-25): Home/authentication plus Products on `feat/products-ui` and New sale/Receipt on stacked `feat/sales-ui` (DM44-DM48). Registration and extended settlement/quote contracts remain pending API approval. See [products/sales UI](docs/products-sales-ui.md), [contract proposals](docs/products-sales-contract-proposal.md) and actual verification output in `sdlc/WORKLOG.md`. Local design exports in `web/Screens/` are ignored, never runtime imports. Backend HTTP implementation remains with the service owners.
+Current frontend state (2026-10-25): Home/authentication, Products, New sale/Receipt, Customer Picker (`feat/customer-picker`) and Customers (`feat/customers-ui`). See [customer UI](docs/customers-ui.md), [customer proposals](docs/customers-contract-proposal.md), [products/sales UI](docs/products-sales-ui.md) and actual verification in `sdlc/WORKLOG.md`. Registration, settlement/quotes and idempotent customer creation remain pending API approval. Current customer POST is non-idempotent: no automatic retry; preserve uncertain user/service-bound attempts. Local design exports in `web/Screens/` are ignored, never runtime imports. Backend HTTP implementation remains with the service owners.
 
 ## Commands
 - Database (local): `docker compose up -d db` (healthy: `db ... Started`)
@@ -54,6 +54,7 @@ Current frontend state (2026-10-25): Home/authentication plus Products on `feat/
 ## Mistakes to avoid
 Rule: when an agent makes the same mistake twice, the correction goes here.
 - UI capture checks must verify computed layout as well as interaction: an existing Vite preview can retain an earlier plugin configuration after branch switching. Use a separate PLAYWRIGHT_PORT for current-config QA, preserve user-owned servers, and check fixed dialogs remain within the viewport. Tailwind v4 uses individual translate properties; mobile overrides need translate:none as well as transform:none (Customer Picker, 2026-10-25; logged by Codex).
+- Browser mock routes ending in /customers must guard the HTTP method before handling POST; otherwise they can intercept the SPA document /app/customers and return JSON or hang navigation. Keep the actual browser/API journey without interception as a separate check (Customers, 2026-10-25; logged by Codex).
 - Decorative error icons must use aria-hidden SVG rather than literal exclamation-mark text. Literal decoration contaminates exact visible-copy checks even when hidden from assistive technology; preserve the message and fix the icon instead of weakening assertions (auth and Sales checks, 2026-10-24; logged by Codex).
 - Removing a CHECK that is the last item in a `CREATE TABLE` leaves a dangling comma. When proving a rule test fails, make sure it fails on the rule, not on a syntax error (rule-removal log, R12).
 - Never leave backup or scratch files under `src/main/resources/db/`. `MigrationRollbackIT` treats every file there as a migration, and stale copies survive in `target/` until `./mvnw clean`.

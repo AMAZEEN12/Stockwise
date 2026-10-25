@@ -181,10 +181,11 @@ Publication follow-up: current main includes merged structure PR #1 (2d170e6). I
 |----|------|----------|--------|------------|-----------|
 | DM50 | 2026-10-25 | Implement the 14 Customer Picker and 22 Customers references using root Screens tokens; separate feat/customer-picker and feat/customers-ui branches and descriptive completed-feature commits. Keep the selected-customer reference message exactly as supplied | Victor authorized implementation after the read-only review and explicitly chose unchanged reference text | Victor Oyeleke | Codex |
 | DM51 | 2026-10-25 | Reuse current GET/POST customers contract and one form/cache. Keep real store-credit writes gated. Preserve server order, load every collection page, use last successful client retrieval for WAT freshness, and use UUID identity even for duplicate names. Handle unsafe amounts and non-idempotent create uncertainty explicitly; proposed API changes stay separate | Complete the supplied flows without inventing approved endpoints, retry guarantees or authoritative balance snapshots | Codex, implementation choices under Victor's authorization | Codex |
-
 | DM52 | 2026-10-25 | Use PLAYWRIGHT_PORT=5184 for current-config QA while preserving the user's existing 5173 preview. Register Tailwind sources explicitly, ignore generated .vite/.mock for lint, and assert dialog positioning/bounds. Override individual translate for the mobile sheet. Keep optional contact valid after Formik normalization | Visual inspection caught missing utilities and offscreen mobile content that interaction-only checks did not detect | Codex, implementation/verification choices | Codex |
 
 Details: [customer UI](docs/customers-ui.md) and [pending contract proposals](docs/customers-contract-proposal.md). No new two-engineer sign-off is recorded.
+
+Implementation follow-up, 2026-10-25: confirmed customer creations update the existing shared cache; the directory uses semantic row headers, matching responsive cards and a persistent dismissible success notice. The last retrieval time is displayed in Africa/Lagos. Independent verification owns temporary API/Vite ports 4711/5185 and stops them afterwards; the user's preview is preserved. All 36 supplied customer frames were compared, remaining differences disclosed, and current OpenAPI/generated types left unchanged. Decided by: Codex (technical choices within DM50 scope). Logged by: Codex.
 
 ## 3. Contract change log
 

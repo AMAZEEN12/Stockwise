@@ -4,7 +4,8 @@ import {Button} from '../../components/ui/button';
 import {Input} from '../../components/ui/input';
 import {FormField} from '../../components/ui/form-field';
 import {customerSchema} from '../../schema/customer.schema';
-import {useCreateCustomerMutation,validCustomer} from '../../service/api/customers.api';
+import {customersApi,useCreateCustomerMutation,validCustomer} from '../../service/api/customers.api';
+import {store} from '../../app/store/store';
 import {httpClient,normalizeHttpError} from '../../service/http-client';
 import type {HttpError} from '../../service/http-client';
 import {authEndpoints} from '../../service/endpoints/auth.endpoints';
@@ -39,6 +40,7 @@ export const CustomerForm = forwardRef<CustomerFormHandle,Props>(function Custom
         sent = true;
         const customer = await createCustomer(body).unwrap();
         if (!validCustomer(customer)) throw {status:'NETWORK',fields:{},code:'INVALID_CUSTOMER_RESPONSE'};
+        store.dispatch(customersApi.util.updateQueryData('customers',undefined,(items)=>{if(!items.some((item)=>item.id===customer.id))items.push(customer);}));
         clearCustomerAttempt(); helpers.resetForm(); onSaved(customer);
       } catch (caught) {
         const error = caught && typeof caught === 'object' && 'status' in caught ? caught as HttpError : normalizeHttpError(caught);

@@ -15,7 +15,7 @@ export function ShopLayout() {
   const navigation = <nav aria-label="Shop navigation">
     <NavLink to="/app/sell" onClick={() => setMenu(false)}>Sell</NavLink>
     <NavLink to="/app/products" onClick={() => setMenu(false)}>Products</NavLink>
-    <button disabled title="Customer screens are coming later">Customers</button>
+    <NavLink to="/app/customers" onClick={() => setMenu(false)}>Customers</NavLink>
     <button disabled title="Sales history is coming later">Sales</button>
   </nav>;
   const account = <div className="shop-account"><p>{user.displayName}</p><span className="role-badge">{user.role}</span>

@@ -6,15 +6,15 @@ Source document: `Tesa cohort 6 software engineering capstone project.pdf` (TeSA
 > Any agent opening this project: read this file first, then the "Conventions and guidelines" and "Decisions" sections, then the artifacts in this folder. Continue from "Resume here". Don't re-ask anything already answered below.
 
 ## Resume here
-- **Picker checkpoint, 2026-10-25:** feat/customer-picker implements all supplied picker states, shared form/cache and conservative create recovery. Lint/typecheck passed; unit 7 files/14 tests; contract valid; build 352 modules/17.67s, vendor warning retained; picker browser 8 passed (53.7s), including axe and fixed/bounded layout. Captured all 14 references; normalized differences documented in docs/customers-ui.md. Actual current-config QA uses port 5184; user's stale-config preview on 5173 was preserved. Customers directory next, then full combined regression. No backend or active contract change.
-- **Current task (DM50-DM51, 2026-10-25):** Victor authorized Customer Picker and Customers after reviewing all 36 frames and root tokens. Preserve selected-customer copy exactly. Customer Picker on feat/customer-picker from Sales; Customers subsequently on feat/customers-ui. Authentication is now merged on origin/main (c3633df); Products/Sales history is preserved. Implementation/verification in progress. See docs/customers-ui.md and docs/customers-contract-proposal.md. Decided by Victor Oyeleke (scope/copy); Codex (documented implementation defaults). Logged by Codex.
-- **Current task (DM44-DM48):** Products implemented and committed as 86fb5ea on feat/products-ui; New sale/Receipt implemented on stacked feat/sales-ui. Final frontend/API/browser checks passed; actual outputs below. Sales history is deferred. Latest stock-conflict frames and corrected 6000-credit/150-due frames were compared at normalized sizes; remaining visual differences are explicitly recorded, not approved as pixel-perfect. Contract proposals remain separate, active OpenAPI/generated schema unchanged. Screens ignored/untracked with all 62 local PNGs preserved. See docs/products-sales-ui.md and docs/products-sales-contract-proposal.md.
+- **Customer features completed, 2026-10-25 (DM50-DM52):** Customer Picker committed as de97504 on feat/customer-picker; Customers implemented on stacked feat/customers-ui with its own descriptive feature commit. Exact selected-customer copy preserved. Final lint/typecheck passed; unit 7 files/14 tests; contract valid; browser 50 passed (5.0m), plus final icon/layout journey 2 passed (33.8s). Unintercepted customer-create-to-credit-sale journey passed. Build 353 modules, final CSS build 15.87s; main chunk warning 526.47 kB / 173.24 kB gzip retained. Service verify still blocked by JAVA_HOME. All 36 customer frames compared; 98 local references preserved, none tracked. See docs/customers-ui.md and docs/customers-contract-proposal.md for measured visual differences and pending API proposals. No pixel-perfect approval, backend proof, new PR or deployment is claimed. Decided by Victor Oyeleke (scope/copy); Codex (technical choices). Logged by Codex.
+- **Current handoff:** Work is on feat/customers-ui, based on feat/customer-picker and the Sales foundation. Authentication is merged on origin/main (c3633df, last fetched for this task); Products/Sales history is preserved. Current-config QA used owned port 5184; the user's existing preview on 5173 was preserved. Restart existing dev/mock processes after switching branches to load current plugins and handlers. Next: human visual review and API-owner decisions; publish customer branches/PRs when requested. Current source verification and exact outputs are recorded below.
+- **Earlier task (DM44-DM48):** Products implemented and committed as 86fb5ea on feat/products-ui; New sale/Receipt implemented on stacked feat/sales-ui. Final frontend/API/browser checks passed; actual outputs below. Sales history is deferred. Latest stock-conflict frames and corrected 6000-credit/150-due frames were compared at normalized sizes; remaining visual differences are explicitly recorded, not approved as pixel-perfect. Contract proposals remain separate, active OpenAPI/generated schema unchanged. Screens ignored/untracked with all then-current 62 local PNGs preserved. See docs/products-sales-ui.md and docs/products-sales-contract-proposal.md.
 - **Publication (DM49, verified 2026-10-25):** Products commit 86fb5ea pushed on feat/products-ui, [PR #4](https://github.com/AMAZEEN12/Stockwise/pull/4); Sales commit 74d6eef pushed on feat/sales-ui, [PR #5](https://github.com/AMAZEEN12/Stockwise/pull/5). Both PRs are open against main as Victor requested. Authentication PR #3 remains open. Review order is #3, #4, #5 because the branches are stacked. No main merge or deployment was performed. Decided by Victor Oyeleke; logged by Codex.
 - **Standing instruction reaffirmed by Victor:** before every new task, read root AGENTS.md, including Mistakes to avoid. DM41's three Tailwind replacements are persistent frontend conventions; the startup reminder, exact mapping and Victor/Codex attribution are now explicit there. Existing component replacements remain applied.
 - **Current alignment follow-up:** Applied/verified canonical Tailwind replacements (DM41). Victor selected contract mock development (DM42); local mock-only configuration is set, and actual browser sign-in/refresh/logout passed. Task-owned mock/Vite processes were stopped after implementation verification; no currently running preview is claimed. Victor's supplied Home/CSS refinements are committed; web/Screens stays local and ignored under DM45. His example D badge is vite.config.ts: current web/vite.config.ts exists and is tracked; the precise IDE view cannot be reproduced from Git.
 - **Stage:** Frontend implementation authorized by Victor on 2026-10-24, following review of all 16 references.
-- **In progress:** Home and authentication UI is in open PR #3; Products and Sales are in open PRs #4 and #5. Merged API/database work from PR #2 is retained. Main now includes merged structure PR #1 (2d170e6); its work-log conflict was reconciled on Products and carried into Sales without application changes.
-- **Next action:** Human review of PRs #3, #4 and #5 in that order, including captured Products/Sales screens and remaining visual differences. Sales/store-credit review requires Isaac Bassey's sign-off under REVIEW.md. API owners must resolve registration, authoritative credit settlement, price guards, recovery lookup and pending two-engineer contract sign-off. No automatic main merge or deployment.
+- **Review state:** Authentication PR #3 is merged (c3633df). Products/Sales PRs #4/#5 were published earlier; their latest review state has not been re-queried during this implementation. Merged API/database work from PR #2 and structure PR #1 is retained. Customer features have separate local branches and completed verification.
+- **Next action:** Human review of captured Products/Sales/Customer screens and remaining visual differences; publish customer PRs when requested. Sales/store-credit review requires Isaac Bassey's sign-off under REVIEW.md. API owners must resolve customer idempotency/search/freshness, registration, authoritative credit settlement, price guards, recovery lookup and pending two-engineer contract sign-off. No automatic main merge or deployment.
 - **Waiting on:** Registration API approval, seeded demo credentials, backend authentication implementation, and the two-engineer contract sign-off still marked pending in the merged log.
 
 ## How to continue without the sdlc skill
@@ -286,3 +286,37 @@ Incoming main's historical Resume here snapshot, retained for context only; its 
 - **In progress:** nothing half-done.
 - **Next action:** Get PR 2 reviewed and merged. Isaac must still approve the migrations (high-risk path, release.md). Then step 7 (auth and roles) and step 9 (sale transaction) need the Spring Boot application from step 3 (walking skeleton: app class, `spring-boot-maven-plugin`, Dockerfile, health). Work on `emeka's-branch` (based on `origin/main`), not local `main`, which has an unrelated history.
 - **Waiting on:** Isaac Bassey (contract agreement and migration review). He isn't a repo collaborator yet, so the owner (AMAZEEN12) must invite him before he can be requested as reviewer on PR 2.
+
+### Customer feature verification output, 2026-10-25
+
+```text
+npm run lint: exit 0, zero warnings
+npm run typecheck: exit 0
+npm test -- --run:
+  Test Files  7 passed (7)
+       Tests  14 passed (14)
+npm run lint:contract:
+  openapi.yaml: validated in 465ms
+  Woohoo! Your API description is valid.
+PLAYWRIGHT_PORT=5184 npx playwright test --workers=1:
+  50 passed (5.0m)
+Final selected-icon desktop/mobile journey:
+  2 passed (33.8s)
+npm run check:customers:
+  PASS: actual local API rejects invalid names; browser sign-in, customer
+  creation/contact, directory search/refresh, picker UUID selection, credit
+  sale and resulting integer-kobo customer balance. No request interception.
+  Development simulation only.
+Final npm run build:
+  353 modules transformed.
+  index-zFq3yQn0.js 526.47 kB | gzip: 173.24 kB
+  built in 15.87s
+  Existing >500 kB chunk warning retained.
+Service mvnw.cmd verify: exit 1 before tests
+  The JAVA_HOME environment variable is not defined correctly.
+Comparison: all 36 supplied Customer Picker/Customers frames processed.
+Git: no active OpenAPI, generated schema, backend or migration diff;
+  no reference PNG tracked; all 98 local reference PNGs preserved.
+```
+
+The final implementation notes include measured differences and explicit remaining visual/API limitations. Local checks do not substitute for human approval, backend tests or CI. Generated comparison/capture artifacts stay outside feature commits.

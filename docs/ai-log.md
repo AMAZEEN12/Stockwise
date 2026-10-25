@@ -2,6 +2,13 @@
 
 Record actual AI use, human decisions and verification. Do not include credentials, tokens, passwords or real customer data.
 
+## 2026-10-25: Customer Picker and Customers
+
+- Victor requested a read-only review, then authorized implementation on separate committed feature branches. Reviewed all 36 supplied 2x desktop/mobile frames and the root token sheet. Victor chose to preserve the exact contradictory selected-customer message; validation still uses the actual UUID and existing sale guards. DM50-DM52 separate human scope/copy from technical defaults and unapproved API proposals.
+- Built the picker/shared form on feat/customer-picker (de97504), then directory/navigation/dialog on feat/customers-ui. Existing v0.1.0 customer paths/models remain authoritative; no backend code, migration, active OpenAPI or generated schema changed. Missing idempotency, matching/order and snapshot semantics are proposed in docs/customers-contract-proposal.md.
+- Checked-and-found-wrong: Formik normalized blank optional contact to undefined; corrected Yup's default while retaining validation assertions. Interaction-only tests initially passed against a user-owned stale Vite preview with no Tailwind utilities; actual capture inspection exposed it. Isolated QA on 5184, registered sources and added geometry checks. Corrected mobile individual translate. Generated Vite cache was incorrectly linted; excluded generated output. New POST mock routes also intercepted /app/customers navigation; added HTTP-method guards without dropping assertions. An actual journey expected a cell where the semantic name is a row header; corrected the selector, retaining persistence assertions.
+- The unintercepted isolated journey now passes customer creation/contact, directory refresh/search, picker selection, a credit sale and integer-kobo customer balance. It owns/stops its temporary local servers and does not touch the user's preview. It is simulation evidence only. Full check output, screenshot measurements and environment limitations are recorded in WORKLOG and implementation notes; no pixel-perfect approval or deployed backend proof is invented.
+
 ## 2026-10-24: Frontend phase 2 starter
 
 - Engineer and decision maker: Victor Oyeleke (Interface). Assistant: Codex, used locally; no AI runs in CI.
