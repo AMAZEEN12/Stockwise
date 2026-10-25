@@ -251,6 +251,14 @@ Publication confirmed: feature commit `761c5c2` and supplied-formatting/publicat
 
 Decided by and approved by Victor Oyeleke for DM60 scope; logged by Codex. Contract paths, payloads, tokens and permissions remain service-owned; no new endpoint, role-selection request field, dashboard contract, backend migration or extra engineer approval is introduced.
 
+### Authentication role-landing publication, 2026-10-25
+
+| ID | Date | Decision | Reason | Decided by | Logged by |
+|----|------|----------|--------|------------|-----------|
+| DM62 | 2026-10-25 | Confirm role-landing feature commit 9fbcc87, commit the ten preserved supplied edits, push feat/auth-role-landing and open a PR into main. Retain the supplied formatting and left-aligned product prices. Sales History PR #10 is now merged; current origin/main is 367a891. Preserve human review gates | Victor explicitly requested committing and making a PR. Eight supplied files match the previously tested snapshots byte-for-byte; router/shop-loader compile to equivalent JavaScript ASTs after formatting | Victor Oyeleke (publication and supplied edits); Codex (verification and publication mechanics) | Codex |
+
+The previously recorded lint/typecheck, 27 unit tests, 86 browser scenarios, actual role simulation, contract lint and build were run against the combined working tree, including these supplied edits. Publication adds Markdown only beyond those verified inputs; no runtime suite is repeated. Invalid JAVA_HOME and the existing bundle warning remain disclosed. Publication supplies neither human approval nor backend authentication evidence. No merge or deployment is authorized by this publication request.
+
 ## 3. Contract change log
 
 | Date | Change | Why | Agreed by (two engineers) |
