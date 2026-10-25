@@ -4,24 +4,22 @@ import java.util.UUID;
 
 import org.junit.jupiter.api.BeforeEach;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.boot.SpringBootConfiguration;
-import org.springframework.boot.autoconfigure.EnableAutoConfiguration;
 import org.springframework.boot.test.context.SpringBootTest;
-import org.springframework.context.annotation.ComponentScan;
 import org.springframework.jdbc.core.simple.JdbcClient;
 import org.springframework.test.context.DynamicPropertyRegistry;
 import org.springframework.test.context.DynamicPropertySource;
 import org.testcontainers.postgresql.PostgreSQLContainer;
+
+import ng.tesa.stockwise.StockwiseApplication;
 
 /**
  * Spring context for the rule integration tests: the real services and repositories,
  * Flyway migrations, and a real Postgres 17. Each test starts from empty tables.
  *
  * <p>This container is separate from {@code db.PostgresTestDatabase}, whose tests drop and
- * undo the schema; a cached Spring context must never see that. The test configuration is
- * explicit until the application class exists (plan step 3).
+ * undo the schema; a cached Spring context must never see that.
  */
-@SpringBootTest(classes = DatabaseTestSupport.TestApplication.class)
+@SpringBootTest(classes = StockwiseApplication.class)
 public abstract class DatabaseTestSupport {
 
     static final PostgreSQLContainer POSTGRES = new PostgreSQLContainer("postgres:17-alpine");
@@ -37,13 +35,11 @@ public abstract class DatabaseTestSupport {
         registry.add("spring.datasource.password", POSTGRES::getPassword);
         // Enough connections for the parallel tests to really overlap.
         registry.add("spring.datasource.hikari.maximum-pool-size", () -> "20");
+        registry.add("app.security.jwt-secret", () -> TEST_JWT_SECRET);
     }
 
-    @SpringBootConfiguration
-    @EnableAutoConfiguration
-    @ComponentScan(basePackages = "ng.tesa.stockwise")
-    public static class TestApplication {
-    }
+    /** Test-only signing key (never used outside tests). */
+    protected static final String TEST_JWT_SECRET = "test-only-signing-key-0123456789-abcdefghijklmnop";
 
     /** The test database itself, for tests that run Flyway with other locations. */
     protected static org.flywaydb.core.api.configuration.FluentConfiguration flywayConfiguration() {

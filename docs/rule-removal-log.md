@@ -17,7 +17,9 @@ Method: a harness deletes the protection from the source file, runs only the nam
 | 2026-10-24 | R5: one sale per key | `ON CONFLICT (idempotency_key) DO NOTHING` deleted from `SaleRepository.insertSale` | `IdempotencyIT` | **Failed**: replays threw a duplicate-key error instead of returning the original sale | agent, for Nnaemeka Chukwuma |
 | 2026-10-24 | R5: same key, different body | request-hash comparison deleted from `SaleService.replay` | `IdempotencyIT#sameKeyWithDifferentBodyIsRefused` | **Failed**: "Expecting code to raise a throwable" (the different body was answered with the old sale) | agent, for Nnaemeka Chukwuma |
 | 2026-10-24 | Deadlock avoidance | product-ID lock ordering deleted from `SaleService.record` | `SaleConcurrencyIT#oppositeLineOrdersDoNotDeadlock` | **Failed**: not every opposite-order cart was recorded (Postgres deadlock) | agent, for Nnaemeka Chukwuma |
+| 2026-10-25 | R15: only the owner adds products | `.requestMatchers(POST, "/api/v1/products").hasRole("OWNER")` deleted from `SecurityConfig` | `AuthorizationIT#assistantCannotAddAProduct` | **Failed**: "expected: 403 but was: 201" (the assistant added a product) | agent, for Nnaemeka Chukwuma |
+| 2026-10-25 | R15: only owner and assistant sell | `.requestMatchers(POST, "/api/v1/sales").hasAnyRole("OWNER", "ASSISTANT")` deleted | `AuthorizationIT#adminCannotSellOrAddCustomers` | **Failed**: "expected: 403 but was: 201" (the admin recorded a sale) | agent, for Nnaemeka Chukwuma |
 
 Step 12 local evidence (2026-10-25): branch `evidence/no-stock-guard` (107a3dd) removes the guard condition and the CHECK. `SaleConcurrencyIT` fails there (10 of 10 devices sold the last unit) and passes on `feat/sale-transaction`. Both logs are in [docs/evidence/concurrency/](evidence/concurrency/README.md).
 
-Still to come: the CI run of the same evidence (`concurrency-evidence.yml`, Blessing), and the R15 role check (`AuthorizationIT`, step 7).
+Still to come: the CI run of the same evidence (`concurrency-evidence.yml`, Blessing), and the deployed run of `last-unit.mjs` (step 13).
