@@ -232,6 +232,14 @@ Publication confirmed: feature commit `9cc489b` and main-integration/publication
 
 Details and pending API-owner clarifications: [Sales History implementation](docs/sales-history-ui.md). Decided by and approved by Victor Oyeleke for DM57 scope; logged by Codex. No backend change, active contract edit or additional engineer approval is claimed.
 
+### Sales History publication, 2026-10-25
+
+| ID | Date | Decision | Reason | Decided by | Logged by |
+|----|------|----------|--------|------------|-----------|
+| DM59 | 2026-10-25 | Confirm Sales History feature commit 761c5c2, preserve and commit Victor's three current CSS formatting changes, push feat/sales-history and open a PR into main. Include the verified implementation, chosen ID-only contract and date/read-only scope. Current main 9e59806 already includes the earlier shared-component/customer foundation; do not republish it as new scope. Preserve human review gates; no automatic merge or deployment | Victor requested ensuring a commit exists before making the PR. Normalized PostCSS AST comparisons confirm the three stylesheet edits change formatting only, including equivalent hex case, decimal notation and quotes | Victor Oyeleke (publication and supplied formatting scope); Codex (verification and publication mechanics) | Codex |
+
+Prior implementation verification remains in docs/sales-history-ui.md and WORKLOG: 23 unit tests, a full 74-scenario regression run, then 18 final history checks after the narrow client timestamp correction, plus the actual simulation/keyboard journey. No runtime tests were repeated for formatting/Markdown-only publication changes. Backend JAVA_HOME and existing bundle warning, visual differences and pending API semantics remain disclosed. No additional engineer approval is inferred.
+
 ## 3. Contract change log
 
 | Date | Change | Why | Agreed by (two engineers) |
