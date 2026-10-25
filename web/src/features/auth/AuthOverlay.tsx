@@ -91,7 +91,7 @@ export function AuthOverlay({ mode }: { mode: 'sign-in' | 'sign-up' }) {
         </FormField>
         <FormField label="Password" id="auth-password" className={`auth-field ${status === 'loading' ? 'loading-password' : ''}`} error={fieldError('password')}>
           {(field) => <div className="password-control"><Input {...field} {...form.getFieldProps('password')} required type={showPassword ? 'text' : 'password'} autoComplete={isSignUp ? 'new-password' : 'current-password'} className="auth-input" aria-invalid={field['aria-invalid'] || status === 'error-401' || undefined} />
-            <button type="button" className="password-toggle" aria-label={showPassword ? 'Hide password' : 'Show password'} aria-pressed={showPassword} onClick={() => setShowPassword((show) => !show)}>{showPassword ? 'Hide' : 'Show'}</button>
+            <Button variant="ghost" type="button" className="password-toggle" aria-label={showPassword ? 'Hide password' : 'Show password'} aria-pressed={showPassword} onClick={() => setShowPassword((show) => !show)}>{showPassword ? 'Hide' : 'Show'}</Button>
           </div>}
         </FormField>
       </fieldset>

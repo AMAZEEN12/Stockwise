@@ -4,9 +4,9 @@ Owner: Victor Oyeleke (Interface). Logged by: Codex, 2026-10-24; shared-source c
 
 ## Current deliverable
 
-Phase 2 is folders, documentation and one empty source file: `web/src/service/http-client.ts`. Empty leaf folders have `.gitkeep` files so a clone preserves them. There are no dependencies, package manifest, configuration, generated types, image or font assets, CSS, screens or application implementation. Remove a folder's placeholder when it gains real files.
+Phase 3 implements Home and authentication on `feat/auth-ui`, with a runnable Vite/React/TypeScript app, Tailwind v4, Data Mode, copied shared components, generated contract types, Axios/RTK Query, Formik/Yup, self-hosted fonts and a reconstructed SVG coin. Registration remains an explicit pending adapter. See [implementation details](auth-ui-implementation.md), [contract proposals](auth-contract-proposal.md), and WORKLOG for actual verification. Empty unused feature folders keep placeholders; populated folders remove them.
 
-The root `service/` is reserved for the Java backend. Frontend HTTP code belongs under `web/src/service/`. Backend, contract, hosting and workflow scaffolding remain with their area owners.
+The root `service/` is the Java backend; merged PR #2's database foundation is retained. Frontend HTTP code belongs under `web/src/service/`. Backend HTTP implementation, hosting and workflows remain with their area owners. The existing OpenAPI is consumed unchanged; proposed changes require two-engineer sign-off.
 
 ## Folder map
 
@@ -50,18 +50,18 @@ web/
     └── styles/
 ```
 
-## Planned stack and ownership
+## Stack and ownership
 
-Vite, React 19, strict TypeScript without `any`, React Router in **Data Mode**, Tailwind CSS, Axios, Formik with Yup, Redux Toolkit and RTK Query. RTK Query replaces TanStack Query from DM21. Keep the planned openapi-typescript generation, Vitest, Testing Library, Playwright, axe, Prism and npm. Verify and pin current compatible package versions when the runnable foundation is separately authorized; Data Mode does not authorize React Router Framework Mode setup.
+Vite, React 19, strict TypeScript without `any`, React Router in **Data Mode**, Tailwind **v4**, Axios, Formik/Yup, Redux Toolkit/RTK Query, openapi-typescript, Vitest, Playwright/axe and npm. Resolved package versions are pinned in package.json and lockfile. Use `react-router`, `createBrowserRouter` and `RouterProvider`; configure `@tailwindcss/vite` beside the React plugin and import Tailwind from the global stylesheet. CSS-first theme mapping belongs in styles/tokens.css. No Framework Mode or parallel query cache.
 
 - `app/router/`: route composition and Data Mode integration; `app/store/`: Redux store and RTK Query integration. RTK Query owns server-data caching; do not introduce a second TanStack Query cache.
-- `auth/`: login UI, authentication/session concerns and local authentication components. Session persistence is still unresolved, not an instruction to select browser storage.
+- `auth/`: expiry-checked tab sessionStorage with memory fallback (DM40), logout and the pending registration adapter. Auth screens are in features/auth; implementation details and limitations are documented.
 - `features/`: product behavior and feature-local screens, components and hooks. Customer ledger and repayments belong with customers; sale details belong with sales; movement-history screens belong with history.
-- `components/ui/`: reusable UI from the future shared agreement; `components/layouts/`: reusable layouts. This reservation does not approve component APIs or dependencies.
+- `components/ui/`: copied shared primitives from the adopted source (DM37), with documented additive styling/loading extensions. `components/layouts/`: reusable layouts.
 - `shared/`: cross-feature hooks, constants and utilities. `lib/money.ts` remains the sole naira-formatting location, using integer arithmetic on integer kobo.
 - `schema/`: Yup form schemas consumed by Formik, distinct from generated OpenAPI types. Form validation helps the user; it does not replace service/database rule enforcement.
-- `styles/`: future token definitions, Tailwind mapping and application styles; `assets/fonts/`: future font assets. None is implemented now.
-- `e2e/`: future Playwright journeys and accessibility checks; `public/`: assets that eventually need fixed public paths. Application images use the image-import convention below.
+- `styles/`: app-wide Stockwise tokens, Tailwind v4 mapping and responsive styles. Fonts are self-hosted by the pinned Fontsource imports; no remote font request is needed.
+- `e2e/`: Playwright auth journeys, reference-size captures and axe checks. `public/`: assets that need fixed public paths. Runtime images use the image-import convention below.
 
 ## API separation and future filenames
 
@@ -69,21 +69,21 @@ Vite, React 19, strict TypeScript without `any`, React Router in **Data Mode**, 
 |---|---|
 | `service/endpoints/products.endpoints.ts` | Central product URL definitions, including parameterized detail URLs when approved in the contract. |
 | `service/api/products.api.ts` | Product operations (list, detail, create, update) together in one resource file, referencing those URL definitions. Other resources get their own file. |
-| `service/http-client.ts` | One shared Axios client: base URL from the future environment configuration, shared headers, consistent transport/error handling. Empty in this phase. |
-| `api/schema.d.ts` | Generated contract types only. Generate when the approved OpenAPI contract exists; never hand-create this file. |
+| `service/http-client.ts` | Shared Axios client, VITE_API_BASE_URL, bearer/request headers, preserved operation headers and normalized transport/problem errors; supplies the common RTK Query base query. |
+| `api/schema.d.ts` | Generated from the merged v0.1.0 contract; never edit by hand. Its upstream two-engineer approval record is still pending. |
 | `models/requests/`, `models/responses/` | Contract-derived request and response type aliases or models. Do not independently invent wire shapes, pagination or response envelopes. |
 
-Resource API modules will connect to RTK Query through a common Axios-backed base query so resource separation still shares one cache for the service. Components will use the resource query/mutation interface rather than duplicating HTTP requests. These are future implementation responsibilities, not source delivered now.
+Resource API modules connect to RTK Query through a common Axios-backed base query, sharing one cache for the service. Components use resource hooks; central endpoints and request/response aliases come from generated contract types. Authentication is implemented; the other resource files remain future work.
 
-The HTTP layer will attach the current bearer token where required and `X-Request-Id` per request. Operation-specific headers such as `If-Match` and `Idempotency-Key` must pass through intact. Create the submission key once per logical sale, restock or repayment and retain it across retries of that write. Do not regenerate it in a generic request interceptor. Preserve the distinction between a retry of the same submission and an edited/new submission.
+The HTTP layer attaches the current bearer token and `X-Request-Id` per request. Operation-specific headers such as `If-Match` and `Idempotency-Key` pass through intact. Create the submission key once per future logical sale, restock or repayment and retain it across retries of that write. Do not regenerate it in a generic request interceptor. Preserve the distinction between a retry of the same submission and an edited/new submission.
 
 Normalize RFC 9457 API problems, field errors, network failures and timeouts without losing status, code or request ID. Forms show relevant field errors; screens choose actionable user messages. Do not log passwords, tokens or full request bodies. An unconfirmed monetary/stock write must never be reported as saved. Login failure, session expiration and forbidden access require different handling; details remain PD14. The existing eight-hour token/no-refresh-token decision still applies.
 
-URLs and wire models must come from `contract/openapi.yaml` once it exists. `/categories` was only an organizational example in the discussion; no category endpoint is approved. New API paths still require two engineers' contract-change sign-off.
+URLs and wire models come from `contract/openapi.yaml`. `/categories` was only an organizational example; no category endpoint is approved. New API paths require two engineers' contract-change sign-off. Registration is proposed separately and not called.
 
 ## Assets and naming
 
-Store image files in `assets/images/`; add a central `assets/images/index.ts` of named exports once real assets exist. Screens import named images from that location. Do not create an empty index file in this phase or pretend the design screenshot supplies production image files.
+Store runtime image files in `assets/images/`, exported by the central `index.ts`. The reconstructed coin is the first runtime asset. DM45 supersedes DM43's versioned-reference policy: local `web/Screens/` references are ignored and untracked without deleting the local files. They are never page backgrounds or runtime imports. The earlier Login-png ignore pattern remains for private copies. Other runtime artwork should join the asset import index.
 
 Use lowercase kebab-case directory names and descriptive filenames. Resource API files use `<resource>.api.ts`; URL definition files use `<resource>.endpoints.ts`; Yup files use `<form>.schema.ts`; request/response models use `<operation>.request.ts` and `<operation>.response.ts`. React screen/component filenames use PascalCase by default; copied shared component filenames must follow the eventual shared agreement. Generated types retain their established filename.
 
@@ -91,7 +91,9 @@ Use separate branches: `chore/web-structure`, `feat/<feature>`, and `fix/<bug>`.
 
 ## Supplied design tokens
 
-Source: the token image supplied by Victor in this conversation. These are recorded design values, not implemented CSS or independently verified contrast measurements. The image's contrast estimates are not accessibility test evidence.
+DM41 canonical utility convention: prefer `focus-visible:outline-offset-(--focus-ring-offset)`, `rounded-md`, and `font-sans` over equivalent arbitrary-value expressions. `rounded-md` resolves to Stockwise's existing 10px radius token; `font-sans` uses the existing Inter Tight theme mapping. Record recurring mistakes in AGENTS.md and apply this convention to copied shared components. See the official [outline-offset](https://tailwindcss.com/docs/outline-offset), [border-radius](https://tailwindcss.com/docs/border-radius), and [font-family](https://tailwindcss.com/docs/font-family) references.
+
+Source: Victor's token image in the local reference folder. Values are implemented in `web/src/styles/tokens.css`; the image's estimated contrast figures are not test evidence. Actual browser accessibility results are recorded separately in WORKLOG.
 
 | Token | Supplied value | Intended use |
 |---|---|---|
@@ -107,26 +109,30 @@ Source: the token image supplied by Victor in this conversation. These are recor
 
 General typography: Inter Tight for headings, body, inputs and labels; heading 600 at 34 px/1.1, body/input 400 at 16 px/1.5, labels 500 at 14 px, help/notes 13 px/1.4. Micro text uses JetBrains Mono at 12 px with 0.04 em tracking. Spacing steps: 4, 8, 12, 16, 24, 32 and 48 px. Reference panel padding is 48 px desktop and 20 px mobile. Control radius is 10 px and card radius 16 px. Targets are at least 44 px; buttons and fields are 48 px. Focus is a 3 px lime outline with 2 px offset.
 
-Login-specific references: Syne 800 wordmark (200 px/0.92 desktop, `min(50px, 13.5vw)` mobile with 16 px side padding); STOCK solid white and WISE outlined. Login headline uses Inter Tight 500 at 58 px/1.02 desktop and 26 px mobile, with an Instrument Serif italic lime accent. Coin artwork, wordmark layout, hero composition and animation belong to the later login work. The reference describes a desktop-only decorative coin with a static reduced-motion treatment; do not generate or implement it in this phase.
+Login-specific token-sheet references: Syne 800 wordmark (200px desktop; fluid mobile with 16px side padding), solid STOCK and outlined WISE; Inter Tight headline with Instrument Serif italic lime accent. The supplied Home frame governs its measured 48px desktop headline and mobile composition; see auth-ui-implementation.md for this explicit difference from the token-sheet 58px note. The reconstructed desktop coin has pointer/idle motion and a static reduced-motion pose, and is hidden on mobile.
 
 Keep the foundational colors, type, spacing, radii and focus treatment app-wide (DM34). Do not extrapolate unspecified success/warning colors, font delivery, responsive layouts or component states from this image. Both invalid-credential and network-error behavior must be considered at every supported screen size; their appearance on different reference frames does not restrict which device can experience them.
 
 ## Shared agreement and remaining questions
 
+DM55 implementation amendment (2026-10-25), approved by Victor Oyeleke and logged by Codex: reuse the shared screen states, controls, notifications, dialogs, cards and badges on feat/shared-component-alignment. Read [local adaptations and owner proposals](shared-component-alignment.md#implementation-authorized-2026-10-25-dm55) before changing a component. Stockwise's visible search labels and five-second success notices are intentional approved adjustments; API and money behavior remain governed by the existing contract.
+
 DM37 adopts the four engineers' shared copy-in source; Victor confirmed the upstream count and approved this correction in DM53. The earlier PDF is historical context. Use the pinned source for actual component behavior where README notes conflict with it: Card supports text-only content, and Select/Checkbox already use shared CSS variables and input-border tokens. See [approved shared-source clarifications](shared-component-alignment.md) for exact behavior and revision. Shadcn is not required. Formik/Yup remains Stockwise's form stack; native Input props and FormField render props support it. See the implementation document for the copied revision, dependencies and local extensions.
 
-Before implementing the affected phase 3 behavior, align on PD14:
+DM40 settles the current auth defaults; [the proposal](auth-contract-proposal.md) records remaining registration/API questions. Before future cart/money features, align on the remaining PD14 items:
 
-- Session persistence across refresh, logout and multiple tabs; expired sessions or role changes during an unfinished form or pending write; post-login destination.
+- Future cross-tab sessions and role changes during an unfinished money form; the current auth tab persistence, logout and welcome handoff are documented by DM40.
 - Pending-write recovery after navigation or refresh, storage/lifetime of submission keys and payloads, retry limits and cancellation behavior. Never invent offline success or replay a changed payload with an old key.
 - A product becoming archived, stock dropping, or the server price changing while a cart is open; presentation of conflicts and updated totals before confirmation.
 - Presenting store credit, amount applied and remaining balance; customer selection for paid sales that may use credit; repayment or reversal conflicts. Existing business rules stay authoritative; wire details require the API owner.
-- Login validation, generic wrong-credential messaging, network errors, waking notice after the existing 3-second threshold, success/confirmation and meaningful empty-state behavior; demo-account controls await Victor's screen prompt.
+- Backend demo seed credentials and registration authorization remain pending. The implemented auth states and fill-only demo buttons are documented by DM40.
 - Naira input rules and maximum safe client amounts for JSON int64 money; no floating-point money arithmetic or parsing policy is selected here.
-- Final responsive screens, reduced-motion artwork, missing tokens, font assets and the shared Formik-compatible component interfaces.
+- Original coin artwork and human visual-baseline approval remain pending; current fonts, responsive auth screens, reduced motion and Formik compatibility are implemented.
 
-## Verification for this phase
+## Verification
+
+Customer UI amendment (2026-10-25, DM50-DM52): Customer Picker and Customers reuse `features/customers/CustomerForm.tsx`, resource-specific customer request/response aliases, `schema/customer.schema.ts` and `service/api/customers.api.ts`. Directory route `/app/customers` uses the existing Data Mode shop loader/layout; creation remains OWNER/ASSISTANT and server-enforced. Customer attempts persist separately from immutable sale submissions; account/service mismatches never expose saved form values or auto-submit. See [customer UI](customers-ui.md) and [API proposals](customers-contract-proposal.md). Scope/reference wording decided by Victor Oyeleke; technical defaults/proposals by Codex; logged by Codex.
 
 Check the exact folder map, empty `.gitkeep` files, the zero-byte HTTP-client file, absence of application/configuration files, Markdown link targets and consistency of decision references. Review staged diffs and whitespace before commits. After publication compare local commit IDs with remote branch heads and confirm the PR targets `main`.
 
-The service wrapper, OpenAPI contract and web package manifest do not exist, so the application commands in AGENTS.md are unavailable, not passed. This phase changes no business rules or rendered UI. Keep runtime checks planned and run them when a runnable foundation is introduced.
+Phase 2 checks above are historical. The service wrapper, OpenAPI and web manifest now exist. Run frontend lint/typecheck/unit/build, contract lint, and Playwright/axe as documented in auth-ui-implementation.md. Record actual output and environment limitations in WORKLOG. This frontend feature changes no database business rule or migration.

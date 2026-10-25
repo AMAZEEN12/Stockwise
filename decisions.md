@@ -164,6 +164,31 @@ Visual-review note: the supplied CSS still hides the headline on mobile. With th
 | DM47 | 2026-10-24 | Development simulation supports product/sale interaction and corrected automatic store credit. Real credit-bearing writes remain blocked pending settlement fields. Persist an immutable pending write before POST; bounded transport retry preserves key/body; reauthentication requires same user and current permitted role; refreshed recovery replays the same POST until a lookup exists | Prevent false success, changed-body retries and fabricated authoritative credit totals | Codex, implementation choices; wire additions remain proposals | Codex |
 
 Details and unresolved API decisions: [UI implementation](docs/products-sales-ui.md), [contract proposal](docs/products-sales-contract-proposal.md). No two-engineer sign-off is invented.
+
+| DM48 | 2026-10-25 | Keep unsubmitted carts in per-user tab storage as well as immutable pending writes. Bind pending recovery to the original service base URL and user, recheck current role, reject unsafe customer money, and retain the original preview during recovery. Use one browser worker on this Windows machine. Decorative error icons use SVG; keep exact-copy assertions intact | Continuation safety and concrete browser/lint findings during implementation; no backend business-rule change | Codex, implementation choices under Victor's authorization | Codex |
+
+### Products and sales publication, 2026-10-25
+
+| ID | Date | Decision | Reason | Decided by | Logged by |
+|----|------|----------|--------|------------|-----------|
+| DM49 | 2026-10-25 | Confirm the feature commits, push feat/products-ui and feat/sales-ui, and open both PRs against main. Products is PR #4 (86fb5ea); Sales is PR #5 (74d6eef). Preserve the existing stacked history and document review order: authentication PR #3, Products PR #4, then Sales PR #5. No automatic merge or deployment | Victor explicitly requested a PR to main for both branches and confirmation that the commits exist | Victor Oyeleke | Codex |
+
+Published: [Products PR #4](https://github.com/AMAZEEN12/Stockwise/pull/4) and [Sales PR #5](https://github.com/AMAZEEN12/Stockwise/pull/5), both open with base main. Authentication [PR #3](https://github.com/AMAZEEN12/Stockwise/pull/3) was still open when checked on 2026-10-25. The descriptions disclose inherited changes, prior local verification, visual differences, service setup limits and pending API proposals. Creating these PRs does not supply human review or contract approval.
+
+Publication follow-up: current main includes merged structure PR #1 (2d170e6). Its only merge conflict with Products was in sdlc/WORKLOG.md. Codex retained the current frontend guidance and appended the incoming historical startup notes, committed the main integration as 8fa08ac on Products, then carried it into Sales. No application files changed, existing feature commits were preserved and neither branch was force-pushed. Decided by: Codex (routine conflict resolution within Victor's publication request). Logged by: Codex.
+
+### Customer Picker and Customers, 2026-10-25
+
+| ID | Date | Decision | Reason | Decided by | Logged by |
+|----|------|----------|--------|------------|-----------|
+| DM50 | 2026-10-25 | Implement the 14 Customer Picker and 22 Customers references using root Screens tokens; separate feat/customer-picker and feat/customers-ui branches and descriptive completed-feature commits. Keep the selected-customer reference message exactly as supplied | Victor authorized implementation after the read-only review and explicitly chose unchanged reference text | Victor Oyeleke | Codex |
+| DM51 | 2026-10-25 | Reuse current GET/POST customers contract and one form/cache. Keep real store-credit writes gated. Preserve server order, load every collection page, use last successful client retrieval for WAT freshness, and use UUID identity even for duplicate names. Handle unsafe amounts and non-idempotent create uncertainty explicitly; proposed API changes stay separate | Complete the supplied flows without inventing approved endpoints, retry guarantees or authoritative balance snapshots | Codex, implementation choices under Victor's authorization | Codex |
+| DM52 | 2026-10-25 | Use PLAYWRIGHT_PORT=5184 for current-config QA while preserving the user's existing 5173 preview. Register Tailwind sources explicitly, ignore generated .vite/.mock for lint, and assert dialog positioning/bounds. Override individual translate for the mobile sheet. Keep optional contact valid after Formik normalization | Visual inspection caught missing utilities and offscreen mobile content that interaction-only checks did not detect | Codex, implementation/verification choices | Codex |
+
+Details: [customer UI](docs/customers-ui.md) and [pending contract proposals](docs/customers-contract-proposal.md). No new two-engineer sign-off is recorded.
+
+Implementation follow-up, 2026-10-25: confirmed customer creations update the existing shared cache; the directory uses semantic row headers, matching responsive cards and a persistent dismissible success notice. The last retrieval time is displayed in Africa/Lagos. Independent verification owns temporary API/Vite ports 4711/5185 and stops them afterwards; the user's preview is preserved. All 36 supplied customer frames were compared, remaining differences disclosed, and current OpenAPI/generated types left unchanged. Decided by: Codex (technical choices within DM50 scope). Logged by: Codex.
+
 ### Shared-source documentation correction, 2026-10-25
 
 | ID | Date | Decision | Reason | Decided by | Logged by |
@@ -180,8 +205,26 @@ Details and unresolved API decisions: [UI implementation](docs/products-sales-ui
 
 Publication confirmed: commit `285cf91`, branch `fix/shared-component-documentation`, [PR #6](https://github.com/AMAZEEN12/Stockwise/pull/6), base `main`, state `open`, draft `false`, merged `false`. Documentation checks passed; original working files and branch were preserved. Logged by Codex on 2026-10-25.
 
+### Shared-component implementation alignment, 2026-10-25
+
+| ID | Date | Decision | Reason | Decided by | Logged by |
+|----|------|----------|--------|------------|-----------|
+| DM55 | 2026-10-25 | Implement the seven reviewed shared-component alignment proposals on feat/shared-component-alignment. Adopt reviewed primitives, visible search labels, shared notifications, state components, cards/badges and guarded Dialog/ConfirmDialog composition; complete token usage and persistent agent guidance. Preserve supplied designs, current Victor refinements, integer-kobo calculations, sale submission/recovery and non-idempotent customer-create safeguards. Document additive shared API proposals and their owners; local implementation approval does not claim cross-team acceptance | Victor explicitly requested proceeding with implementation after approving DM53 and publishing the documentation PR. Scope includes the proposed visible labels and five-second success toasts; active API contracts remain unchanged | Victor Oyeleke (implementation scope); Codex (technical adaptations) | Codex |
+
+**Approved by:** Victor Oyeleke. **Logged by:** Codex. Implementation, source provenance, owner-review proposals and validation are tracked in [shared component alignment](docs/shared-component-alignment.md).
+
+### Shared-component feature publication, 2026-10-25
+
+| ID | Date | Decision | Reason | Decided by | Logged by |
+|----|------|----------|--------|------------|-----------|
+| DM56 | 2026-10-25 | Confirm feature commit 9cc489b, integrate current main c0ab694 into feat/shared-component-alignment, commit the publication record, push and open a PR into main. Preserve completed Customer Picker de97504 and Customers cb19935 as inherited feature commits. Resolve overlapping Markdown by retaining current implementation guidance and the already-recorded DM53/DM54 corrections; retain upstream removal of obsolete populated-folder placeholders. No application source or tests change during publication | Victor requested a PR for the new changes with a commit available first. Main now includes merged Sales PR #5 and documentation PR #6; customer features remain additional scope in this branch | Victor Oyeleke (publication scope); Codex (routine integration and documentation resolution) | Codex |
+
+Prior verification and its limits remain in WORKLOG and the implementation notes: 18 unit tests passed; the full browser run was 54/56, with all 56 distinct scenarios passing across full and focused runs. Windows timing, remaining measured visual differences, the existing bundle warning and invalid JAVA_HOME are disclosed. Human review, including Isaac Bassey's sale/store-credit sign-off under REVIEW.md, remains required. No main merge, deployment, upstream component acceptance or API-contract approval is supplied by publication.
+
+Publication confirmed: feature commit `9cc489b` and main-integration/publication commit `6f70072` were pushed before creating [PR #9](https://github.com/AMAZEEN12/Stockwise/pull/9), `feat(ui): align shared components and add customer screens`, from `feat/shared-component-alignment` into `main`. GitHub returned state `open`, draft `false`, merged `false`, initial head `6f7007254692f00dba0ed2db6ec4937a9d95fa10`. The description explicitly includes customer commits de97504/cb19935 and discloses prior QA limitations. This documentation follow-up records the confirmed result. Logged by Codex on 2026-10-25.
+
 ## 3. Contract change log
 
 | Date | Change | Why | Agreed by (two engineers) |
 |------|--------|-----|---------------------------|
-| 2026-10-23 | **v0.1.0 (DRAFT):** first contract with the Monday paths: `GET /health`, `POST /auth/sessions`, `GET /me`, `GET/POST /products`, `GET /products/{id}`, `GET/POST /customers`, `GET/POST /sales` (`Idempotency-Key` required), `GET /sales/{id}`. Problem+json errors with codes. Money as int64 kobo (`x-unit: kobo`, enforced by the lint rule `money-is-integer-kobo`). Mock on port 4710 | EXECUTION step 2: contract before code; unblocks the interface | **Pending:** Isaac Bassey (API and access owner) and Nnaemeka Chukwuma. Drafted by the agent for review; not agreed until both names are recorded here |
+| 2026-10-23 | **v0.1.0 (DRAFT):** first contract with the Monday paths: `GET /health`, `POST /auth/sessions`, `GET /me`, `GET/POST /products`, `GET /products/{id}`, `GET/POST /customers`, `GET/POST /sales` (`Idempotency-Key` required), `GET /sales/{id}`. Problem+json errors with codes. Money as int64 kobo (`x-unit: kobo`, enforced by the lint rule `money-is-integer-kobo`). Mock on port 4710 | EXECUTION step 2: contract before code; unblocks the interface | **Agreed:** Nnaemeka Chukwuma (Data and rules), 2026-10-25: money as int64 kobo, `Idempotency-Key` on `POST /sales`, the error codes, and request shapes that match V1-V3 and the sale service. **Pending:** Isaac Bassey (API and access owner). Drafted by the agent for review; not agreed until both names are recorded here |

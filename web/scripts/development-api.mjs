@@ -7,6 +7,14 @@ const products = makeProducts();
 const user = {...mockUser, role: process.argv.find((arg) => arg.startsWith('--role='))?.slice(7) || 'OWNER'};
 if (!['OWNER','ASSISTANT','ADMIN'].includes(user.role)) throw new Error('Unknown mock role');
 const token = 'stockwise-contract-mock-token';
+const customers = [
+  {id:'22222222-2222-4222-8222-222222222221',displayName:'Mama Chidi',balanceKobo:450000,storeCreditKobo:0,createdAt:'2026-10-24T08:41:00Z'},
+  {id:'22222222-2222-4222-8222-222222222222',displayName:'Bolu Adeyemi',balanceKobo:0,storeCreditKobo:600000,createdAt:'2026-10-24T08:41:00Z'},
+  {id:'22222222-2222-4222-8222-222222222223',displayName:'Ngozi Okoro',balanceKobo:85000,storeCreditKobo:0,createdAt:'2026-10-24T08:41:00Z'},
+  {id:'22222222-2222-4222-8222-222222222224',displayName:'Tunde Bakare',balanceKobo:0,storeCreditKobo:0,createdAt:'2026-10-24T08:41:00Z'},
+];
+const sales = [];
+const submissions = new Map();
 const isUuid = (text) => typeof text === 'string' && /^[0-9a-f]{8}-[0-9a-f]{4}-[1-5][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i.test(text);
 const server = createServer(async (request,response) => {
   const origin = request.headers.origin;
@@ -60,6 +68,60 @@ const server = createServer(async (request,response) => {
     if (!product) {problem(404,'NOT_FOUND','Product not found.'); return;}
     send(200,{...product,stockState:stockState(product)}); return;
   }
+  if (url.pathname === '/customers' && request.method === 'GET') {
+    const page = Number(url.searchParams.get('page') || 0); const size = Number(url.searchParams.get('size') || 20);
+    if (!Number.isInteger(page) || page < 0 || !Number.isInteger(size) || size < 1 || size > 100) {problem(400,'VALIDATION_FAILED','Invalid pagination.'); return;}
+    const q = (url.searchParams.get('q') || '').toLowerCase(); const items = customers.filter((person) => person.displayName.toLowerCase().includes(q));
+    send(200,{items:items.slice(page*size,(page+1)*size),page,size,totalItems:items.length}); return;
+  }
+  if (url.pathname === '/customers' && request.method === 'POST') {
+    if (!['OWNER','ASSISTANT'].includes(user.role)) {problem(403,'FORBIDDEN','Admins cannot add customers.'); return;}
+    const errors = [];
+    if (typeof body.displayName !== 'string' || !body.displayName.trim() || [...body.displayName.trim()].length > 120) errors.push({field:'displayName',message:'Enter a display name, up to 120 characters.'});
+    if (body.contactPlaceholder !== undefined && (typeof body.contactPlaceholder !== 'string' || [...body.contactPlaceholder].length > 60)) errors.push({field:'contactPlaceholder',message:'Use at most 60 characters.'});
+    if (Object.keys(body).some((key) => !['displayName','contactPlaceholder'].includes(key))) errors.push({field:'body',message:'Unexpected property.'});
+    if (errors.length) {problem(400,'VALIDATION_FAILED','Check customer fields.',errors); return;}
+    const customer = {...body,displayName:body.displayName.trim(),id:randomUUID(),balanceKobo:0,storeCreditKobo:0,createdAt:new Date().toISOString()};
+    customers.push(customer);send(201,customer);return;
+  }
+  if (url.pathname === '/sales' && request.method === 'POST') {
+    if (user.role === 'ADMIN') {problem(403,'FORBIDDEN','Admins cannot record sales.'); return;}
+    const key = request.headers['idempotency-key'];
+    if (!isUuid(key)) {problem(400,'VALIDATION_FAILED','A UUID Idempotency-Key is required.'); return;}
+    const serialized = JSON.stringify(body);
+    if (submissions.has(key)) {
+      const saved = submissions.get(key);
+      if (saved.body !== serialized) {problem(422,'IDEMPOTENCY_KEY_REUSED','This key was already used with a different request.'); return;}
+      send(201,saved.sale); return;
+    }
+    if (!['PAID','CREDIT'].includes(body.paymentType) || !Array.isArray(body.lines) || body.lines.length < 1 || body.lines.length > 50 || body.lines.some((line) => !line || typeof line !== 'object' || !isUuid(line.productId) || !Number.isInteger(line.quantity) || line.quantity < 1 || line.quantity > 10000 || Object.keys(line).some((key) => !['productId','quantity'].includes(key))) || Object.keys(body).some((key) => !['paymentType','lines','customerId','dueDate'].includes(key)) || (body.paymentType === 'CREDIT' && !body.customerId) || (body.dueDate && (body.paymentType !== 'CREDIT' || !/^\d{4}-\d{2}-\d{2}$/.test(body.dueDate) || Number.isNaN(Date.parse(body.dueDate))))) {problem(400,'VALIDATION_FAILED','Check sale quantities, payment type and customer.'); return;}
+    const customer = customers.find((person) => person.id === body.customerId);
+    if (body.customerId && !customer) {problem(404,'NOT_FOUND','Customer not found.'); return;}
+    const grouped = new Map();
+    for (const line of body.lines) grouped.set(line.productId,(grouped.get(line.productId) || 0)+line.quantity);
+    const lines = [];
+    for (const [productId,quantity] of grouped) {
+      const product = products.find((item) => item.id === productId);
+      if (!product) {problem(404,'NOT_FOUND','Product not found.'); return;}
+      if (!product.active || product.quantity < quantity) {problem(409,'INSUFFICIENT_STOCK',`Only ${product.active ? product.quantity : 0} of ${product.name} left. Nothing was recorded.`,[{field:`lines[${body.lines.findIndex((line) => line.productId === productId)}].quantity`,message:`availableQuantity: ${product.active ? product.quantity : 0}`}]); return;}
+      const amount = BigInt(product.priceKobo)*BigInt(quantity);
+      if (amount > BigInt(Number.MAX_SAFE_INTEGER)) {problem(400,'VALIDATION_FAILED','Amount is too large.'); return;}
+      lines.push({productId,productName:product.name,quantity,unitPriceKobo:product.priceKobo,lineTotalKobo:Number(amount)});
+    }
+    const total = lines.reduce((sum,line) => sum+BigInt(line.lineTotalKobo),0n);
+    if (total > BigInt(Number.MAX_SAFE_INTEGER)) {problem(400,'VALIDATION_FAILED','Amount is too large.'); return;}
+    const totalKobo = Number(total); const applied = customer ? Math.min(customer.storeCreditKobo,totalKobo) : 0;
+    if (customer && body.paymentType === 'CREDIT' && BigInt(customer.balanceKobo)+total-BigInt(applied) > BigInt(Number.MAX_SAFE_INTEGER)) {problem(400,'VALIDATION_FAILED','Customer balance would exceed the supported amount.'); return;}
+    for (const line of lines) {const product = products.find((item) => item.id === line.productId); product.quantity -= line.quantity; product.version++; product.updatedAt = new Date().toISOString();}
+    if (customer) {customer.storeCreditKobo -= applied; if (body.paymentType === 'CREDIT') customer.balanceKobo += totalKobo-applied;}
+    const sale = {id:randomUUID(),reference:`S-${String(sales.length+1).padStart(6,'0')}`,paymentType:body.paymentType,...(body.customerId ? {customerId:body.customerId} : {}),...(body.dueDate ? {dueDate:body.dueDate} : {}),totalKobo,lines,createdBy:user.id,createdAt:new Date().toISOString()};
+    sales.unshift(sale); submissions.set(key,{body:serialized,sale}); response.setHeader('Location',`/sales/${sale.id}`); send(201,sale); return;
+  }
+  if (/^\/sales\/[^/]+$/.test(url.pathname) && request.method === 'GET') {
+    const sale = sales.find((item) => item.id === url.pathname.split('/')[2]); if (!sale) {problem(404,'NOT_FOUND','Sale not found.'); return;} send(200,sale); return;
+  }
   problem(404,'NOT_FOUND','This operation is not available in this simulation.');
 });
-server.listen(4710,'127.0.0.1',() => console.log(`Development simulation listening on http://127.0.0.1:4710 (${user.role}). In-memory demonstration data only; no credential or backend-rule proof.`));
+const port=Number(process.env.DEVELOPMENT_API_PORT || 4710);
+if(!Number.isInteger(port) || port<1024 || port>65535)throw new Error('Invalid DEVELOPMENT_API_PORT');
+server.listen(port,'127.0.0.1',() => console.log(`Development simulation listening on http://127.0.0.1:${port} (${user.role}). In-memory demonstration data only; no credential or backend-rule proof.`));

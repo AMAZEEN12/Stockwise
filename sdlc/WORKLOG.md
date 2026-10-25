@@ -6,15 +6,21 @@ Source document: `Tesa cohort 6 software engineering capstone project.pdf` (TeSA
 > Any agent opening this project: read this file first, then the "Conventions and guidelines" and "Decisions" sections, then the artifacts in this folder. Continue from "Resume here". Don't re-ask anything already answered below.
 
 ## Resume here
-- **Documentation publication completed, 2026-10-25 (DM54):** committed the approved correction as 285cf91 (docs(ui): align shared component agreement and source notes), pushed fix/shared-component-documentation, and opened [PR #6](https://github.com/AMAZEEN12/Stockwise/pull/6) into main. GitHub confirmed open, non-draft and not merged. The branch starts directly from origin/main (c3633df) and includes only Markdown; the original feat/customers-ui workspace and its independent edits are preserved. Decided by Victor Oyeleke (publication scope); Codex (isolation/adaptation). Logged by Codex.
+- **Publication completed, 2026-10-25 (DM56):** shared-component feature commit 9cc489b and integration/publication commit 6f70072 were pushed before opening [PR #9](https://github.com/AMAZEEN12/Stockwise/pull/9) into main. GitHub confirmed open, non-draft and unmerged. The PR also includes separate Customer Picker de97504 and Customers cb19935 commits and discloses prior browser/visual/Java limitations. Current main c0ab694 is integrated; human review is next. Decided by Victor Oyeleke (scope); Codex (routine integration). Logged by Codex.
+- **Shared-component implementation completed, 2026-10-25 (DM55):** implemented the seven reviewed proposals on feat/shared-component-alignment, carrying Victor's current Product/CSS refinements forward. Shared states, controls, cards/badges, notifications, dialogs/confirmations and token usage are integrated; additive APIs are documented for their original owners. Eighteen unit tests passed; all 56 browser scenarios passed across the full run and targeted reruns, with the Windows headless-shell timing limitation disclosed below. API simulation journey passed; backend verification still cannot start because JAVA_HOME is invalid. No cross-team acceptance or pixel-perfect approval is invented. Approved by Victor Oyeleke; logged by Codex.
 - **Shared-source documentation correction, 2026-10-25 (DM53):** Victor confirmed and approved four interface engineers, matching upstream. Current guidance is corrected; earlier references to five are historical and superseded. Approved Card and Select/Checkbox source clarifications, immutable revision links and owners are in docs/shared-component-alignment.md. This round updates Markdown only; component migration proposals remain pending. Decided by and approved by Victor Oyeleke; logged by Codex.
-- **Current publication:** persistent guidance commit 2f15ec4 confirmed; Victor's recent Home/CSS/Screens changes committed as e200ce0 and pushed before PR creation (DM43). [PR #3](https://github.com/AMAZEEN12/Stockwise/pull/3) is open from feat/auth-ui into main, not merged. Human review is next; no deployment was performed.
+- **Customer features completed, 2026-10-25 (DM50-DM52):** Customer Picker committed as de97504 on feat/customer-picker; Customers implemented on stacked feat/customers-ui with its own descriptive feature commit. Exact selected-customer copy preserved. Final lint/typecheck passed; unit 7 files/14 tests; contract valid; browser 50 passed (5.0m), plus final icon/layout journey 2 passed (33.8s). Unintercepted customer-create-to-credit-sale journey passed. Build 353 modules, final CSS build 15.87s; main chunk warning 526.47 kB / 173.24 kB gzip retained. Service verify still blocked by JAVA_HOME. All 36 customer frames compared; 98 local references preserved, none tracked. See docs/customers-ui.md and docs/customers-contract-proposal.md for measured visual differences and pending API proposals. No pixel-perfect approval, backend proof, new PR or deployment is claimed. Decided by Victor Oyeleke (scope/copy); Codex (technical choices). Logged by Codex.
+- **Current handoff:** Implementation is on feat/shared-component-alignment, based on feat/customers-ui (cb19935) and the existing picker/sales/products history. DM55 records Victor’s implementation approval; docs/shared-component-alignment.md lists copied sources, approved local APIs and proposals for their original owners. Current QA used an owned server on port 5186 and preserved user-owned previews. Publication is now authorized under DM56; human visual/shared-owner review remains next. Detailed verification and the Windows timing/Java limitations are recorded below.
+- **Earlier task (DM44-DM48):** Products implemented and committed as 86fb5ea on feat/products-ui; New sale/Receipt implemented on stacked feat/sales-ui. Final frontend/API/browser checks passed; actual outputs below. Sales history is deferred. Latest stock-conflict frames and corrected 6000-credit/150-due frames were compared at normalized sizes; remaining visual differences are explicitly recorded, not approved as pixel-perfect. Contract proposals remain separate, active OpenAPI/generated schema unchanged. Screens ignored/untracked with all then-current 62 local PNGs preserved. See docs/products-sales-ui.md and docs/products-sales-contract-proposal.md.
+- **Publication (DM49, verified 2026-10-25):** Products commit 86fb5ea pushed on feat/products-ui, [PR #4](https://github.com/AMAZEEN12/Stockwise/pull/4); Sales commit 74d6eef pushed on feat/sales-ui, [PR #5](https://github.com/AMAZEEN12/Stockwise/pull/5). Both PRs are open against main as Victor requested. Authentication PR #3 remains open. Review order is #3, #4, #5 because the branches are stacked. No main merge or deployment was performed. Decided by Victor Oyeleke; logged by Codex.
 - **Standing instruction reaffirmed by Victor:** before every new task, read root AGENTS.md, including Mistakes to avoid. DM41's three Tailwind replacements are persistent frontend conventions; the startup reminder, exact mapping and Victor/Codex attribution are now explicit there. Existing component replacements remain applied.
-- **Current alignment follow-up:** Applied/verified canonical Tailwind replacements (DM41). Victor selected contract mock development (DM42); the mock is running on 127.0.0.1:4710, local mock-only configuration is set, and actual browser sign-in/refresh/logout passed. Existing user edits to HomePage.tsx/app.css and untracked web/Screens are preserved. His example D badge is vite.config.ts: current web/vite.config.ts exists, is tracked and unchanged; the precise IDE view cannot be reproduced from Git.
+- **Current alignment follow-up:** Applied/verified canonical Tailwind replacements (DM41). Victor selected contract mock development (DM42); local mock-only configuration is set, and actual browser sign-in/refresh/logout passed. Task-owned mock/Vite processes were stopped after implementation verification; no currently running preview is claimed. Victor's supplied Home/CSS refinements are committed; web/Screens stays local and ignored under DM45. His example D badge is vite.config.ts: current web/vite.config.ts exists and is tracked; the precise IDE view cannot be reproduced from Git.
 - **Stage:** Frontend implementation authorized by Victor on 2026-10-24, following review of all 16 references.
-- **In progress:** Home and authentication UI implemented, verified and published on `feat/auth-ui` in PR #3. Merged API/database work from PR #2 is retained. PR #1 remains unmerged.
-- **Next action:** Human review of PR #3 and captured screens; API-owner resolution of registration, seed credentials and pending two-engineer sign-off. No automatic main merge or deployment.
+- **Review state (GitHub verified during DM56 publication):** Authentication PR #3, Sales PR #5 and shared-source documentation PR #6 are merged; main is c0ab694. Products PR #4 remains open, although its feature history is included through Sales. Customer Picker and Customers retain separate local feature branches/commits and are included in the requested shared-component PR. Backend PRs #7/#8 remain separate and untouched.
+- **Next action:** Human review of captured Products/Sales/Customer screens and remaining visual differences; publish customer PRs when requested. Sales/store-credit review requires Isaac Bassey's sign-off under REVIEW.md. API owners must resolve customer idempotency/search/freshness, registration, authoritative credit settlement, price guards, recovery lookup and pending two-engineer contract sign-off. No automatic main merge or deployment.
 - **Waiting on:** Registration API approval, seeded demo credentials, backend authentication implementation, and the two-engineer contract sign-off still marked pending in the merged log.
+- **Backend, step 9 (Nnaemeka Chukwuma, Data and rules), 2026-10-25:** the sale transaction's service part (`SaleService`, `SaleRepository`) is in [PR #7](https://github.com/AMAZEEN12/Stockwise/pull/7) from `feat/sale-transaction` into main, after PR #2 merged. `./mvnw clean verify`: 32 tests green; `SaleConcurrencyIT` and `IdempotencyIT` looped 20/20; five removal checks in `docs/rule-removal-log.md`. Next: Isaac Bassey reviews PR #7 (riskiest step, REVIEW.md) and writes `SaleController` and `ProblemHandler` from the signature and error mapping in plan.md "Departures recorded". Store-credit draw comes with step 16. Isaac isn't a repo collaborator yet, so the owner (AMAZEEN12) must invite him. Next for Nnaemeka: `evidence/no-stock-guard` (step 12) and the Monday seed (step 14).
+- **Backend before Monday (Nnaemeka Chukwuma, Data and rules), 2026-10-25:** branch `feat/monday-data` (stacked on PR #7) adds `ProductRepository`, `CustomerRepository`, the Monday seed with demo logins (`SeedVerificationIT`), and the step 12 evidence logs (`docs/evidence/concurrency/`, from branch `evidence/no-stock-guard`). Full build: 57 tests green. Nnaemeka's half of the v0.1.0 contract sign-off is recorded in decisions.md §3; Isaac's is still pending. Blocking the Monday journey, outside this area: `StockwiseApplication`, `application.yml` with the demo seed location, the Dockerfile, CI and deploy (Blessing), and auth plus the controllers (Isaac).
 
 ## How to continue without the sdlc skill
 1. Stages run in order: Plan (intent.md), Design (spec.md), Build (plan.md + repo AGENTS.md), Test (test-plan.md), Deploy (release.md + repo REVIEW.md), Maintain (monitoring.md), then EXECUTION.md.
@@ -101,6 +107,7 @@ Append-only. To change a decision, add a new entry that supersedes it.
 | Q18 | 2026-10-24 | Frontend phase 2 | Publish from an empty remote? | One-time docs baseline on main, then separate `chore/web-structure` commit/push and PR; never force-push or merge automatically | answered |
 
 ## Activity log
+- 2026-10-25 · Codex · Sales implementation and QC completed on feat/sales-ui, stacked on Products 86fb5ea. Checks: lint/typecheck exit 0; unit output `Test Files 5 passed (5) / Tests 10 passed (10)`; latest full browser output `30 passed (3.1m)` with axe checks and no assertion weakening; production build `346 modules transformed / built in 17.36s` (main chunk 526.17 kB, gzip 173.16 kB warning retained). Contract lint remains valid and OpenAPI/generated types have no diff. Actual development API checks passed create/read/duplicate, integer validation, same-key replay, changed-body 422, stock conflict and credit settlement; actual browser without interception passed sign-in → open shop → add product → catalogue → confirmation → receipt → refresh. A workspace link contrast conflict was fixed and checked in that journey. A decorative status-icon text failure was fixed with SVG and added to AGENTS.md; tests were not loosened. Temporary visual-inspection script removed after lint caught it in the ignored scratch folder. Service verify: sandbox wrapper access first failed, then permitted wrapper invocation reported `The JAVA_HOME environment variable is not defined correctly`; no service pass is claimed. Final normalized visual differences are in docs/products-sales-ui.md and local .mock/design-comparison.json; they are not approved exact baselines. All 62 local reference PNGs remain; Git tracks none. No business rule or migration changed. Human visual review and API-owner agreement on proposed settlement/price/recovery fields remain next.
 - 2026-10-24 · Codex · Products on feat/products-ui: shared layout, catalogue/filters, owner-only drawer/mobile form, exact money helpers, immutable contract aliases and stateful local product simulation. Verified lint and typecheck exit 0; 4 unit files/8 tests passed; contract lint valid; production build passed (338 modules, 20.82s, existing vendor-size warning noted). Playwright Products desktop/mobile 2 passed in 31.9s with one worker, including axe and unsaved-change checks. Initial sandboxed esbuild could not read ancestor directories; reran with required toolchain access. Initial parallel browser run exhausted the default per-test time; same assertions passed with one worker without weakening tests. React ref render lint finding corrected with an event-time blocker predicate. Screens removed from index only; local copies preserved. Sales still to implement.
 Append-only, newest last.
 - 2026-10-23 · agent · Read the source PDF (all 26 pages readable) and inspected the repository (empty apart from `.claude/`).
@@ -149,12 +156,19 @@ git diff --check: exit 0
 ```
 
 Service verify, contract lint, web lint/typecheck/unit/build, and Playwright: unavailable at this stage, not run. No package manifest, service wrapper or OpenAPI file exists. No rendered UI or business rule was changed.
+
+### Requested rollback (2026-10-24)
+
+- Victor requested reverting all changes just made. Codex reverted login/home implementation commit `78f6363`, restoring the tracked starter state from `b49d07a`, with this rollback record as the only addition.
+- Removed generated frontend dependencies, `web/package-lock.json` and `web/install.log`; stopped the project's Vite/esbuild processes to release locked files. Local design-reference images were preserved.
+- Verification: staged files matched `b49d07a` before this log entry; `git diff --check` passed. Application checks remain unavailable because the restored starter has no package manifest, service scaffold or OpenAPI contract.
 - 2026-10-23 · agent · EXECUTION step 1 (local part): `git init -b main` in `stockwise/`, added `.gitignore`, committed the artifacts one commit per stage (first commit 4de3402). No remote, nothing pushed (user: "local only for now").
 - 2026-10-23 · agent · EXECUTION step 2: drafted `contract/openapi.yaml` v0.1.0 (Monday paths), `redocly.yaml` (recommended rules plus a custom `money-is-integer-kobo` rule) and the contract README. Redocly lint: 0 errors, 0 warnings after fixing a missing 4xx on /health and an if/then conflict with additionalProperties (the CREDIT → customerId rule moved to the description, enforced by service and DB). Proved the money rule fails on a deliberate `priceKobo: number`. Prism mock failed on port 4010 (EACCES, Windows reserved range 3965-4064) and moved to 4710. Smoke test: health 200, login 201, products 401 without token and 200 with, sale 201, missing Idempotency-Key 422, float quantity 422, forced 409 returns the INSUFFICIENT_STOCK example. Logged as DRAFT in decisions.md §3, pending Isaac Bassey and Nnaemeka Chukwuma.
 - 2026-10-23 · agent · Committed the contract draft (Stockwise 199f70b) and the Genie port note (Genie 491ea43).
 - 2026-10-23 · agent · EXECUTION step 4: started Docker Desktop (it wasn't running). Wrote V1__users, V2__products, V3__customers_sales_ledger with named CHECK and UNIQUE constraints and the indexes for Q1-Q5, plus hand-written U1-U3. Added `service/pom.xml` (Boot 4.1.2), the Maven wrapper, `MigrationUndo`, `MigrationRollbackIT` (an undo script exists for every migration; up/down/up with exact schema snapshots at every step) and `SchemaRulesIT` (no float or numeric columns, *_kobo is bigint, R4 backstop, R5, R8, R9, R12, sale-line total, sale reference). `./mvnw clean verify`: 11 tests, 0 failures. Removal checks: 6 protections removed one at a time, each made its test fail (the first R12 attempt was invalid because of a dangling comma, then redone). Logged in `docs/rule-removal-log.md`. Found and fixed a harness issue (stale .bak in target/classes). Added `.gitattributes` (LF) and the executable bit on mvnw for Linux CI. Recorded the plan departures in plan.md.
 - 2026-10-24 · agent · Committed step 4 (local 164ff63). Remote https://github.com/AMAZEEN12/Stockwise already existed: `main` is one commit by Victor (176fc3a, "planning baseline") holding the same artifacts as local 34f82a0 but with no shared history, plus `chore/web-structure` (PR 1) and an empty `emeka's-branch`. Replayed local commits (.gitignore, log, contract, step 4) onto `emeka's-branch` from `origin/main`. The resulting tree is identical to local `main`. Pushed (head 93882f3). Nothing force-pushed; `main` untouched.
 - 2026-10-24 · agent · Opened PR 2 (`emeka's-branch` → `main`) through the GitHub API with the user's stored Git credential (Chukwuma-Elvis); `gh` isn't installed. No reviewer requested: Isaac isn't a collaborator (collaborators are Victor-430, AMAZEEN12, Chukwuma-Elvis), per the user.
+- 2026-10-24 · agent · EXECUTION step 9, service part (Data and rules area only): `SaleService.record` runs one transaction: it claims the Idempotency-Key (`INSERT … ON CONFLICT DO NOTHING`), takes stock per line with `UPDATE … WHERE active AND quantity >= :q RETURNING price_kobo` in product-ID order, writes lines and movements, sets the total, and charges credit with a ledger entry. Added `spring-boot-starter-jdbc`. Tests: `SaleIT` (9), `SaleConcurrencyIT` (4: last unit ×10, no oversell, opposite line orders, parallel credit), `IdempotencyIT` (5), `SaleRequestHashTest` (3). Full build: 32 green. Loop: 20/20. Removal checks: guard only, guard plus CHECK (10 of 10 sold the last unit), ON CONFLICT, hash comparison, lock ordering, each failing as expected. Store-credit draw deferred to step 16; controller left to Isaac (plan.md departures).
 
 ### Home/authentication implementation and verification (2026-10-24)
 
@@ -267,9 +281,119 @@ The mock is development-only, binds 127.0.0.1, reads the trusted repository cont
 - Created [PR #3](https://github.com/AMAZEEN12/Stockwise/pull/3), title `feat(auth): add responsive entry UI, contract mock and agent conventions`, base `main`, head `feat/auth-ui`. GitHub returned state `open`, draft `false`, merged `false`, initial head `e200ce0716484d9236f63e84387580bd765b31ac`.
 - The description covers the final feature, latest supplied refinements, fresh verification, mobile-copy consequence, and existing API/mock/artwork/environment limits. No reviewers were impersonated, no merge/deployment performed, and no credentials were printed or written to project files. This documentation follow-up records the confirmed publication on the same branch.
 
+### Current main integration for Products/Sales PRs (2026-10-25)
+
+Victor requested both feature PRs into main: Products [PR #4](https://github.com/AMAZEEN12/Stockwise/pull/4), feature commit 86fb5ea, and Sales [PR #5](https://github.com/AMAZEEN12/Stockwise/pull/5), feature commit 74d6eef. Both feature commits were confirmed and pushed. Authentication PR #3 remains open; review order is #3, #4, #5.
+
+GitHub reported a WORKLOG conflict after main merged PR #1 (2d170e6). Merge current main into Products and carry that merge into Sales, preserving feature history without force-pushing or merging either PR. The conflict contains older main startup notes; retain current frontend guidance and the historical notes below. Decided by: Victor Oyeleke (publication scope); Codex (routine conflict resolution). Logged by: Codex. Only Markdown resolution is required; application source and earlier test results are unchanged.
+
+Incoming main's historical Resume here snapshot, retained for context only; its open-PR and next-action statements are superseded by the current publication status:
+
+- **Stage:** Implementation (EXECUTION.md)
+- **Step:** Step 2 committed (contract draft, pending Isaac and Nnaemeka in decisions.md §3). Step 4 done locally: migrations V1-V3, undo scripts U1-U3, `MigrationUndo` runner, `MigrationRollbackIT` and `SchemaRulesIT`. `./mvnw clean verify` gives 11/11 green, and each protection was shown failing when removed (`docs/rule-removal-log.md`). Committed and pushed to `emeka's-branch` on https://github.com/AMAZEEN12/Stockwise PR https://github.com/AMAZEEN12/Stockwise/pull/2 (open, into `main`).
+- **In progress:** nothing half-done.
+- **Next action:** Get PR 2 reviewed and merged. Isaac must still approve the migrations (high-risk path, release.md). Then step 7 (auth and roles) and step 9 (sale transaction) need the Spring Boot application from step 3 (walking skeleton: app class, `spring-boot-maven-plugin`, Dockerfile, health). Work on `emeka's-branch` (based on `origin/main`), not local `main`, which has an unrelated history.
+- **Waiting on:** Isaac Bassey (contract agreement and migration review). He isn't a repo collaborator yet, so the owner (AMAZEEN12) must invite him before he can be requested as reviewer on PR 2.
+
+### Customer feature verification output, 2026-10-25
+
+```text
+npm run lint: exit 0, zero warnings
+npm run typecheck: exit 0
+npm test -- --run:
+  Test Files  7 passed (7)
+       Tests  14 passed (14)
+npm run lint:contract:
+  openapi.yaml: validated in 465ms
+  Woohoo! Your API description is valid.
+PLAYWRIGHT_PORT=5184 npx playwright test --workers=1:
+  50 passed (5.0m)
+Final selected-icon desktop/mobile journey:
+  2 passed (33.8s)
+npm run check:customers:
+  PASS: actual local API rejects invalid names; browser sign-in, customer
+  creation/contact, directory search/refresh, picker UUID selection, credit
+  sale and resulting integer-kobo customer balance. No request interception.
+  Development simulation only.
+Final npm run build:
+  353 modules transformed.
+  index-zFq3yQn0.js 526.47 kB | gzip: 173.24 kB
+  built in 15.87s
+  Existing >500 kB chunk warning retained.
+Service mvnw.cmd verify: exit 1 before tests
+  The JAVA_HOME environment variable is not defined correctly.
+Comparison: all 36 supplied Customer Picker/Customers frames processed.
+Git: no active OpenAPI, generated schema, backend or migration diff;
+  no reference PNG tracked; all 98 local reference PNGs preserved.
+```
+
+The final implementation notes include measured differences and explicit remaining visual/API limitations. Local checks do not substitute for human approval, backend tests or CI. Generated comparison/capture artifacts stay outside feature commits.
+
 ### Shared-source documentation clarification, 2026-10-25
 
 - DM53 records Victor's correction to four interface engineers and his approval of the Card and Select/Checkbox source notes. Updated current AGENTS, architecture, provenance, spec, plan and execution guidance; retained the original DM37 and historical logs with explicit correction notices.
 - Added docs/shared-component-alignment.md with immutable source links at reviewed revision dbe1cac1f5e6e0838331e35b8da482ab4a1497fc. Card omits its image area when image is omitted; Select/Checkbox already read shared CSS variables and use the input-border token for their control edges. Their obsolete README warnings do not require additional utility mappings or a border repair. The actual older copy-in revision is preserved separately.
 - Verification: git diff --check passed; documentation checks confirmed approval/logger attribution, relative link targets, unique DM53 and corrected current guidance. SHA-256 checks confirmed all four pre-existing application edits (ProductsPage.tsx and customers/sales/shop CSS) are byte-for-byte unchanged by this task. No application tests rerun for Markdown-only changes.
 - Decided by: Victor Oyeleke. Approved by: Victor Oyeleke. Logged by: Codex. Component migration proposals remain pending; no runtime, API-contract or upstream repository change was made.
+
+### Shared-component implementation verification, 2026-10-25 (DM55)
+
+- Approved by Victor Oyeleke; logged by Codex. Implemented the seven reviewed proposals on feat/shared-component-alignment. Imported eight primitives and persistent shared guidance at dbe1cac, retained earlier provenance for existing primitives, and recorded additive APIs by owner. Shared notifications use the five-second success duration; unresolved writes retain their persistent record and original request semantics.
+- All three starting customer/sales/shop CSS refinements were compared with saved input: they are retained with only value-preserving literal-to-token substitutions. Products retains the current formatting/refinements while adopting shared controls/states. Existing test assertions/timeouts, API models/transport, OpenAPI, generated types, backend files and migrations are unchanged. No local design PNG is tracked.
+- QA corrections: preserve compact empty-cart composition, mobile single-border cards and selected-customer action spacing; exclude generated trace/report/mock/reference files from Vite watchers on Windows. check:ui owns and warms an isolated server before unchanged timed tests, supports the existing browser-channel setting and stops only its own processes. Reference comparison now accepts capture folders in priority order.
+
+```text
+Final npm run lint: exit 0, zero warnings
+Final npm run typecheck: exit 0
+npm test -- --run:
+  Test Files  8 passed (8)
+       Tests  18 passed (18)
+npm run lint:contract:
+  openapi.yaml: validated in 531ms
+  Woohoo! Your API description is valid.
+Final npm run build:
+  2295 modules transformed
+  index-g2pyT9U_.js 555.23 kB | gzip: 182.68 kB
+  built in 41.24s
+  Existing >500 kB chunk warning retained
+npm audit --omit=dev: total vulnerabilities 0
+Development dependency install/audit: 8 advisories (7 high, 1 moderate)
+20 token contrast pairs: PASS; minimum ratio 5.56:1
+DM41 canonical-class scan: PASS
+npm run check:customers:
+  PASS: actual local API rejects invalid names; browser sign-in, customer
+  creation/contact, directory search/refresh, picker UUID selection, credit
+  sale and resulting integer-kobo customer balance. No request interception.
+  Development simulation only.
+Playwright full final run: 54 passed, 2 failed (11.7m)
+  Desktop picker UUID case lost its dialog when a web README edit caused
+  navigation 73ms later; confirmed with trace/document-write timestamps.
+  Mobile picker capture/axe flow exceeded the original 30-second deadline.
+Earlier focused auth/products/customers/shared-controls verification:
+  14 passed (3.2m)
+Targeted UUID selection rerun: desktop and mobile passed
+Final long picker flow, PLAYWRIGHT_CHANNEL=chromium, npm run check:ui:
+  desktop 26.9s, mobile 16.8s; 2 passed (1.5m)
+All 56 distinct browser cases passed across full/focused reruns;
+  no claim that one uninterrupted 56-case run was green.
+  Headless-shell timing remains variable; original assertions/timeouts kept.
+Customer Picker/Customers comparisons: all 36 states; 1.97%-13.32% changed pixels
+Updated stock/corrected credit comparisons: 4 states; 3.93%-16.67% changed pixels
+Service mvnw.cmd verify: cannot start, JAVA_HOME is not defined correctly
+Guidance links, decision IDs, whitespace and protected-scope checks: PASS
+```
+
+Captures and comparison reports remain ignored local artifacts. Stock conflict uses the supplied updated 2x frames; corrected store-credit inputs currently supplied are 1x and normalized to logical dimensions. Visible labels/counts and transient success notices are approved adjustments; measured nonzero differences are disclosed rather than called pixel-perfect. No manual screen-reader, backend, cross-team API acceptance, new PR, merge or deployment is claimed. The feature is ready for its descriptive commit; publication remains by request.
+
+### Shared-component publication preparation, 2026-10-25 (DM56)
+
+- Confirmed clean feature branch and implementation commit 9cc489b before publication. Fresh origin/main c0ab694 includes Sales PR #5 and documentation PR #6. The remaining feature commits are de97504 (Customer Picker), cb19935 (Customers) and 9cc489b (shared-component alignment).
+- Integrated main into this branch without rewriting history. Six overlapping Markdown files contained older startup instructions or duplicate documentation corrections; retained the current implementation records and DM53/DM54 content. Retained upstream deletion of 14 obsolete .gitkeep files in populated directories. No application source, tests, active contract, generated schema, backend or migration changed relative to the verified implementation.
+- Publication verification uses whitespace, conflict-marker, unique-decision and protected-scope checks. Prior runtime results are evidence for unchanged implementation; no new uninterrupted all-green browser suite or backend verification is claimed. PR description must disclose the included customer features and previously measured visual differences.
+- Decided by: Victor Oyeleke (publication scope); Codex (routine merge resolution). Logged by: Codex. Human review remains required; no automatic merge or deployment.
+
+### Shared-component PR publication confirmed, 2026-10-25
+
+- Pushed committed branch feat/shared-component-alignment and opened [PR #9](https://github.com/AMAZEEN12/Stockwise/pull/9), title `feat(ui): align shared components and add customer screens`, base main. Initial head was 6f7007254692f00dba0ed2db6ec4937a9d95fa10; GitHub confirmed open, non-draft and not merged. Original feature commit 9cc489b exists in its history, as do separate customer feature commits de97504 and cb19935.
+- The description covers final implementation, inherited customer scope, unchanged active API, original source owners, validation evidence and remaining limits. Publication changed no application code; runtime tests were not repeated for Markdown/placeholder changes. Whitespace, unique decision IDs, absence of conflict markers and protected-scope checks passed before the commit.
+- This follow-up is committed and pushed to the same PR branch. No reviewers were impersonated, no credentials were printed or stored in project files, and no main merge/deployment was performed. Decided by Victor Oyeleke (publication); logged by Codex.

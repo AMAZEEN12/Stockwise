@@ -35,6 +35,8 @@ type BaseProps = ButtonHTMLAttributes<HTMLButtonElement> & {
   loading?: boolean;
   /** Optional visible pending label; original width-preserving spinner remains the default. */
   loadingLabel?: string;
+  /** Stockwise-approved layout slot for compound option content. */
+  contentClassName?: string;
 };
 
 export type ButtonProps = BaseProps &
@@ -70,6 +72,7 @@ export const Button = forwardRef<HTMLButtonElement, ButtonProps>(function Button
     size = "md",
     loading = false,
     loadingLabel,
+    contentClassName,
     iconOnly = false,
     type = "button",
     disabled,
@@ -114,7 +117,7 @@ export const Button = forwardRef<HTMLButtonElement, ButtonProps>(function Button
     >
       {/* Content stays in place (just invisible) while loading, so the width
           doesn't jump and the accessible name is still read out. */}
-      <span className={cn("inline-flex items-center gap-2", loading && "opacity-0")} aria-hidden={loading && loadingLabel ? true : undefined}>
+      <span className={cn("inline-flex items-center gap-2", loading && "opacity-0", contentClassName)} aria-hidden={loading && loadingLabel ? true : undefined}>
         {children}
       </span>
       {loading && (

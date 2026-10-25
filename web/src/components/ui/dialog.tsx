@@ -36,7 +36,7 @@ import { cn } from "../../lib/cn";
 import { Button } from "./button";
 
 const focusRing =
-  "focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[var(--color-focus)]";
+  "focus-visible:[outline:var(--focus-ring-width)_solid_var(--color-focus)] focus-visible:outline-offset-(--focus-ring-offset)";
 
 export interface DialogProps {
   /** Short name of the dialog. Required so screen readers always announce it. */
@@ -60,6 +60,14 @@ export interface DialogProps {
   descriptionClassName?: string;
   closeClassName?: string;
   className?: string;
+  /** Stockwise-approved additive proposals; defaults preserve the shared dialog. */
+  placement?: "center" | "right" | "left";
+  dismissible?: boolean;
+  headerClassName?: string;
+  bodyClassName?: string;
+  footerClassName?: string;
+  closeLabel?: string;
+  closeContent?: React.ReactNode;
 }
 
 export const Dialog = React.forwardRef<HTMLDivElement, DialogProps>(function Dialog(
@@ -79,24 +87,29 @@ export const Dialog = React.forwardRef<HTMLDivElement, DialogProps>(function Dia
     descriptionClassName,
     closeClassName,
     className,
+    placement = "center", dismissible = true, headerClassName, bodyClassName, footerClassName,
+    closeLabel = "Close", closeContent,
   },
   ref,
 ) {
   return (
-    <DialogPrimitive.Root open={open} defaultOpen={defaultOpen} onOpenChange={onOpenChange}>
+    <DialogPrimitive.Root open={open} defaultOpen={defaultOpen} onOpenChange={(next) => { if (next || dismissible) onOpenChange?.(next); }}>
       {trigger ? <DialogPrimitive.Trigger asChild>{trigger}</DialogPrimitive.Trigger> : null}
       <DialogPrimitive.Portal>
         <DialogPrimitive.Overlay className={cn("fixed inset-0 z-50 bg-[var(--color-text)]/50", overlayClassName)} />
         <DialogPrimitive.Content
           ref={ref}
+          data-placement={placement}
+          onEscapeKeyDown={(event) => { if (!dismissible) event.preventDefault(); }}
+          onPointerDownOutside={(event) => { if (!dismissible) event.preventDefault(); }}
           onOpenAutoFocus={onOpenAutoFocus}
           onCloseAutoFocus={onCloseAutoFocus}
           className={cn(
-            "fixed left-1/2 top-1/2 z-50 flex max-h-[85vh] w-[calc(100vw-2rem)] max-w-lg -translate-x-1/2 -translate-y-1/2 flex-col gap-4 overflow-y-auto rounded-[var(--radius)] border border-[var(--color-border)] bg-[var(--color-surface)] p-6 text-[var(--color-text)] shadow-lg",
+            "shared-dialog fixed left-1/2 top-1/2 z-50 flex max-h-[85vh] w-[calc(100vw-2rem)] max-w-lg -translate-x-1/2 -translate-y-1/2 flex-col gap-4 overflow-y-auto rounded-[var(--radius)] border border-[var(--color-border)] bg-[var(--color-surface)] p-6 text-[var(--color-text)] shadow-lg",
             className,
           )}
         >
-          <div className="flex items-start justify-between gap-4">
+          <div className={cn("flex items-start justify-between gap-4", headerClassName)}>
             <div className="flex flex-col gap-1">
               <DialogPrimitive.Title className={cn("text-lg font-semibold", titleClassName)}>{title}</DialogPrimitive.Title>
               <DialogPrimitive.Description className={cn("text-sm text-[var(--color-text-muted)]", descriptionClassName)}>
@@ -104,20 +117,21 @@ export const Dialog = React.forwardRef<HTMLDivElement, DialogProps>(function Dia
               </DialogPrimitive.Description>
             </div>
             <DialogPrimitive.Close
-              aria-label="Close"
+              aria-label={closeLabel}
+              disabled={!dismissible}
               className={cn(
                 "inline-flex h-8 w-8 shrink-0 items-center justify-center rounded-[var(--radius)] text-[var(--color-text)] hover:bg-[var(--color-border)]",
                 focusRing,
                 closeClassName,
               )}
             >
-              <svg aria-hidden="true" width="16" height="16" viewBox="0 0 16 16" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round">
+              {closeContent ?? <svg aria-hidden="true" width="16" height="16" viewBox="0 0 16 16" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round">
                 <path d="M3 3l10 10M13 3L3 13" />
-              </svg>
+              </svg>}
             </DialogPrimitive.Close>
           </div>
-          {children ? <div className="text-sm">{children}</div> : null}
-          {footer ? <div className="flex flex-col-reverse gap-2 sm:flex-row sm:justify-end">{footer}</div> : null}
+          {children ? <div className={cn("text-sm", bodyClassName)}>{children}</div> : null}
+          {footer ? <div className={cn("flex flex-col-reverse gap-2 sm:flex-row sm:justify-end", footerClassName)}>{footer}</div> : null}
         </DialogPrimitive.Content>
       </DialogPrimitive.Portal>
     </DialogPrimitive.Root>
@@ -130,6 +144,11 @@ export interface ConfirmDialogProps
   confirmLabel: string;
   /** Defaults to "Cancel". */
   cancelLabel?: string;
+  confirmDisabled?: boolean;
+  closeOnConfirm?: boolean;
+  actionOrder?: "cancel-first" | "confirm-first";
+  confirmButtonProps?: Pick<import("./button").ButtonProps, "variant" | "size" | "className">;
+  cancelButtonProps?: Pick<import("./button").ButtonProps, "variant" | "size" | "className">;
   /** "danger" for delete, reverse and similar. Focus starts on Cancel in this tone. */
   tone?: "default" | "danger";
   /**
@@ -149,6 +168,8 @@ export const ConfirmDialog = React.forwardRef<HTMLDivElement, ConfirmDialogProps
     confirmLabel,
     cancelLabel = "Cancel",
     tone = "default",
+    confirmDisabled = false, closeOnConfirm = true, actionOrder = "cancel-first",
+    confirmButtonProps, cancelButtonProps,
     onConfirm,
     loading = false,
     open,
@@ -162,6 +183,7 @@ export const ConfirmDialog = React.forwardRef<HTMLDivElement, ConfirmDialogProps
   const [internalOpen, setInternalOpen] = React.useState(defaultOpen ?? false);
   const [pending, setPending] = React.useState(false);
   const cancelRef = React.useRef<HTMLButtonElement>(null);
+  const submitting = React.useRef(false);
 
   const isControlled = open !== undefined;
   const isOpen = isControlled ? open : internalOpen;
@@ -179,14 +201,16 @@ export const ConfirmDialog = React.forwardRef<HTMLDivElement, ConfirmDialogProps
   };
 
   const handleConfirm = async () => {
-    if (busy) return;
+    if (busy || confirmDisabled || submitting.current) return;
+    submitting.current = true;
     setPending(true);
     try {
       await onConfirm();
-      setOpen(false);
+      if (closeOnConfirm) setOpen(false);
     } catch {
       // Stay open so the user can retry. The caller reports the error.
     } finally {
+      submitting.current = false;
       setPending(false);
     }
   };
@@ -197,22 +221,21 @@ export const ConfirmDialog = React.forwardRef<HTMLDivElement, ConfirmDialogProps
       ref={ref}
       open={isOpen}
       onOpenChange={handleOpenChange}
+      dismissible={!busy && rest.dismissible !== false}
       onOpenAutoFocus={(event) => {
         if (tone === "danger") {
           event.preventDefault();
           cancelRef.current?.focus();
         }
       }}
-      footer={
-        <>
-          <Button ref={cancelRef} variant="secondary" disabled={busy} onClick={() => handleOpenChange(false)}>
-            {cancelLabel}
-          </Button>
-          <Button variant={tone === "danger" ? "danger" : "primary"} loading={busy} onClick={handleConfirm}>
-            {confirmLabel}
-          </Button>
-        </>
-      }
+      footer={[
+        <Button key="cancel" ref={cancelRef} variant="secondary" {...cancelButtonProps} disabled={busy} onClick={() => handleOpenChange(false)}>
+          {cancelLabel}
+        </Button>,
+        <Button key="confirm" variant={tone === "danger" ? "danger" : "primary"} {...confirmButtonProps} disabled={confirmDisabled} loading={busy} onClick={handleConfirm}>
+          {confirmLabel}
+        </Button>,
+      ].slice().sort((a, b) => actionOrder === "confirm-first" ? (a.key === "confirm" ? -1 : b.key === "confirm" ? 1 : 0) : 0)}
     >
       {children}
     </Dialog>

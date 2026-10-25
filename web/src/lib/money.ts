@@ -26,3 +26,4 @@ export function formatMoney(value: number): string {
   const whole = (kobo / 100n).toString().replace(/\B(?=(\d{3})+(?!\d))/g, ',');
   return `₦${whole}.${(kobo % 100n).toString().padStart(2, '0')}`;
 }
+export function displayMoney(value:number):string {try {return formatMoney(value);} catch {return 'Amount unavailable';}}
