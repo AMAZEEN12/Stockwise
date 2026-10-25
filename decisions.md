@@ -221,6 +221,8 @@ Publication confirmed: commit `285cf91`, branch `fix/shared-component-documentat
 
 Prior verification and its limits remain in WORKLOG and the implementation notes: 18 unit tests passed; the full browser run was 54/56, with all 56 distinct scenarios passing across full and focused runs. Windows timing, remaining measured visual differences, the existing bundle warning and invalid JAVA_HOME are disclosed. Human review, including Isaac Bassey's sale/store-credit sign-off under REVIEW.md, remains required. No main merge, deployment, upstream component acceptance or API-contract approval is supplied by publication.
 
+Publication confirmed: feature commit `9cc489b` and main-integration/publication commit `6f70072` were pushed before creating [PR #9](https://github.com/AMAZEEN12/Stockwise/pull/9), `feat(ui): align shared components and add customer screens`, from `feat/shared-component-alignment` into `main`. GitHub returned state `open`, draft `false`, merged `false`, initial head `6f7007254692f00dba0ed2db6ec4937a9d95fa10`. The description explicitly includes customer commits de97504/cb19935 and discloses prior QA limitations. This documentation follow-up records the confirmed result. Logged by Codex on 2026-10-25.
+
 ## 3. Contract change log
 
 | Date | Change | Why | Agreed by (two engineers) |
