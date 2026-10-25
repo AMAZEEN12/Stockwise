@@ -22,7 +22,6 @@ CREATE TABLE product (
     CONSTRAINT product_name_length              CHECK (length(trim(name)) BETWEEN 1 AND 200),
     CONSTRAINT product_category_not_blank       CHECK (length(trim(category)) BETWEEN 1 AND 60),
     CONSTRAINT product_price_non_negative       CHECK (price_kobo >= 0),
-    CONSTRAINT product_quantity_non_negative    CHECK (quantity >= 0),
     CONSTRAINT product_threshold_non_negative   CHECK (low_stock_threshold >= 0),
     CONSTRAINT product_version_non_negative     CHECK (version >= 0)
 );

@@ -75,7 +75,7 @@ public class SaleRepository {
         return jdbc.sql("""
                         UPDATE product
                         SET quantity = quantity - :quantity, version = version + 1, updated_at = now()
-                        WHERE id = :id AND active AND quantity >= :quantity
+                        WHERE id = :id AND active
                         RETURNING price_kobo
                         """)
                 .param("id", productId)
