@@ -242,6 +242,15 @@ Prior implementation verification remains in docs/sales-history-ui.md and WORKLO
 
 Publication confirmed: feature commit `761c5c2` and supplied-formatting/publication commit `d45a5ec` were pushed before creating [PR #10](https://github.com/AMAZEEN12/Stockwise/pull/10), title `feat(sales): add responsive sales history and filters`, from `feat/sales-history` into `main`. GitHub confirmed `open`, non-draft, unmerged, and mergeable without conflicts at initial head `d45a5ecaecb4740252d712d1817ab0d1d0e9c75e`. This follow-up records the actual publication on the same branch. Logged by Codex on 2026-10-25.
 
+### Authentication role landing, 2026-10-25
+
+| ID | Date | Decision | Reason | Decided by | Logged by |
+|----|------|----------|--------|------------|-----------|
+| DM60 | 2026-10-25 | Replace the temporary Workspace screen with existing role landing pages: OWNER Products, ASSISTANT Sell, ADMIN Sales History. Demo buttons fill credentials only; users explicitly select Sign in. Use the authenticated service role, retain permitted return destinations, and redirect legacy /workspace bookmarks. Supersedes DM40's Workspace handoff only; retains its fill-only demo behavior. The earlier immediate-login selection was withdrawn before implementation | Victor reviewed the questions again, selected these final choices, then authorized implementation. No separate dashboard designs or new API are requested | Victor Oyeleke | Codex |
+| DM61 | 2026-10-25 | Implement on feat/auth-role-landing. Resolve destinations through fresh GET /me, synchronize the verified user, reset account cache after login, allow only known internal return paths, and preserve permission/uncertain-write guards. Give development simulation accounts separate identities/tokens and scope simulated idempotency by user; retain explicit --role override. Update the obsolete Workspace assertions/smoke steps to the approved workflow while retaining login, error, loading, duplicate-submit, refresh and logout assertions. Preserve all ten pre-existing user edits and stage only owned changes | This is an authorized workflow feature change, rather than a fix that weakens a failing test; the old temporary welcome-page expectation no longer describes the chosen product behavior. Independent browser/simulation checks must verify role isolation | Codex (technical implementation and verification within Victor's scope) | Codex |
+
+Decided by and approved by Victor Oyeleke for DM60 scope; logged by Codex. Contract paths, payloads, tokens and permissions remain service-owned; no new endpoint, role-selection request field, dashboard contract, backend migration or extra engineer approval is introduced.
+
 ## 3. Contract change log
 
 | Date | Change | Why | Agreed by (two engineers) |

@@ -10,6 +10,8 @@ import { useCreateSessionMutation } from '../../service/api/auth.api';
 import type { HttpError } from '../../service/http-client';
 import { saveSession } from '../../auth/session';
 import { registrationAvailability } from '../../auth/registration-adapter';
+import {store} from '../../app/store/store';
+import {authApi} from '../../service/api/auth.api';
 
 type Status = 'idle' | 'loading' | 'waking' | 'error-401' | 'error-network' | 'registration-pending';
 type PendingRequest = ReturnType<ReturnType<typeof useCreateSessionMutation>[0]>;
@@ -48,9 +50,10 @@ export function AuthOverlay({ mode }: { mode: 'sign-in' | 'sign-up' }) {
       try {
         const session = await request.unwrap();
         if (!mounted.current) return;
+        store.dispatch(authApi.util.resetApiState());
         saveSession(session);
         const returnTo = searchParams.get('returnTo');
-        await navigate(returnTo?.startsWith('/app/') && !returnTo.includes('//') ? returnTo : '/workspace', { replace: true });
+        await navigate(returnTo ? `/app?returnTo=${encodeURIComponent(returnTo)}` : '/app', { replace: true });
       } catch (caught) {
         if (!mounted.current) return;
         const error = caught as HttpError;

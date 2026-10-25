@@ -51,6 +51,7 @@ test('401 and network errors preserve input and allow a deliberate retry', async
 
 test('pending login shows waking state, blocks duplicate submission, then uses /me', async ({ page }, testInfo) => {
   let attempts = 0;
+  await page.route('**/products?*', (route) => { const params=new URL(route.request().url()).searchParams; return route.fulfill({json:{items:[],page:0,size:Number(params.get('size') || 20),totalItems:0}}); });
   await page.route('**/auth/sessions', async (route) => {
     attempts++;
     expect(route.request().postDataJSON()).toEqual({ email: session.user.email, password: 'demo-password' });
@@ -69,11 +70,16 @@ test('pending login shows waking state, blocks duplicate submission, then uses /
   await page.screenshot({ path: testInfo.outputPath('sign-in-loading.png'), fullPage: true });
   await expect(page.getByRole('status')).toContainText('Service is waking up');
   await page.screenshot({ path: testInfo.outputPath('sign-in-waking.png'), fullPage: true });
-  await expect(page).toHaveURL('/workspace');
-  await expect(page.getByRole('heading', { name: 'Welcome, Demo Owner.' })).toBeVisible();
+  await expect(page).toHaveURL('/app/products');
+  await expect(page.getByRole('heading', { name: 'Products', exact:true })).toBeVisible();
   expect(attempts).toBe(1);
   await page.reload();
-  await expect(page.getByRole('heading', { name: 'Welcome, Demo Owner.' })).toBeVisible();
+  await expect(page.getByRole('heading', { name: 'Products', exact:true })).toBeVisible();
+  const menu=page.getByRole('button',{name:'Open menu',exact:true});
+  if(await menu.isVisible()) {
+    await menu.click();
+    await expect(page.getByRole('dialog',{name:'Stockwise',exact:true})).toBeVisible();
+  }
   await page.getByRole('button', { name: 'Sign out' }).click();
   await page.goto('/workspace');
   await expect(page).toHaveURL('/sign-in');

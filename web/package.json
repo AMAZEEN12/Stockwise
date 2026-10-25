@@ -9,6 +9,7 @@
     "mock:prism": "node scripts/mock-api.mjs",
     "mock:prepare": "node scripts/mock-api.mjs --prepare-only",
     "check:mock": "node scripts/check-mock.mjs",
+    "check:roles": "node scripts/check-role-landing.mjs",
     "check:shop": "node scripts/check-shop.mjs",
     "check:shop:browser": "node scripts/check-shop-browser.mjs",
     "check:customers": "node scripts/check-customers.mjs",
