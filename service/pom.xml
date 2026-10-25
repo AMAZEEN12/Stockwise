@@ -27,6 +27,11 @@
     </properties>
 
     <dependencies>
+        <!-- JdbcClient with plain SQL, no JPA (DM18). -->
+        <dependency>
+            <groupId>org.springframework.boot</groupId>
+            <artifactId>spring-boot-starter-jdbc</artifactId>
+        </dependency>
         <dependency>
             <groupId>org.springframework.boot</groupId>
             <artifactId>spring-boot-starter-flyway</artifactId>
@@ -43,6 +48,13 @@
         <dependency>
             <groupId>org.springframework.boot</groupId>
             <artifactId>spring-boot-starter-test</artifactId>
+            <scope>test</scope>
+        </dependency>
+        <!-- BCrypt, to check the seeded demo password hashes (DM3). The auth work (step 7)
+             brings Spring Security into the main scope. -->
+        <dependency>
+            <groupId>org.springframework.security</groupId>
+            <artifactId>spring-security-crypto</artifactId>
             <scope>test</scope>
         </dependency>
         <dependency>
