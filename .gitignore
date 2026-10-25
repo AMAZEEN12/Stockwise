@@ -28,3 +28,9 @@ web/coverage/
 *.iml
 .DS_Store
 Thumbs.db
+
+# Local reference exports and TypeScript cache
+/web/Screens/
+/web/*Login-png/
+web/*.tsbuildinfo
+web/.mock/

@@ -1,8 +1,14 @@
 # Execution: Stockwise, stock and customer credit for one small shop
 
-The runbook for taking Stockwise from its current state (all planning artifacts done, no code, no repository yet) to the Monday 26 Oct MVP, the final submission on Tue 3 Nov 2026, and into maintenance. Any human or agent can follow it. It is generated from the artifacts below, so update it whenever one of them changes. Progress against these steps, and all decisions and conventions, are tracked in [WORKLOG.md](WORKLOG.md). Log each completed step there. Product decisions are in [decisions.md](../decisions.md) (DM1-DM31).
+The runbook for taking Stockwise from its current state (planning baseline published; frontend folders and documentation prepared; no runnable application yet) to the Monday 26 Oct MVP, the final submission on Tue 3 Nov 2026, and into maintenance. Any human or agent can follow it. It is generated from the artifacts below, so update it whenever one of them changes. Progress against these steps, and all decisions and conventions, are tracked in [WORKLOG.md](WORKLOG.md). Log each completed step there. Product decisions are in [decisions.md](../decisions.md) (DM1-DM36).
 
-Change slug: `stockwise` · Last updated: 2026-10-23 · Current stage: Build (implementation not started)
+Change slug: `stockwise` · Last updated: 2026-10-24 · Current stage: Build preparation, frontend phase 2 (no application implementation)
+
+## Current frontend handoff
+
+**Shared-source documentation correction, 2026-10-25 (DM53):** Victor confirmed and approved four interface engineers. See [approved source clarifications](../docs/shared-component-alignment.md) for Card and Select/Checkbox behavior. Logged by Codex. The earlier phase 2 handoff below is historical; component migration proposals remain separate.
+
+Victor Oyeleke accepted the phase 2 folder/documentation plan (DM32-DM36). [Frontend architecture](../docs/frontend-architecture.md) is the folder map and naming reference. `main` contains the initial planning baseline `176fc3a`; the starter was statically verified, committed as `45f49c6` and pushed on `chore/web-structure`. [PR #1](https://github.com/AMAZEEN12/Stockwise/pull/1) targets `main` and remains open for human review; no merge or deployment was performed. The only source file is an empty HTTP-client placeholder. Package setup, routes, screens, generated types and dependencies await later authorization and inputs. The shared-component agreement is pending (PD13); phase 3 behavior questions are PD14. Do not treat the proposed Friday/Saturday schedule below as evidence those tasks are done.
 
 ## Artifact chain
 | Stage | Artifact | Status | Owner | Approved by / date |
@@ -28,7 +34,7 @@ Candidate skills to write (conventions that came up in the interview and that to
 - **Contract-change sign-off:** a dated line naming two engineers in `decisions.md` §3. Owner: Isaac Bassey. Hard guardrail: yes, via the `contract-log` CI check.
 
 ## Setup before automation starts
-- [ ] Create the **public** GitHub repository for Stockwise and push this folder (DM19). (Blessing)
+- [x] Public GitHub repository `AMAZEEN12/Stockwise` exists; existing planning documents published on `main` as `176fc3a` on 2026-10-24 (Victor's authorized one-time bootstrap, executed by Codex). This does not complete protections, CODEOWNERS or environments below.
 - [ ] Branch protection on `main`: PR required, CI green, one code-owner approval, author can't approve (DM30). (Blessing)
 - [ ] `CODEOWNERS` with the area owners, plus Isaac on sale, reversal, store-credit and migration paths (REVIEW.md). (Isaac)
 - [ ] GitHub `production` environment: required reviewers Isaac Bassey and Blessing Nwafor (DM26); deploy secrets stored only there (release.md). (Blessing)
@@ -43,12 +49,12 @@ Candidate skills to write (conventions that came up in the interview and that to
 ## Steps
 Each step: actor · input → action → output · gate before the next step.
 
-**Friday 23 Oct (today)**
+**Friday 23 Oct (original planned schedule)**
 1. **Repository and protections** · human (Blessing) · plan.md, release.md → create the repo, push, apply the setup checklist items for branch protection, CODEOWNERS and environments → live repo · Gate: a test PR is blocked without review.
 2. **Contract v0.1 (Monday paths) + mock** · human (Isaac + Nnaemeka; AI allowed locally) · spec.md "Interfaces" → `contract/openapi.yaml`, Prism mock, first line in `decisions.md` §3 → validated contract · Gate: `redocly lint` passes, and two engineers are named in the change log.
 3. **Walking skeleton on both stacks + Qocent spike** · human (Blessing) · deploy-plan.md → Spring Boot app answering `/` and `/api/v1/health`, Dockerfile, `ci.yml`, `deploy.yml` → two live addresses per stack · Gate: smoke green; PD5b spike answers recorded in decisions.md; Isaac approves the first production deploy.
 4. **Migrations V1-V3 with undo scripts** · human (Nnaemeka) · spec.md data model → `db/migration`, `db/rollback`, `MigrationRollbackIT` · Gate: `./mvnw verify` green; Isaac approves (high-risk path).
-5. **Web scaffold against the mock** · human (Victor) · contract v0.1 → routes, shared components, generated types · Gate: lint, typecheck and tests green.
+5. **Frontend preparation, then runnable scaffold** · human (Victor) · phase 2 first: folders, documentation and empty HTTP client on `chore/web-structure`, static checks and reviewed PR. Later: approved contract and shared-component agreement → separately authorized runnable foundation, routes, shared components and generated types · Gate for runnable scaffold: lint, typecheck and tests green. Phase 2 does not satisfy this runtime gate.
 6. **Journey run against the deployed skeleton** · humans (all) · deployed addresses → record any divergences from the contract in decisions.md · Gate: divergences logged (the brief's day-4 check).
 
 **Saturday 24 Oct**
