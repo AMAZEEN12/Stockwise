@@ -2,7 +2,11 @@
 
 Stock and customer-credit ledger for one demonstration shop (TeSA Cohort 6 capstone, Team 3 main product). Context for any AI agent or new team member. Read it at the start of every session.
 
-> Commands below are **planned** (plan.md, Build stage). The first engineer to scaffold each part replaces "planned" with the verified command and its real healthy output.
+**Before starting any new task:** read `sdlc/WORKLOG.md` first, then this file, especially [Mistakes to avoid](#mistakes-to-avoid). Those corrections are standing instructions for future work, not a one-time cleanup. Before writing or copying frontend components, review the Tailwind replacements below; before finishing, check that the touched components do not reintroduce them. The decision and attribution are recorded as DM41 in `decisions.md`.
+
+> Frontend commands below are implemented and verified; actual output is in sdlc/WORKLOG.md. Backend run/deployment commands remain planned. Earlier service results are upstream evidence, not this machine's verification.
+
+Current frontend state (2026-10-24): runnable Home and authentication UI on `feat/auth-ui`; React Router Data Mode, Tailwind v4, shared copy-in components and generated contract types. Registration remains pending API approval. PR #2's contract/database work is integrated; backend HTTP authentication and demo seeds remain unimplemented. See [auth UI implementation](docs/auth-ui-implementation.md) and actual verification output in `sdlc/WORKLOG.md`.
 
 Current frontend state (2026-10-24): folders and `.gitkeep` placeholders only, plus an empty `web/src/service/http-client.ts`. There is no package manifest, runnable app, service scaffold or OpenAPI contract yet. The application commands below cannot run at this stage; do not report them as passing. Frontend conventions and pending questions are in [docs/frontend-architecture.md](docs/frontend-architecture.md).
 
@@ -12,8 +16,8 @@ Current frontend state (2026-10-24): folders and `.gitkeep` placeholders only, p
 - Undo migrations (rollback): `cd service && ./mvnw -Pundo -Dundo.target=<n-1> exec:java` with `DATABASE_JDBC_URL`, `DATABASE_USERNAME`, `DATABASE_PASSWORD` set (verified by `MigrationRollbackIT`; not yet run against a real database)
 - Service run: `cd service && ./mvnw spring-boot:run -Dspring-boot.run.profiles=local,demo` (healthy: `Started StockwiseApplication`). `curl localhost:8080/api/v1/health` returns `{"status":"UP"}`.
 - Contract lint **(verified 2026-10-23)**: `npx @redocly/cli@2 lint contract/openapi.yaml --config contract/redocly.yaml` (healthy: `Woohoo! Your API description is valid.`)
-- Mock server **(verified 2026-10-23)**: `npx @stoplight/prism-cli@5 mock contract/openapi.yaml --port 4710` (healthy: `Prism is listening on http://127.0.0.1:4710`)
-- Web: `cd web && npm ci && npm run lint && npm run typecheck && npm test && npm run build`
+- Mock server **(verified 2026-10-24)**: `cd web && npm run mock` (healthy: `Prism is listening on http://127.0.0.1:4710`). Uses an ignored generated contract copy with consistent OWNER/session fixtures and an unexpired session. `npm run check:mock` verifies actual browser sign-in with the mock; it requires the web dev server too. Public mock examples are in `.env.example`; they are not seeded accounts. Do not modify the active OpenAPI just to add development fixtures.
+- Web (implemented): `cd web && npm ci && npm run lint && npm run typecheck && npm test -- --run && npm run build`. Lint uses ESLint with zero warnings; typecheck uses strict tsc; browser checks use `npx playwright test` after `npx playwright install chromium`. See WORKLOG for actual results.
 - Web dev against the mock: `cd web && VITE_API_BASE_URL=http://127.0.0.1:4710 npm run dev`
 
 ## Conventions
@@ -53,6 +57,18 @@ Current frontend state (2026-10-24): folders and `.gitkeep` placeholders only, p
 Rule: when an agent makes the same mistake twice, the correction goes here.
 - Removing a CHECK that is the last item in a `CREATE TABLE` leaves a dangling comma. When proving a rule test fails, make sure it fails on the rule, not on a syntax error (rule-removal log, R12).
 - Never leave backup or scratch files under `src/main/resources/db/`. `MigrationRollbackIT` treats every file there as a migration, and stale copies survive in `target/` until `./mvnw clean`.
+
+### Recurring Tailwind class mistakes (DM41)
+
+**Decided by:** Victor Oyeleke. **Logged by:** Codex. **Date:** 2026-10-24. Victor reaffirmed that this must guide every new task, not only the initial replacements.
+
+| Do not reintroduce | Use instead |
+|---|---|
+| `focus-visible:[outline-offset:var(--focus-ring-offset)]` | `focus-visible:outline-offset-(--focus-ring-offset)` |
+| `rounded-[var(--radius-md)]` | `rounded-md` |
+| `font-[family-name:var(--font-sans)]` | `font-sans` |
+
+Apply these replacements when creating, editing or copying shared components. Preserve Stockwise's existing `--radius-md: 10px`, Inter Tight `font-sans` mapping and configured focus offset. These particular arbitrary-value classes are valid syntax, but their canonical equivalents are the required project convention. Keep arbitrary values where no equivalent utility exists; do not change the design just to shorten a class.
 
 ## Verifying your work
 Run these before reporting any task complete, and paste the output (full list in `sdlc/test-plan.md`):

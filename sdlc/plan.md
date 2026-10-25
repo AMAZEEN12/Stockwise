@@ -226,6 +226,20 @@ Each row is confirmed with `EXPLAIN (ANALYZE, BUFFERS)` on the full seed, with t
 | N15 | `ci.yml` runs all three test levels; a failure blocks `deploy.yml` |
 
 ## Plan maintenance
+
+Publication DM43: commit Victor's supplied Home/CSS refinements and 16 PNG references under web/Screens, verify the combined feature branch, push feat/auth-ui and open a PR into main. Keep the mobile-copy consequence and existing API/mock/artwork limitations visible in review. No automatic merge or deployment.
+
+Frontend maintenance DM41: normalize the three requested Tailwind utility patterns in copied shared components, keep Stockwise token values and existing behavior, verify with the existing checks, and preserve the user's independent Home/CSS/reference edits. Victor selected contract-mock development (DM42): add a pinned Prism launcher, ignored derived fixture contract and public mock-only local configuration. Verify session creation, /me, CORS/browser sign-in, refresh and logout against the actual mock. This does not implement backend authentication or create real accounts.
+
+### Authorized Home/authentication implementation (2026-10-24)
+
+- Integrated merged PR #2 on `feat/auth-ui`; preserve backend migrations, tests, and the contract's pending sign-off record. Resolve the work-log merge by retaining both histories and updating current state.
+- Implement the entry/authentication feature from all 16 references using Data Mode nested overlay routes, Tailwind v4's Vite plugin and CSS-first token mapping. Pin resolved dependencies. Copy shared primitives at revision d153611; retain ownership and document additive extensions.
+- Generate API types, alias request/response models, use one Axios-backed RTK Query service and resource endpoint definitions. Sign-in follows v0.1.0 exactly. No registration wire model or endpoint is activated; document the proposed contract separately.
+- Store expiry-checked sessions per tab with memory fallback; validate protected navigation with /me. Demo buttons fill supplied public seed credentials and require explicit submission. No demo password is fabricated. Authenticated /workspace is a welcome handoff, not a fake dashboard.
+- Self-host the specified fonts, keep runtime images in assets/images with named exports, and reconstruct the missing coin as SVG with reduced-motion/mobile behavior. Compare captures to references at 1440×900 and 360×880 at 2×; do not claim the reconstructed artwork is the original.
+- Checks: real ESLint, strict TypeScript, meaningful HTTP/session/form unit tests, production build, contract lint, Playwright flows and axe. Run the repository service check where the local Java/Docker prerequisites permit; record actual limitations without claiming upstream results as this session's checks.
+- Detailed behavior/provenance: [auth UI](../docs/auth-ui-implementation.md); missing contract: [proposal](../docs/auth-contract-proposal.md). Update documentation and actual output in the same feature commit.
 If implementation departs from this plan, update this file in the same commit as the code.
 
 **Departures recorded:**

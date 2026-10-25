@@ -117,7 +117,43 @@ Questions include session persistence and expiry during pending writes, recovery
 | DM35 | 2026-10-24 | Shared-component agreement remains pending (PD13). Shadcn is not required; adopt the foundation and dependencies actually agreed by the interface engineers | The PDF describes a proposal and its copy-in approach does not require shadcn | Victor Oyeleke | Codex (logging assistant) |
 | DM36 | 2026-10-24 | Phase 2 creates frontend folders, documentation, `.gitkeep` placeholders and one empty HTTP-client source file only. Publish existing planning docs as the one-time initial `main` baseline, then publish `chore/web-structure` and open a reviewed PR. Later features use separate branches and descriptive commits; no force-push or automatic merge | Make the empty cloned repository useful and visible to teammates without implementing screens or bypassing later review gates | Victor Oyeleke | Codex (logging assistant) |
 
+### Frontend implementation decisions, 2026-10-24
+
+| ID | Date | Decision | Reason | Decided by | Logged by |
+|----|------|----------|--------|------------|-----------|
+| DM37 | 2026-10-24 | Adopt [interface-eng-shared-components](https://github.com/spr-tech/interface-eng-shared-components) as the five engineers' agreed copy-in interface source. React/TypeScript/Tailwind/Radix; preserve component ownership and token names, replace neutral values with Stockwise values. Supersedes DM35's pending status and resolves PD13 | Victor reports the agreement; upstream still names four engineers, so no fifth name or extra approval is invented | Five interface engineers, as reported by Victor Oyeleke | Codex |
+| DM38 | 2026-10-24 | Implement the supplied Home/sign-in/sign-up references as one entry/authentication feature on feat/auth-ui, using React Router Data Mode from react-router, Tailwind v4 with @tailwindcss/vite, central image imports, self-hosted specified fonts, and descriptive commits | Victor requested implementation after the read-only review; screenshots define responsive composition | Victor Oyeleke | Codex |
+| DM39 | 2026-10-24 | Preserve merged v0.1.0 contract and generate frontend types from it. Call POST /auth/sessions and GET /me; registration remains a validated explicit pending adapter. Proposed POST /auth/registrations and additional responses are documented in docs/auth-contract-proposal.md, not activated | Keep UI and approved wire shapes aligned; merged log still marks two-engineer sign-off pending | Victor Oyeleke (scope); Codex (proposal details, pending API approval) | Codex |
+| DM40 | 2026-10-24 | Implementation defaults: expiry-checked tab sessionStorage with memory fallback, no password persistence; /workspace authenticated welcome via /me; sign-out clears tab session/cache; demo buttons fill configured public seed details without auto-submit or invented password. Apply local additive shared component styling/loading slots, reconstruct coin as SVG with reduced-motion behavior, and verify supplied viewports before claiming visual accuracy | Complete the authorized UI while clearly recording missing backend registration/seeds and original artwork. Future money/cart behavior in PD14 remains unresolved | Codex, implementation choices under Victor's authorization | Codex |
+
+Implementation details and remaining limits: [auth UI](docs/auth-ui-implementation.md), [contract proposal](docs/auth-contract-proposal.md). Historical DM32–DM36 remain intact. No proposed endpoint is added to the active contract or counted as two-engineer approval.
+
+### Tailwind utility convention, 2026-10-24
+
+| ID | Date | Decision | Reason | Decided by | Logged by |
+|----|------|----------|--------|------------|-----------|
+| DM41 | 2026-10-24 | Prefer `focus-visible:outline-offset-(--focus-ring-offset)`, `rounded-md`, and `font-sans` over their equivalent arbitrary CSS-variable classes. Record recurring examples in AGENTS.md and apply the replacements across Button, Input and FormField, including future shared-component copies. Preserve 10px radius, Inter Tight and the configured focus offset | Victor identified recurring IDE canonical-class suggestions; reduce repeated guidance without changing appearance | Victor Oyeleke | Codex |
+
+**DM41 reaffirmed, 2026-10-24:** Victor clarified that preventing recurrence in future agent work is the purpose of this decision. The repository-root AGENTS.md now calls out the rule at task startup, contains the exact replacement table under Mistakes to avoid, and requires reviewing it before frontend edits and checking touched components before completion. This reinforces the existing decision without creating a duplicate or attributing it to the whole team. **Decided by:** Victor Oyeleke. **Logged by:** Codex.
+
+Initial observations: neither the local mock (4710) nor backend (8080) was listening; no local override or demo password was configured. The seven reported D-marked files exist and are tracked in the current tree; deletion history includes the earlier requested rollback, followed by recreation in ec0bf7f. Victor identified vite.config.ts as an example after describing folder badges. `web/vite.config.ts` is a tracked, unchanged 196-byte file, not a deleted folder. The IDE panel/badge state cannot be reproduced from Git; refreshing Explorer/current Source Control is suggested without resetting files.
+
+| ID | Date | Decision | Reason | Decided by | Logged by |
+|----|------|----------|--------|------------|-----------|
+| DM42 | 2026-10-24 | Run the contract mock for UI development. Add a pinned Prism launcher with a generated, ignored copy of the active contract containing consistent OWNER/session response examples and a future eight-hour expiry. Configure the local UI to use port 4710. The public sample owner@stockwise.demo / stockwise-demo is mock-only; Prism validates request shape, not credentials, and returns a fixed OWNER fixture for all valid login bodies. Supersedes DM40's unset local demo password only for mock development; real backend seeds remain pending | Victor chose contract mock development when asked how sign-in should work; generated examples prevent random/expired sessions without changing the authoritative contract | Victor Oyeleke (mock mode); Codex (fixture/launcher implementation) | Codex |
+
+No registration endpoint, real account, server-authentication implementation or two-engineer contract approval is implied by DM42.
+
+### Publication and supplied Home refinements, 2026-10-24
+
+| ID | Date | Decision | Reason | Decided by | Logged by |
+|----|------|----------|--------|------------|-----------|
+| DM43 | 2026-10-24 | Commit Victor's recent HomePage/CSS changes and the 16 design references under web/Screens before pushing feat/auth-ui and opening a PR into main. Preserve the supplied headline punctuation, removed description, 320px desktop coin offset and CSS formatting. Treat Screens as versioned design inputs, not runtime assets; no automatic merge/deployment | Victor explicitly requested committing his recent changes before creating the PR | Victor Oyeleke | Codex |
+
+Visual-review note: the supplied CSS still hides the headline on mobile. With the description removed, mobile Home has no supporting copy; this is retained as supplied for human review rather than silently changed during publication.
+
 ## 3. Contract change log
+
 | Date | Change | Why | Agreed by (two engineers) |
 |------|--------|-----|---------------------------|
 | 2026-10-23 | **v0.1.0 (DRAFT):** first contract with the Monday paths: `GET /health`, `POST /auth/sessions`, `GET /me`, `GET/POST /products`, `GET /products/{id}`, `GET/POST /customers`, `GET/POST /sales` (`Idempotency-Key` required), `GET /sales/{id}`. Problem+json errors with codes. Money as int64 kobo (`x-unit: kobo`, enforced by the lint rule `money-is-integer-kobo`). Mock on port 4710 | EXECUTION step 2: contract before code; unblocks the interface | **Pending:** Isaac Bassey (API and access owner) and Nnaemeka Chukwuma. Drafted by the agent for review; not agreed until both names are recorded here |
