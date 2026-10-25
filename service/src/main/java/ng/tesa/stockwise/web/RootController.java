@@ -9,9 +9,11 @@ import org.springframework.web.bind.annotation.RestController;
 import ng.tesa.stockwise.config.AppProperties;
 
 /**
- * The walking skeleton's two public addresses (deploy-plan §2). {@code /} answers the host's
- * health check; {@code /api/v1/health} (contract {@code Health}) also asks the database, and a
- * database that doesn't answer becomes 503 {@code DATABASE_UNAVAILABLE} through the problem handler.
+ * The two public liveness addresses (deploy-plan §2). {@code /} answers 200 with no database
+ * call, because Qocent's release health check hits {@code /} while the database may still be
+ * waking. {@code /api/v1/health} (contract {@code Health}) also asks the database, reports the
+ * deployed version (deploy.yml waits for its commit), and becomes 503 {@code DATABASE_UNAVAILABLE}
+ * through the problem handler when the database doesn't answer.
  */
 @RestController
 public class RootController {
@@ -26,7 +28,7 @@ public class RootController {
 
     @GetMapping("/")
     public Map<String, String> root() {
-        return Map.of("service", "stockwise", "status", "UP");
+        return Map.of("service", "stockwise", "status", "ok");
     }
 
     @GetMapping("/api/v1/health")

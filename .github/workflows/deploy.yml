@@ -1,0 +1,130 @@
+# Production deploy (deploy-plan §2-§6, release.md). Order: gate -> approval -> migrate -> deploy -> smoke.
+# The single job "deploy-production" uses the GitHub `production` environment, which requires a reviewer
+# (the release manager, never the author of the change). One approval covers migrate AND both stacks.
+name: Deploy
+on:
+  push:
+    branches: [main]
+  workflow_dispatch:
+    inputs:
+      run_last_unit:
+        description: Run the last-unit concurrency test against the deployed service after the smoke check
+        type: boolean
+        default: false
+
+permissions:
+  contents: read
+
+concurrency:
+  group: deploy-production
+  cancel-in-progress: false
+
+jobs:
+  gate:
+    uses: ./.github/workflows/ci.yml
+    permissions:
+      contents: read
+
+  deploy-production:
+    name: Migrate and deploy (waits for approval)
+    needs: gate
+    runs-on: ubuntu-latest
+    environment:
+      name: production
+    permissions:
+      contents: write   # only to push deploy/* branches (Stack Q)
+    env:
+      SHA: ${{ github.sha }}
+    steps:
+      - uses: actions/checkout@v4
+        with: { fetch-depth: 0 }
+
+      # ---- 1. Migrate the database over the DIRECT Neon endpoint (the pooler breaks Flyway's lock) ----
+      - name: Flyway migrate
+        env:
+          FLYWAY_URL: ${{ secrets.DATABASE_JDBC_URL_DIRECT }}
+          FLYWAY_USER: ${{ secrets.DATABASE_USERNAME }}
+          FLYWAY_PASSWORD: ${{ secrets.DATABASE_PASSWORD }}
+          SEED_DEMO: ${{ vars.SEED_DEMO }}
+        run: |
+          set -euo pipefail
+          locations="filesystem:/db/migration"
+          if [ "${SEED_DEMO:-false}" = "true" ]; then locations="$locations,filesystem:/db/seed"; fi
+          docker run --rm \
+            -e FLYWAY_URL -e FLYWAY_USER -e FLYWAY_PASSWORD \
+            -e FLYWAY_LOCATIONS="$locations" -e FLYWAY_CONNECT_RETRIES=10 \
+            -v "$PWD/service/src/main/resources/db:/db:ro" \
+            flyway/flyway:12.4.0 migrate
+          echo "### Migrations applied" >> "$GITHUB_STEP_SUMMARY"
+          ls service/src/main/resources/db/migration >> "$GITHUB_STEP_SUMMARY"
+
+      # ---- 2a. Stack V, interface: Vercel prebuilt deploy (git integration is off in vercel.json) ----
+      - uses: actions/setup-node@v4
+        with: { node-version: 22 }
+      - name: Deploy web to Vercel
+        working-directory: web
+        env:
+          VERCEL_TOKEN: ${{ secrets.VERCEL_TOKEN }}
+          VERCEL_ORG_ID: ${{ secrets.VERCEL_ORG_ID }}
+          VERCEL_PROJECT_ID: ${{ secrets.VERCEL_PROJECT_ID }}
+        run: |
+          set -euo pipefail
+          npx --yes vercel@latest pull --yes --environment=production --token "$VERCEL_TOKEN"
+          npx --yes vercel@latest build --prod --token "$VERCEL_TOKEN"
+          url=$(npx --yes vercel@latest deploy --prebuilt --prod --token "$VERCEL_TOKEN")
+          echo "Vercel deployment: $url"
+          echo "### Vercel deployment: $url" >> "$GITHUB_STEP_SUMMARY"
+
+      # ---- 2b. Stack V, service: Render deploy hook for this exact commit, then wait until it reports it ----
+      - name: Deploy service to Render
+        env:
+          HOOK: ${{ secrets.RENDER_DEPLOY_HOOK_STOCKWISE }}
+          API_URL: ${{ vars.API_URL }}
+        run: |
+          set -euo pipefail
+          curl -fsS -X POST "${HOOK}&ref=${SHA}" > /dev/null
+          echo "Render deploy triggered for $SHA; waiting for /api/v1/health to report it (up to 10 min)"
+          for i in $(seq 1 60); do
+            body=$(curl -s -m 20 "${API_URL%/}/api/v1/health" || true)
+            if echo "$body" | grep -q "$SHA"; then echo "Render is serving $SHA"; exit 0; fi
+            sleep 10
+          done
+          echo "::error::Render did not report $SHA within 10 minutes. Check the Render dashboard; roll back if needed (release.md)."; exit 1
+
+      # ---- 2c. Stack Q (parallel, optional): subtree push to the deploy/* branches Qocent tracks ----
+      - name: Push deploy branches for Qocent
+        if: ${{ vars.ENABLE_QOCENT == 'true' }}
+        continue-on-error: true
+        run: |
+          set -euo pipefail
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git subtree split --prefix web -b tmp-web
+          git subtree split --prefix service -b tmp-api
+          git push --force origin tmp-web:deploy/stockwise-web tmp-api:deploy/stockwise-api
+
+  smoke:
+    name: Smoke check on the live addresses
+    needs: deploy-production
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - name: Smoke
+        env:
+          API_URL: ${{ vars.API_URL }}
+          WEB_URL: ${{ vars.WEB_URL }}
+          EXPECT_VERSION: ${{ github.sha }}
+        run: scripts/smoke.sh
+      - uses: actions/setup-node@v4
+        if: ${{ inputs.run_last_unit }}
+        with: { node-version: 22 }
+      - name: Last-unit concurrency test against the deployed service
+        if: ${{ inputs.run_last_unit }}
+        env:
+          API_URL: ${{ vars.API_URL }}/api/v1
+          OWNER_EMAIL: ${{ vars.DEMO_OWNER_EMAIL }}
+          OWNER_PASSWORD: ${{ secrets.DEMO_OWNER_PASSWORD }}
+        run: node load/concurrency/last-unit.mjs | tee last-unit.log
+      - uses: actions/upload-artifact@v4
+        if: ${{ always() && inputs.run_last_unit }}
+        with: { name: last-unit-log, path: last-unit.log, if-no-files-found: ignore }

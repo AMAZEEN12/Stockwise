@@ -1,0 +1,68 @@
+# Manual. Proves the last-unit rule with its protection AND without it (spec R4, success measure S1).
+#   sale branch (default: main)  -> SaleConcurrencyIT must PASS
+#   evidence/no-stock-guard      -> SaleConcurrencyIT must FAIL
+# The workflow is green only when both happened. Both logs are uploaded as artifacts.
+name: Concurrency evidence
+on:
+  workflow_dispatch:
+    inputs:
+      sale_ref:
+        description: Branch or SHA that has the guarded sale transaction
+        default: main
+        required: true
+      evidence_ref:
+        description: Branch with the guard removed (never merged)
+        default: evidence/no-stock-guard
+        required: true
+
+permissions:
+  contents: read
+
+jobs:
+  with-guard:
+    name: With the guard (expect BUILD SUCCESS)
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with: { ref: "${{ inputs.sale_ref }}" }
+      - uses: actions/setup-java@v4
+        with: { distribution: temurin, java-version: 25, cache: maven }
+      - name: Run SaleConcurrencyIT
+        working-directory: service
+        run: |
+          chmod +x mvnw
+          set +e
+          ./mvnw -B clean verify -Dit.test=SaleConcurrencyIT -Dtest=NoUnitTests -Dsurefire.failIfNoSpecifiedTests=false 2>&1 | tee ../with-guard-PASSES.log
+          code=${PIPESTATUS[0]}
+          echo "maven exit code: $code"
+          exit "$code"
+      - uses: actions/upload-artifact@v4
+        if: always()
+        with: { name: with-guard-PASSES, path: with-guard-PASSES.log }
+
+  without-guard:
+    name: Without the guard (expect BUILD FAILURE)
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with: { ref: "${{ inputs.evidence_ref }}" }
+      - uses: actions/setup-java@v4
+        with: { distribution: temurin, java-version: 25, cache: maven }
+      - name: Run SaleConcurrencyIT (a failure is the evidence)
+        working-directory: service
+        run: |
+          chmod +x mvnw
+          set +e
+          ./mvnw -B clean verify -Dit.test=SaleConcurrencyIT -Dtest=NoUnitTests -Dsurefire.failIfNoSpecifiedTests=false 2>&1 | tee ../no-stock-guard-FAILS.log
+          code=${PIPESTATUS[0]}
+          echo "maven exit code: $code"
+          if [ "$code" = 0 ]; then
+            echo "::error::The test PASSED without the guard, so it proves nothing. Check that the evidence branch really removes the guard."; exit 1
+          fi
+          if ! grep -q "BUILD FAILURE" ../no-stock-guard-FAILS.log || ! grep -q "SaleConcurrencyIT" ../no-stock-guard-FAILS.log; then
+            echo "::error::Maven failed, but not because SaleConcurrencyIT failed (compile or setup error?). Not valid evidence."; exit 1
+          fi
+          echo "Failed as expected: this is the evidence."
+      - uses: actions/upload-artifact@v4
+        if: always()
+        with: { name: no-stock-guard-FAILS, path: no-stock-guard-FAILS.log }

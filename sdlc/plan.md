@@ -271,9 +271,14 @@ If implementation departs from this plan, update this file in the same commit as
   JWT uses Spring Security's resource server (Nimbus), not jjwt. Validation uses `spring-boot-starter-validation`. `DatabaseTestSupport` now boots the real application.
 - 2026-10-25: contract gaps found while building, for Isaac and Nnaemeka to log as v0.1.1 in decisions.md §3:
   - **`INTERNAL_ERROR`:** a 500 needs a code, and the `Problem.code` enum has none. The service sends `INTERNAL_ERROR`.
-  - **`GET /` body:** deploy-plan says `{"status":"ok"}`, but the service answers `{"service":"stockwise","status":"UP"}`, matching `Health`.
   - **Other statuses:** 405 and 415 use `VALIDATION_FAILED` with their own status.
 - 2026-10-25: not done, still Blessing's: `ci.yml`, `deploy.yml`, `concurrency-evidence.yml`, the Neon, Render and Vercel setup, and the live addresses in the README. The web app's `.env.example` lists simulated mock accounts (`@stockwise.demo`); the real seeded accounts are `@stockwise.test` (README).
+- 2026-10-25, repository reordered to the shared backend template (`BACKEND-STRUCTURE.md`, supplied by Nnaemeka Chukwuma), on `feat/backend-api`, without breaking anything. The template was an older copy, so newer repo files (`AGENTS.md`, `decisions.md`, the code) were kept and the template only **added** files:
+  - **Added from the template:** `.github/workflows` (`ci`, `deploy`, `concurrency-evidence`), `.github/scripts` (guards), `load/` (`last-unit.mjs`, k6), `scripts/` (`smoke.sh`, `reset-demo.sql`), `docker-compose.yml`, `docs/deploy-setup.md`, `docs/demo-runbook.md` and `docs/releases.md`, `package-info.java` for `restock`, `reversal`, `history` and `dashboard`, and its Dockerfile (`prod` profile by default, `-XX:+ExitOnOutOfMemoryError`).
+  - **Aligned to its conventions:** settings prefix `stockwise.*` (was `app.*`); `stockwise.version` from `APP_VERSION` or `RENDER_GIT_COMMIT`, so `deploy.yml` can wait for its commit; `local` and `prod` profiles (`prod` leaves migrations to `deploy.yml` unless `FLYWAY_ON_STARTUP=true`); `DB_POOL_SIZE`; graceful shutdown; CORS moved to `config/CorsConfig`; `GET /` answers `{"status":"ok"}` as `scripts/smoke.sh` and deploy-plan expect (this closes the earlier `/` contract-gap note).
+  - **Tests moved to mirror `main`:** `config/CorsIT`, `config/MoneyJsonIT`, `web/MondayJourneyIT`.
+  - **Added beyond the template:** `web/vercel.json` (`deploy.yml` assumes it).
+  - **Kept against the template:** `/api/v1/health` answers 503 as a problem (`DATABASE_UNAVAILABLE`) when the database is down, as contract v0.1.0 says, not the template's `DEGRADED` body.
 
 ## Measurement
 - Leading: share of changes that merge from the first implementation pass; time from plan acceptance to merged PR.

@@ -6,8 +6,8 @@ import java.util.List;
 
 import org.springframework.boot.context.properties.ConfigurationProperties;
 
-/** The {@code app.*} settings in application.yml. */
-@ConfigurationProperties("app")
+/** The {@code stockwise.*} settings in application.yml. */
+@ConfigurationProperties("stockwise")
 public record AppProperties(String version, String timezone, Security security, Cors cors) {
 
     /** DM15: tokens last 8 hours; the signing key comes only from the environment. */
