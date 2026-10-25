@@ -259,6 +259,8 @@ Decided by and approved by Victor Oyeleke for DM60 scope; logged by Codex. Contr
 
 The previously recorded lint/typecheck, 27 unit tests, 86 browser scenarios, actual role simulation, contract lint and build were run against the combined working tree, including these supplied edits. Publication adds Markdown only beyond those verified inputs; no runtime suite is repeated. Invalid JAVA_HOME and the existing bundle warning remain disclosed. Publication supplies neither human approval nor backend authentication evidence. No merge or deployment is authorized by this publication request.
 
+Publication confirmed: feature commit `9fbcc87` and supplied-edit/publication commit `39322b9` were pushed before creating [PR #11](https://github.com/AMAZEEN12/Stockwise/pull/11), `feat(auth): route sign-in to service-verified role pages`, from `feat/auth-role-landing` into `main`. GitHub confirmed open, non-draft, unmerged and conflict-free at initial head `39322b99b4f44a9eaed07dc80f4bc104e8590a7c`. This follow-up records the actual publication on the same branch. Human review remains next. Logged by Codex on 2026-10-25.
+
 ## 3. Contract change log
 
 | Date | Change | Why | Agreed by (two engineers) |
