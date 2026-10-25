@@ -6,6 +6,8 @@ Change slug: `stockwise` · Last updated: 2026-10-24 · Current stage: Build pre
 
 ## Current frontend handoff
 
+**Shared-source documentation correction, 2026-10-25 (DM53):** Victor confirmed and approved four interface engineers. See [approved source clarifications](../docs/shared-component-alignment.md) for Card and Select/Checkbox behavior. Logged by Codex. The earlier phase 2 handoff below is historical; component migration proposals remain separate.
+
 Victor Oyeleke accepted the phase 2 folder/documentation plan (DM32-DM36). [Frontend architecture](../docs/frontend-architecture.md) is the folder map and naming reference. `main` contains the initial planning baseline `176fc3a`; the starter was statically verified, committed as `45f49c6` and pushed on `chore/web-structure`. [PR #1](https://github.com/AMAZEEN12/Stockwise/pull/1) targets `main` and remains open for human review; no merge or deployment was performed. The only source file is an empty HTTP-client placeholder. Package setup, routes, screens, generated types and dependencies await later authorization and inputs. The shared-component agreement is pending (PD13); phase 3 behavior questions are PD14. Do not treat the proposed Friday/Saturday schedule below as evidence those tasks are done.
 
 ## Artifact chain
