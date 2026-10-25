@@ -128,3 +128,5 @@ Approved by Victor Oyeleke; logged by Codex. Keep existing auth/product/customer
 ## Measurement
 - Leading: first-pass CI success rate for agent-written changes; eval pass rate over time.
 - Lagging: review time per PR; change failure rate; regressions caught in CI versus in production.
+
+Sales History verification (DM57-DM58): unit-check Lagos midnight, inclusive seven-day/year/leap boundaries and invalid money/identity/time. Browser-check the 12 supplied states at 2x; read-only ID-based rendering; date/payment filters; pagination retention/retry; malformed/duplicate records; ADMIN access; session errors; midnight refresh; confirmed first-row highlights and toast expiry. Keep assertions/timeouts unchanged. Run check:sales-history without interception, frontend checks and contract lint; record service limitations and measured visual differences. UI dates mean Lagos calendar dates and freshness means last successful retrieval, not server snapshot time.

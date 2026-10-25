@@ -223,6 +223,15 @@ Prior verification and its limits remain in WORKLOG and the implementation notes
 
 Publication confirmed: feature commit `9cc489b` and main-integration/publication commit `6f70072` were pushed before creating [PR #9](https://github.com/AMAZEEN12/Stockwise/pull/9), `feat(ui): align shared components and add customer screens`, from `feat/shared-component-alignment` into `main`. GitHub returned state `open`, draft `false`, merged `false`, initial head `6f7007254692f00dba0ed2db6ec4937a9d95fa10`. The description explicitly includes customer commits de97504/cb19935 and discloses prior QA limitations. This documentation follow-up records the confirmed result. Logged by Codex on 2026-10-25.
 
+### Sales History implementation, 2026-10-25
+
+| ID | Date | Decision | Reason | Decided by | Logged by |
+|----|------|----------|--------|------------|-----------|
+| DM57 | 2026-10-25 | Implement the supplied 12 Sales History frames on feat/sales-history and commit the completed feature descriptively. Use Today, Yesterday, Last 7 days. Keep rows/cards non-interactive and defer receipt navigation. Retain the current contract's customer/staff IDs; defer display-name snapshots | Victor confirmed the range options, chose a read-only list, then explicitly authorized implementation with the existing ID-only contract | Victor Oyeleke | Codex |
+| DM58 | 2026-10-25 | Use the existing GET /sales, generated models, shared components and Stockwise tokens. Show full IDs with explicit labels, use last successful retrieval for WAT freshness, validate money and page consistency, and retain stale rows on failures. Load more re-reads the displayed prefix; sorting/snapshot/settlement semantics remain proposals. Scope mobile avatar omission to this route and retain demonstration/account controls. Document visual differences caused by labels/IDs and verify all supplied states | Complete the chosen contract-first scope without fabricating names, successful writes or an atomic history snapshot | Codex (technical choices under Victor's implementation authorization) | Codex |
+
+Details and pending API-owner clarifications: [Sales History implementation](docs/sales-history-ui.md). Decided by and approved by Victor Oyeleke for DM57 scope; logged by Codex. No backend change, active contract edit or additional engineer approval is claimed.
+
 ## 3. Contract change log
 
 | Date | Change | Why | Agreed by (two engineers) |

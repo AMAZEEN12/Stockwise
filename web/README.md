@@ -65,3 +65,7 @@ Customer creation is not idempotent in the active contract. One POST is sent; un
 Run `npm run check:customers` for a self-contained, unintercepted browser/API journey. It owns temporary simulation/Vite processes on 4711/5185, adds only fictional records and stops them afterwards. `DEVELOPMENT_API_PORT` overrides the usual 4710 for isolated local checks. This is simulation evidence, not deployed backend proof.
 
 After switching branches or changing Vite plugins/environment, restart your dev and mock servers. For tests alongside an existing preview, use `$env:PLAYWRIGHT_PORT='5184'; npx playwright test --workers=1`. Customer captures use 1440x900 and 360x1000 at 2x. After a complete browser run, `node scripts/compare-customer-designs.mjs` compares all 36 frames and writes the ignored `.mock/customer-design-comparison.json`; measurements are not automatic visual approval. See [implementation and limits](../docs/customers-ui.md).
+
+## Sales History
+
+`/app/sales` uses the existing listSales contract, Today/Yesterday/Last 7 days in Africa/Lagos, and full customer/staff IDs. Rows remain non-interactive. `npm run check:sales-history` runs an isolated, unintercepted local simulation journey on ports 4712/5187 and cleans up its own servers. It is not backend authentication/concurrency evidence. `node scripts/compare-sales-history-designs.mjs <capture-folder>` measures the 12 ignored supplied frames. See ../docs/sales-history-ui.md for explicit UI differences and pending API proposals.

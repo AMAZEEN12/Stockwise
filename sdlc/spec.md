@@ -190,3 +190,5 @@ New in Design (all in decisions.md):
 ## Measurement
 - Leading: time from the intent.md commit to the spec.md commit.
 - Lagging: commits to spec.md made after plan.md was first committed (requirements rework).
+
+Frontend Sales History amendment (2026-10-25, DM57-DM58), scope approved by Victor Oyeleke and logged by Codex: use the existing GET /sales contract and IDs for responsive recorded-sale history. Today/Yesterday/Last 7 days use Africa/Lagos; entries remain non-interactive, original totals are integer kobo, and successful retrieval time is explicit. Display-name snapshots and receipt linking remain deferred. This verifies the selected R16/R17/N5/N9/N10 interface scope; it does not claim the full reversal/movement-history requirement complete. Evidence and pending API semantics are in docs/sales-history-ui.md and WORKLOG.

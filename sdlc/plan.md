@@ -257,3 +257,5 @@ If implementation departs from this plan, update this file in the same commit as
 ## Measurement
 - Leading: share of changes that merge from the first implementation pass; time from plan acceptance to merged PR.
 - Lagging: rework cycles per change; whether the merged diff still matches this plan.
+
+Sales History amendment (2026-10-25, DM57-DM58): implement 12 desktop/mobile reference states on feat/sales-history using existing GET /sales and ID-only generated models, shared primitives, Lagos date presets, read-only rows and prefix pagination. Record proposed semantics separately, test midnight/date boundaries, money rejection, filters/pagination/refresh, role/session failures and confirmed-row notifications. Compare all supplied frames at 2x. Scope approved by Victor Oyeleke; technical choices/logged by Codex. See docs/sales-history-ui.md.
