@@ -1,0 +1,50 @@
+# Stockwise service configuration. Every secret comes from the environment (deploy-plan §2); none is committed.
+server:
+  port: ${PORT:8080}
+  # Render and Qocent terminate TLS in front of the service.
+  forward-headers-strategy: framework
+
+spring:
+  application:
+    name: stockwise
+  datasource:
+    # JDBC form. Neon: jdbc:postgresql://<host>/<db>?sslmode=require. Local default: docker compose.
+    url: ${DATABASE_JDBC_URL:jdbc:postgresql://localhost:5432/stockwise}
+    username: ${DATABASE_USERNAME:stockwise}
+    password: ${DATABASE_PASSWORD:stockwise}
+    hikari:
+      maximum-pool-size: ${DATABASE_POOL_SIZE:10}
+  flyway:
+    locations: classpath:db/migration
+    # Neon: migrations need the DIRECT endpoint; the pooled one breaks Flyway's session lock (deploy-plan §2).
+    url: ${DATABASE_JDBC_URL_DIRECT:${spring.datasource.url}}
+    user: ${spring.datasource.username}
+    password: ${spring.datasource.password}
+  jackson:
+    # N1: money and quantities are integers. 1.5, "2" or an unknown field is a 400, never a guess.
+    default-property-inclusion: non_null
+    deserialization:
+      accept-float-as-int: false
+      fail-on-unknown-properties: true
+      fail-on-null-for-primitives: true
+    mapper:
+      allow-coercion-of-scalars: false
+
+app:
+  version: "@project.version@"
+  timezone: Africa/Lagos
+  security:
+    # HS256 signing key, at least 32 bytes. Required: the service refuses to start without it.
+    jwt-secret: ${JWT_SECRET:}
+    token-lifetime: 8h
+  cors:
+    allowed-origins: ${CORS_ALLOWED_ORIGINS:http://127.0.0.1:5173,http://localhost:5173}
+
+---
+# Demo data (DM16, R19): adds the Monday seed as a Flyway repeatable migration.
+spring:
+  config:
+    activate:
+      on-profile: demo
+  flyway:
+    locations: classpath:db/migration,classpath:db/seed
