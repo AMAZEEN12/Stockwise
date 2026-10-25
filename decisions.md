@@ -213,6 +213,14 @@ Publication confirmed: commit `285cf91`, branch `fix/shared-component-documentat
 
 **Approved by:** Victor Oyeleke. **Logged by:** Codex. Implementation, source provenance, owner-review proposals and validation are tracked in [shared component alignment](docs/shared-component-alignment.md).
 
+### Shared-component feature publication, 2026-10-25
+
+| ID | Date | Decision | Reason | Decided by | Logged by |
+|----|------|----------|--------|------------|-----------|
+| DM56 | 2026-10-25 | Confirm feature commit 9cc489b, integrate current main c0ab694 into feat/shared-component-alignment, commit the publication record, push and open a PR into main. Preserve completed Customer Picker de97504 and Customers cb19935 as inherited feature commits. Resolve overlapping Markdown by retaining current implementation guidance and the already-recorded DM53/DM54 corrections; retain upstream removal of obsolete populated-folder placeholders. No application source or tests change during publication | Victor requested a PR for the new changes with a commit available first. Main now includes merged Sales PR #5 and documentation PR #6; customer features remain additional scope in this branch | Victor Oyeleke (publication scope); Codex (routine integration and documentation resolution) | Codex |
+
+Prior verification and its limits remain in WORKLOG and the implementation notes: 18 unit tests passed; the full browser run was 54/56, with all 56 distinct scenarios passing across full and focused runs. Windows timing, remaining measured visual differences, the existing bundle warning and invalid JAVA_HOME are disclosed. Human review, including Isaac Bassey's sale/store-credit sign-off under REVIEW.md, remains required. No main merge, deployment, upstream component acceptance or API-contract approval is supplied by publication.
+
 ## 3. Contract change log
 
 | Date | Change | Why | Agreed by (two engineers) |
