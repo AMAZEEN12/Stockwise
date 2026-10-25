@@ -123,7 +123,16 @@ export interface paths {
         put?: never;
         /**
          * Add a customer
-         * @description Neither safe nor idempotent. OWNER or ASSISTANT.
+         * @description OWNER or ASSISTANT. **Idempotent when `Idempotency-Key` is sent** (v0.2.0, optional):
+         *     - the same key and the same body (after trimming the name, and treating a blank contact as none)
+         *       return 201 with the **original** customer, and nothing new is created, also when the retries
+         *       arrive in parallel;
+         *     - the same key with a different body, or sent by another user, returns 422
+         *       `IDEMPOTENCY_KEY_REUSED`, and nothing is created;
+         *     - keys are kept for the life of the customer.
+         *
+         *     Without the header, every call creates a new customer (v0.1.0 behaviour). Two customers may
+         *     share a name; the UUID is the identity.
          */
         post: operations["createCustomer"];
         delete?: never;
@@ -431,6 +440,8 @@ export interface components {
         RequestId: string;
         /** @description Client-generated UUID, one per user attempt; reused on retry. */
         IdempotencyKey: string;
+        /** @description Optional client-generated UUID, one per user attempt; reuse it on retry to make the call safe to repeat. */
+        IdempotencyKeyOptional: string;
         ProductId: string;
         /** @description Zero-based page number. */
         Page: number;
@@ -671,6 +682,8 @@ export interface operations {
             header?: {
                 /** @description Client-generated UUID used to trace one action across both tiers. */
                 "X-Request-Id"?: components["parameters"]["RequestId"];
+                /** @description Optional client-generated UUID, one per user attempt; reuse it on retry to make the call safe to repeat. */
+                "Idempotency-Key"?: components["parameters"]["IdempotencyKeyOptional"];
             };
             path?: never;
             cookie?: never;
@@ -694,6 +707,16 @@ export interface operations {
             400: components["responses"]["BadRequest"];
             401: components["responses"]["Unauthorized"];
             403: components["responses"]["Forbidden"];
+            /** @description `IDEMPOTENCY_KEY_REUSED`: this key was already used with a different body or by another user; nothing was created */
+            422: {
+                headers: {
+                    "X-Request-Id": components["headers"]["RequestId"];
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/problem+json": components["schemas"]["Problem"];
+                };
+            };
         };
     };
     listSales: {

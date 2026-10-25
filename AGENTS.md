@@ -12,7 +12,7 @@ Current frontend state (2026-10-25): Sales History on `feat/sales-history` (DM57
 
 ## Commands
 - Database (local): `docker compose up -d db` (healthy: `db ... Started`)
-- Service build and test **(verified 2026-10-23)**: `cd service && ./mvnw verify` (healthy: `BUILD SUCCESS`; 88 tests on `feat/backend-api`, 2026-10-25). Needs **Docker Desktop running** for Testcontainers (Postgres 17). On Windows Docker Desktop is installed per-user at `%LOCALAPPDATA%\Programs\DockerDesktop`.
+- Service build and test **(verified 2026-10-23)**: `cd service && ./mvnw verify` (healthy: `BUILD SUCCESS`; 95 tests on `feat/contract-v0-2`, 2026-10-25). Needs **Docker Desktop running** for Testcontainers (Postgres 17). On Windows Docker Desktop is installed per-user at `%LOCALAPPDATA%\Programs\DockerDesktop`.
 - Undo migrations (rollback): `cd service && ./mvnw -Pundo -Dundo.target=<n-1> exec:java` with `DATABASE_JDBC_URL`, `DATABASE_USERNAME`, `DATABASE_PASSWORD` set (verified by `MigrationRollbackIT`; not yet run against a real database)
 - Regenerate the demo seed: `python tools/seed/generate_monday_seed.py` (from the repository root) rewrites `service/src/main/resources/db/seed/R__seed_demo.sql`. Never edit the SQL by hand. `SeedVerificationIT` checks it. The seed runs only where `spring.flyway.locations` includes `classpath:db/seed` (the demo profile), and does nothing on a database that already has data.
 - Concurrency evidence (step 12) **(verified 2026-10-25)**: on `evidence/no-stock-guard`, `cd service && ./mvnw clean verify -Dit.test=SaleConcurrencyIT -Dtest=NoUnitTests -Dsurefire.failIfNoSpecifiedTests=false` must give `BUILD FAILURE`. On the sale branch it must give `BUILD SUCCESS`. Logs: `docs/evidence/concurrency/`.

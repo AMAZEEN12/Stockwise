@@ -23,7 +23,7 @@ Handover written 2026-10-25 (evening, the day before the Monday 26 Oct checkpoin
   3. **Victor Oyeleke:** check the web against the real service (locally first: `docker compose up -d db`, then the service with profiles `local,demo`, then `VITE_API_BASE_URL=http://localhost:8080/api/v1`). Demo logins: `owner@`, `assistant@` and `admin@stockwise.test`, password `Stockwise-Demo-2026`. The `@stockwise.demo` accounts in `web/.env.example` belong to the mock only.
   4. **All:** run the full Monday journey from a clean browser on the deployed site (intent S7), then rehearse the 10 slides. Use [docs/demo-runbook.md](../docs/demo-runbook.md).
   5. **Isaac Bassey:** add his half of the v0.1.0 contract sign-off in `decisions.md` §3 (Nnaemeka's half is recorded). Decide the v0.1.1 gaps: there is no `Problem.code` value for a 500 (the service sends `INTERNAL_ERROR`), and 405/415 reuse `VALIDATION_FAILED`.
-  6. **Nnaemeka Chukwuma:** the change `contract-v0-2` (the Victor-requested proposals A-D, MVP-ready) is at intake. Continue from [sdlc/contract-v0-2/WORKLOG.md](contract-v0-2/WORKLOG.md) (its next action is the path question).
+  6. **Nnaemeka Chukwuma:** the change `contract-v0-2` (the Victor-requested proposals A-D, MVP-ready) is in Build. Proposal A (retry-safe `POST /customers`, migration V4) is done on `feat/contract-v0-2`; B-D are next. Continue from [sdlc/contract-v0-2/WORKLOG.md](contract-v0-2/WORKLOG.md).
 - **Waiting on:** hosting accounts and secrets (Blessing); production approval and contract sign-off (Isaac). Whether Isaac has been added as a repository collaborator is unknown; earlier he wasn't (the owner is AMAZEEN12).
 - **Help outside the Data and rules area (logged as the brief requires):** the backend app, auth, controllers, Dockerfile and README (#12), and the template reorder (#13), were built by the agent for Nnaemeka Chukwuma. Isaac and Blessing should review them as their own.
 - **Local checkout:** the branch `docs/handover-log` holds only this handover update. The evidence branch `evidence/no-stock-guard` is pushed and must never be merged.
@@ -51,7 +51,7 @@ Handover written 2026-10-25 (evening, the day before the Monday 26 Oct checkpoin
 | release.md | accepted | Nnaemeka Chukwuma | 2026-10-23 |
 | monitoring.md | deferred (DM31) | Team 3 | 2026-10-23 |
 | EXECUTION.md | written (runbook) | Nnaemeka Chukwuma | 2026-10-23 |
-| Change `contract-v0-2` (sdlc/contract-v0-2/) | intake; no artifact yet | | 2026-10-25 |
+| Change `contract-v0-2` (sdlc/contract-v0-2/) | Build; intent, plan and test-plan **draft**; proposal A implemented | | 2026-10-25 |
 
 ## Conventions and guidelines
 - **Stack and versions:** service: Java 25, Spring Boot 4, Flyway, JUnit + Testcontainers, PostgreSQL (DM1). Hosting: Vercel + Render + Neon, terms to verify (DM2). Auth: email+password, bcrypt, JWT bearer (DM3). Interface constraints from the brief: React interface with React Router (or equivalent) and Tailwind or plain CSS, typed models (no `any`); own HTTP service; free managed Postgres; GitHub Actions deploys both tiers; free tiers only.
@@ -461,6 +461,8 @@ The initial two browser-found defects were corrected in the implementation witho
   - Genie: PR #1 (scaffold) merged; branch `feat/backend-api` pushed, with no PR.
 
   Rewrote "Resume here" to the current state. Moved the earlier Resume-here bullets, unchanged, to the history block below. Created [sdlc/contract-v0-2/WORKLOG.md](contract-v0-2/WORKLOG.md) for the new change (intake: scope D1 = proposals A-D; path question open).
+
+- 2026-10-25 · agent (for Nnaemeka Chukwuma) · Change `contract-v0-2`, proposal A, on `feat/contract-v0-2`: contract v0.2.0 (optional `Idempotency-Key` on `POST /customers`), migration V4 with undo U4, and `CustomerIdempotencyIT`. Full build 95 tests green; the web is green against the regenerated types. Details: [sdlc/contract-v0-2/WORKLOG.md](contract-v0-2/WORKLOG.md).
 
 ### Earlier "Resume here" entries (moved at the 2026-10-25 handover; history, not current state)
 - **Role-landing publication completed (DM62), 2026-10-25:** feature commit 9fbcc87 and supplied-edit/publication commit 39322b9 were pushed before opening [PR #11](https://github.com/AMAZEEN12/Stockwise/pull/11) from feat/auth-role-landing into main. GitHub confirmed open, non-draft, unmerged and conflict-free. The ten supplied edits, including left-aligned product prices, are committed; eight inputs match verified snapshots byte-for-byte and router/shop-loader compile to equivalent JavaScript ASTs. Prior combined-tree QA remains applicable; only Markdown was added for publication. Sales History PR #10 is merged and origin/main is 367a891. Human review is next. Decided by Victor Oyeleke (publication/supplied edits); Codex (verification mechanics). Logged by Codex.
