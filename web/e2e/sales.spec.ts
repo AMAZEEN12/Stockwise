@@ -50,7 +50,7 @@ test('updated stock conflict retains zero row and blocks confirm until removal',
 test('corrected store credit shows 6000 applied and 150 remaining in simulation',async ({page},info) => {
   await setup(page); await page.route('**/sales',(route) => route.fulfill({status:201,json:receipt(route.request().postDataJSON())}));
   await page.goto('/app/sell'); await add(page,'Dettol 250ml',3); await add(page,'Milo Sachet 20g',5);
-  await page.getByRole('button',{name:'On credit',exact:true}).click(); await page.getByRole('combobox',{name:'Choose customer (required)'}).selectOption(customers[1].id);
+  await page.getByRole('button',{name:'On credit',exact:true}).click(); await page.getByRole('button',{name:'Choose customer (required)',exact:true}).click(); await page.getByRole('button',{name:/Bolu Adeyemi Settled Store credit/}).click(); await page.getByRole('button',{name:'Back to sale',exact:true}).click();
   await expect(page.locator('.credit-breakdown')).toContainText('−₦6,000.00'); await expect(page.locator('.sale-total-heading')).toContainText('₦150.00');
   await page.getByRole('heading',{name:'New sale',exact:true}).scrollIntoViewIfNeeded();
   await page.evaluate(async () => {await document.fonts.ready; if (document.activeElement instanceof HTMLElement) document.activeElement.blur(); window.scrollTo({top:0,behavior:'instant'}); await new Promise<void>((resolve) => requestAnimationFrame(() => requestAnimationFrame(() => resolve())));}); await page.screenshot({path:info.outputPath('store-credit-updated.png')});

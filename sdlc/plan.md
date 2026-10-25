@@ -2,9 +2,11 @@
 
 Derived from: [intent.md](intent.md) (accepted 2026-10-23), [spec.md](spec.md) (accepted 2026-10-23, revised with DM5-DM16) · Status: accepted
 Accepted by: Nnaemeka Chukwuma (2026-10-23) · Higher-risk sign-off: Isaac Bassey (team lead, DM7). Required for the sale transaction, the store-credit logic and every migration.
-Frontend phase 2 amendment accepted by Victor Oyeleke on 2026-10-24; logged by Codex (logging assistant). See DM32-DM36. Other area approvals are unchanged.
-Decisions in force: [decisions.md](../decisions.md) DM1-DM36 · Deployment: [deploy-plan.md](../deploy-plan.md)
+Frontend amendments DM32–DM40: Victor authorized Home/authentication implementation on 2026-10-24 after the design/API review. Codex logs scope, implementation choices and pending proposals separately. Other area approvals are unchanged.
+Decisions in force: [decisions.md](../decisions.md) DM1–DM43 · Deployment: [deploy-plan.md](../deploy-plan.md)
 Supporting skills: none
+
+Shared-component implementation amendment, 2026-10-25 (DM55), approved by Victor Oyeleke and logged by Codex: implement the seven reviewed alignment proposals on feat/shared-component-alignment. Reuse shared states, controls, notifications, dialogs, cards and badges; preserve current product/category, customer-create and sale/recovery contracts. Verify existing frontend, browser/axe and local API journeys, token contrast, new select/checkbox keyboard behavior, toast dismissal and confirmation guards. Additive shared API proposals and their owners are recorded in docs/shared-component-alignment.md.
 
 Shared-source documentation amendment, 2026-10-25 (DM53): four interface engineers, confirmed and approved by Victor Oyeleke; logged by Codex. Use [shared component source clarifications](../docs/shared-component-alignment.md) for Card's optional image area and the resolved Select/Checkbox token/border README notes at the reviewed revision. This amendment records source behavior; component migrations remain separate proposals.
 
@@ -74,6 +76,7 @@ This is the full build inventory, not a statement that every file already exists
 | `…/contract/ContractIT.java`: every response is validated against `contract/openapi.yaml` | N5 |
 
 ### Interface (`web/`), owned by Victor (DM32-DM36)
+Customer UI amendment, 2026-10-25 (DM50-DM51): implement Customer Picker first on feat/customer-picker, then Customers on feat/customers-ui with separate descriptive commits. Shared customer Formik/Yup form and generated models, one resource API/cache, existing GET/POST contract, user/service-bound uncertain-create recovery and no automatic customer POST retry. Reference inventory, exact-copy choice, safe current adapters and API proposals are in docs/customers-ui.md and docs/customers-contract-proposal.md. Verify desktop/mobile states, keyboard/axe, selection by UUID, pagination, creation/cache refresh, role/session changes and lost responses. Decided by Victor Oyeleke (scope/copy); Codex (implementation defaults). Logged by Codex.
 
 **Phase 2 deliverable:** create the exact folder tree in [docs/frontend-architecture.md](../docs/frontend-architecture.md), track empty leaf folders with `.gitkeep`, and create only one empty source file, `src/service/http-client.ts`. No package manifest, configuration, dependencies, API implementations, generated types, styles or screens are created yet. The root Java service, contract and delivery scaffolds remain with their area owners.
 

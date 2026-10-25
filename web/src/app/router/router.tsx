@@ -12,6 +12,7 @@ export const router = createBrowserRouter([
   { path: '/app', id: 'shop', Component: ShopLayout, loader: shopLoader, errorElement: <RouteErrorPage/>, children: [
     {index: true, loader: () => redirect('/app/products')},
     {path:'sell', lazy:async () => ({Component:(await import('../../features/sales/NewSalePage')).NewSalePage})},
+    {path:'customers', lazy:async () => ({Component:(await import('../../features/customers/CustomersPage')).CustomersPage})},
     {path:'receipts/:saleId', lazy:async () => ({Component:(await import('../../features/sales/ReceiptPage')).ReceiptPage})},
     {path: 'products', lazy: async () => ({Component: (await import('../../features/products/ProductsPage')).ProductsPage}), children: [
       {path: 'new', lazy: async () => ({Component: (await import('../../features/products/AddProductPage')).AddProductPage})},
