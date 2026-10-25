@@ -29,9 +29,9 @@ try {
   assert.ok(styles.font.includes('Inter Tight'));
   assert.equal(styles.offset, '2px');
   await page.getByRole('button', { name: 'Sign in', exact: true }).click();
-  await expect(page.getByRole('heading', { name: 'Welcome, Demo Owner.' })).toBeVisible();
+  await expect(page.getByRole('heading', { name: 'Products', exact: true })).toBeVisible();
   await page.reload();
-  await expect(page.getByRole('heading', { name: 'Welcome, Demo Owner.' })).toBeVisible();
+  await expect(page.getByRole('heading', { name: 'Products', exact: true })).toBeVisible();
   await page.getByRole('button', { name: 'Sign out' }).click();
   await expect(page).toHaveURL(/\/$/);
   console.log('PASS: actual mock 201/200, future session, demo autofill, canonical styles, browser sign-in, refresh and sign-out.');

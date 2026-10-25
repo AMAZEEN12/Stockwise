@@ -2,11 +2,18 @@
 import { createServer } from 'node:http';
 import { randomUUID } from 'node:crypto';
 import { mockUser, makeProducts, stockState } from './mock-data.mjs';
+import {loadEnv} from 'vite';
 
 const products = makeProducts();
-const user = {...mockUser, role: process.argv.find((arg) => arg.startsWith('--role='))?.slice(7) || 'OWNER'};
-if (!['OWNER','ASSISTANT','ADMIN'].includes(user.role)) throw new Error('Unknown mock role');
-const token = 'stockwise-contract-mock-token';
+const forcedRole=process.argv.find((arg)=>arg.startsWith('--role='))?.slice(7);
+if(forcedRole && !['OWNER','ASSISTANT','ADMIN'].includes(forcedRole))throw new Error('Unknown mock role');
+const demoEnv=loadEnv('development',process.cwd(),'VITE_DEMO_');
+const accounts=['OWNER','ASSISTANT','ADMIN'].map((role,index)=>({...mockUser,
+  id:index===0 ? mockUser.id : `a2222222-2222-4222-8222-${String(222222222222+index)}`,
+  role,displayName:`Demo ${role[0]+role.slice(1).toLowerCase()}`,
+  email:demoEnv[`VITE_DEMO_${role}_EMAIL`] || `${role.toLowerCase()}@stockwise.demo`,
+}));
+const sessions=new Map();
 const customers = [
   {id:'22222222-2222-4222-8222-222222222221',displayName:'Mama Chidi',balanceKobo:450000,storeCreditKobo:0,createdAt:'2026-10-24T08:41:00Z'},
   {id:'22222222-2222-4222-8222-222222222222',displayName:'Bolu Adeyemi',balanceKobo:0,storeCreditKobo:600000,createdAt:'2026-10-24T08:41:00Z'},
@@ -40,10 +47,15 @@ const server = createServer(async (request,response) => {
   } catch {problem(400,'VALIDATION_FAILED','Invalid JSON request.'); return;}
   if (url.pathname === '/auth/sessions' && request.method === 'POST') {
     if (typeof body.email !== 'string' || !/^[^@\s]+@[^@\s]+\.[^@\s]+$/.test(body.email) || typeof body.password !== 'string' || body.password.length < 8 || body.password.length > 128) {problem(400,'VALIDATION_FAILED','Check email and password.'); return;}
-    send(201,{accessToken:token,tokenType:'Bearer',expiresAt:new Date(Date.now()+8*60*60*1000).toISOString(),user}); return;
+    const user=forcedRole ? accounts.find((account)=>account.role===forcedRole) : accounts.find((account)=>account.email.toLowerCase()===body.email.trim().toLowerCase()) || accounts[0];
+    const token=`stockwise-simulation-${randomUUID()}`;const expiresAt=new Date(Date.now()+8*60*60*1000).toISOString();
+    sessions.set(token,{user,expiresAt});
+    send(201,{accessToken:token,tokenType:'Bearer',expiresAt,user}); return;
   }
   if (url.pathname === '/health') {send(200,{status:'UP',service:'stockwise',version:'development-simulation'}); return;}
-  if (request.headers.authorization !== `Bearer ${token}`) {problem(401,'UNAUTHENTICATED','Sign in again.'); return;}
+  const session=sessions.get(request.headers.authorization?.replace(/^Bearer /,''));
+  if(!session || Date.parse(session.expiresAt)<=Date.now()){problem(401,'UNAUTHENTICATED','Sign in again.');return;}
+  const user=session.user;
   if (url.pathname === '/me' && request.method === 'GET') {send(200,user); return;}
   if (url.pathname === '/products' && request.method === 'GET') {
     const q = (url.searchParams.get('q') || '').toLowerCase();
@@ -99,8 +111,9 @@ const server = createServer(async (request,response) => {
     const key = request.headers['idempotency-key'];
     if (!isUuid(key)) {problem(400,'VALIDATION_FAILED','A UUID Idempotency-Key is required.'); return;}
     const serialized = JSON.stringify(body);
-    if (submissions.has(key)) {
-      const saved = submissions.get(key);
+    const submissionKey=`${user.id}:${key}`;
+    if (submissions.has(submissionKey)) {
+      const saved = submissions.get(submissionKey);
       if (saved.body !== serialized) {problem(422,'IDEMPOTENCY_KEY_REUSED','This key was already used with a different request.'); return;}
       send(201,saved.sale); return;
     }
@@ -125,7 +138,7 @@ const server = createServer(async (request,response) => {
     for (const line of lines) {const product = products.find((item) => item.id === line.productId); product.quantity -= line.quantity; product.version++; product.updatedAt = new Date().toISOString();}
     if (customer) {customer.storeCreditKobo -= applied; if (body.paymentType === 'CREDIT') customer.balanceKobo += totalKobo-applied;}
     const sale = {id:randomUUID(),reference:`S-${String(sales.length+1).padStart(6,'0')}`,paymentType:body.paymentType,...(body.customerId ? {customerId:body.customerId} : {}),...(body.dueDate ? {dueDate:body.dueDate} : {}),totalKobo,lines,createdBy:user.id,createdAt:new Date().toISOString()};
-    sales.unshift(sale); submissions.set(key,{body:serialized,sale}); response.setHeader('Location',`/sales/${sale.id}`); send(201,sale); return;
+    sales.unshift(sale); submissions.set(submissionKey,{body:serialized,sale}); response.setHeader('Location',`/sales/${sale.id}`); send(201,sale); return;
   }
   if (/^\/sales\/[^/]+$/.test(url.pathname) && request.method === 'GET') {
     const sale = sales.find((item) => item.id === url.pathname.split('/')[2]); if (!sale) {problem(404,'NOT_FOUND','Sale not found.'); return;} send(200,sale); return;
@@ -134,4 +147,4 @@ const server = createServer(async (request,response) => {
 });
 const port=Number(process.env.DEVELOPMENT_API_PORT || 4710);
 if(!Number.isInteger(port) || port<1024 || port>65535)throw new Error('Invalid DEVELOPMENT_API_PORT');
-server.listen(port,'127.0.0.1',() => console.log(`Development simulation listening on http://127.0.0.1:${port} (${user.role}). In-memory demonstration data only; no credential or backend-rule proof.`));
+server.listen(port,'127.0.0.1',() => console.log(`Development simulation listening on http://127.0.0.1:${port} (${forcedRole || 'per-account demo roles'}). In-memory demonstration data only; no credential or backend-rule proof.`));

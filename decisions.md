@@ -242,6 +242,25 @@ Prior implementation verification remains in docs/sales-history-ui.md and WORKLO
 
 Publication confirmed: feature commit `761c5c2` and supplied-formatting/publication commit `d45a5ec` were pushed before creating [PR #10](https://github.com/AMAZEEN12/Stockwise/pull/10), title `feat(sales): add responsive sales history and filters`, from `feat/sales-history` into `main`. GitHub confirmed `open`, non-draft, unmerged, and mergeable without conflicts at initial head `d45a5ecaecb4740252d712d1817ab0d1d0e9c75e`. This follow-up records the actual publication on the same branch. Logged by Codex on 2026-10-25.
 
+### Authentication role landing, 2026-10-25
+
+| ID | Date | Decision | Reason | Decided by | Logged by |
+|----|------|----------|--------|------------|-----------|
+| DM60 | 2026-10-25 | Replace the temporary Workspace screen with existing role landing pages: OWNER Products, ASSISTANT Sell, ADMIN Sales History. Demo buttons fill credentials only; users explicitly select Sign in. Use the authenticated service role, retain permitted return destinations, and redirect legacy /workspace bookmarks. Supersedes DM40's Workspace handoff only; retains its fill-only demo behavior. The earlier immediate-login selection was withdrawn before implementation | Victor reviewed the questions again, selected these final choices, then authorized implementation. No separate dashboard designs or new API are requested | Victor Oyeleke | Codex |
+| DM61 | 2026-10-25 | Implement on feat/auth-role-landing. Resolve destinations through fresh GET /me, synchronize the verified user, reset account cache after login, allow only known internal return paths, and preserve permission/uncertain-write guards. Give development simulation accounts separate identities/tokens and scope simulated idempotency by user; retain explicit --role override. Update the obsolete Workspace assertions/smoke steps to the approved workflow while retaining login, error, loading, duplicate-submit, refresh and logout assertions. Preserve all ten pre-existing user edits and stage only owned changes | This is an authorized workflow feature change, rather than a fix that weakens a failing test; the old temporary welcome-page expectation no longer describes the chosen product behavior. Independent browser/simulation checks must verify role isolation | Codex (technical implementation and verification within Victor's scope) | Codex |
+
+Decided by and approved by Victor Oyeleke for DM60 scope; logged by Codex. Contract paths, payloads, tokens and permissions remain service-owned; no new endpoint, role-selection request field, dashboard contract, backend migration or extra engineer approval is introduced.
+
+### Authentication role-landing publication, 2026-10-25
+
+| ID | Date | Decision | Reason | Decided by | Logged by |
+|----|------|----------|--------|------------|-----------|
+| DM62 | 2026-10-25 | Confirm role-landing feature commit 9fbcc87, commit the ten preserved supplied edits, push feat/auth-role-landing and open a PR into main. Retain the supplied formatting and left-aligned product prices. Sales History PR #10 is now merged; current origin/main is 367a891. Preserve human review gates | Victor explicitly requested committing and making a PR. Eight supplied files match the previously tested snapshots byte-for-byte; router/shop-loader compile to equivalent JavaScript ASTs after formatting | Victor Oyeleke (publication and supplied edits); Codex (verification and publication mechanics) | Codex |
+
+The previously recorded lint/typecheck, 27 unit tests, 86 browser scenarios, actual role simulation, contract lint and build were run against the combined working tree, including these supplied edits. Publication adds Markdown only beyond those verified inputs; no runtime suite is repeated. Invalid JAVA_HOME and the existing bundle warning remain disclosed. Publication supplies neither human approval nor backend authentication evidence. No merge or deployment is authorized by this publication request.
+
+Publication confirmed: feature commit `9fbcc87` and supplied-edit/publication commit `39322b9` were pushed before creating [PR #11](https://github.com/AMAZEEN12/Stockwise/pull/11), `feat(auth): route sign-in to service-verified role pages`, from `feat/auth-role-landing` into `main`. GitHub confirmed open, non-draft, unmerged and conflict-free at initial head `39322b99b4f44a9eaed07dc80f4bc104e8590a7c`. This follow-up records the actual publication on the same branch. Human review remains next. Logged by Codex on 2026-10-25.
+
 ## 3. Contract change log
 
 | Date | Change | Why | Agreed by (two engineers) |

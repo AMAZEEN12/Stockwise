@@ -89,3 +89,7 @@ If a test fails, fix the code, not the test. Never skip, disable or delete a fai
 
 ## Lifecycle work in progress
 Artifacts live in `sdlc/`. Before doing any work, read `sdlc/WORKLOG.md` first: it holds the current state, the next action, every decision made so far, and the agreed conventions. Continue from its "Resume here" section, follow its decisions and conventions, and update it as you work. Then read `sdlc/intent.md`, `sdlc/spec.md` and `sdlc/plan.md` before changing code. Product decisions are in `decisions.md`.
+
+## Authentication role landing (DM60-DM61, 2026-10-25)
+
+Victor selected credential-fill demo buttons plus explicit Sign in. After fresh GET /me, OWNER lands on Products, ASSISTANT on Sell, ADMIN on Sales History. /workspace is a compatibility redirect; no welcome UI or new dashboard is implemented. Keep account roles service-owned and simulation sessions separate. See [implementation](docs/auth-role-landing.md). Decided by Victor Oyeleke; technical choices/logged by Codex.
