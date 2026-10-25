@@ -240,6 +240,8 @@ Details and pending API-owner clarifications: [Sales History implementation](doc
 
 Prior implementation verification remains in docs/sales-history-ui.md and WORKLOG: 23 unit tests, a full 74-scenario regression run, then 18 final history checks after the narrow client timestamp correction, plus the actual simulation/keyboard journey. No runtime tests were repeated for formatting/Markdown-only publication changes. Backend JAVA_HOME and existing bundle warning, visual differences and pending API semantics remain disclosed. No additional engineer approval is inferred.
 
+Publication confirmed: feature commit `761c5c2` and supplied-formatting/publication commit `d45a5ec` were pushed before creating [PR #10](https://github.com/AMAZEEN12/Stockwise/pull/10), title `feat(sales): add responsive sales history and filters`, from `feat/sales-history` into `main`. GitHub confirmed `open`, non-draft, unmerged, and mergeable without conflicts at initial head `d45a5ecaecb4740252d712d1817ab0d1d0e9c75e`. This follow-up records the actual publication on the same branch. Logged by Codex on 2026-10-25.
+
 ## 3. Contract change log
 
 | Date | Change | Why | Agreed by (two engineers) |

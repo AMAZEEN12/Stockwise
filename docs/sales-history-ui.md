@@ -55,3 +55,5 @@ All 12 supplied states were measured at their exact logical viewports and 2x exp
 | mobile | success | 11.95% |
 
 Reports/captures stay in ignored local QA folders; all 110 local design PNGs remain untracked. Scope approved by Victor Oyeleke; technical choices and validation logged by Codex. Human code-owner review and applicable sale/store-credit sign-off remain required before merging. No new PR, merge or deployment was requested/performed for this feature.
+
+Publication follow-up (2026-10-25, DM59): Victor subsequently requested publication. Feature 761c5c2 and formatting/publication d45a5ec were pushed before opening [PR #10](https://github.com/AMAZEEN12/Stockwise/pull/10) into main. The three supplied CSS edits are formatting-only by normalized PostCSS AST comparison; original behavior/QA evidence is retained. Human review is next. No merge/deployment was performed. Decided by Victor Oyeleke; logged by Codex.
