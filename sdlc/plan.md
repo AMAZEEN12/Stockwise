@@ -6,6 +6,8 @@ Frontend phase 2 amendment accepted by Victor Oyeleke on 2026-10-24; logged by C
 Decisions in force: [decisions.md](../decisions.md) DM1-DM36 · Deployment: [deploy-plan.md](../deploy-plan.md)
 Supporting skills: none
 
+Shared-source documentation amendment, 2026-10-25 (DM53): four interface engineers, confirmed and approved by Victor Oyeleke; logged by Codex. Use [shared component source clarifications](../docs/shared-component-alignment.md) for Card's optional image area and the resolved Select/Checkbox token/border README notes at the reviewed revision. This amendment records source behavior; component migrations remain separate proposals.
+
 All paths are relative to the **Stockwise repository root** (the local `stockwise/` folder, DM19). Java package root: `ng.tesa.stockwise`.
 
 ## Area owners (DM8, DM21)

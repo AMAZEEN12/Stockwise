@@ -12,3 +12,7 @@ Record actual AI use, human decisions and verification. Do not include credentia
 - Review finding: local self-review found that blank lines before newly appended Markdown decision/question rows split the existing tables. Removed the blank lines before committing and included table continuity in the static verification.
 - Verification: exact folder/file set, zero-byte placeholders and HTTP client, existing local Markdown link targets, decision IDs and table continuity, staged scope and whitespace. Application/service/contract checks cannot run because their scaffolds do not exist; no runtime passing result is claimed. Publication evidence belongs in WORKLOG.md and the PR.
 - Publication: baseline `176fc3a` on main; starter `45f49c6` on `chore/web-structure`; [PR #1](https://github.com/AMAZEEN12/Stockwise/pull/1) opened into main for human review. Initial remote heads matched local refs. The connector could read but not create the PR (403); the Git credentials that successfully pushed the branches were used for the authorized PR creation without displaying or storing credential values in the project. A docs-only follow-up records this outcome; no merge or deployment was performed.
+
+## 2026-10-25: Approved shared-source documentation correction
+
+- Victor Oyeleke confirmed and approved four interface engineers and the Card and Select/Checkbox source clarifications (DM53). Codex updated Markdown and retained the original copy-in provenance. See [source clarifications](shared-component-alignment.md). Component migration proposals remain separate.

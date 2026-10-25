@@ -1,6 +1,6 @@
 # Frontend starter and conventions
 
-Owner and decider: Victor Oyeleke (Interface). Logged by: Codex (logging assistant), 2026-10-24. Decisions: DM32-DM36 in [decisions.md](../decisions.md). Nnaemeka Chukwuma remains the existing decision-log owner; this document does not attribute Victor's decisions to Team 3 or the other interface engineers.
+Owner: Victor Oyeleke (Interface). Logged by: Codex, 2026-10-24; shared-source clarification approved by Victor Oyeleke on 2026-10-25 (DM53). Decisions are in [decisions.md](../decisions.md). The shared agreement covers four interface engineers; implementation choices and proposals are identified separately. Nnaemeka remains the existing decision-log owner.
 
 ## Current deliverable
 
@@ -111,9 +111,9 @@ Login-specific references: Syne 800 wordmark (200 px/0.92 desktop, `min(50px, 13
 
 Keep the foundational colors, type, spacing, radii and focus treatment app-wide (DM34). Do not extrapolate unspecified success/warning colors, font delivery, responsive layouts or component states from this image. Both invalid-credential and network-error behavior must be considered at every supported screen size; their appearance on different reference frames does not restrict which device can experience them.
 
-## Pending agreement and phase 3 questions
+## Shared agreement and remaining questions
 
-`shared-component-set-plan.pdf` (proposal dated 22 Oct 2026) is context, not an adopted agreement or a request to create another repository. Its 14-piece list, Radix foundation, copy-in repo, assignments (including Dialog/Toast for Victor), interfaces and deadlines remain unconfirmed. Shadcn is not required. Adopt the foundation and dependencies the interface engineers actually agree upon, recording their actual sign-off. The proposed React Hook Form compatibility does not supersede Victor's Formik/Yup selection; compatibility must be discussed in the shared agreement.
+DM37 adopts the four engineers' shared copy-in source; Victor confirmed the upstream count and approved this correction in DM53. The earlier PDF is historical context. Use the pinned source for actual component behavior where README notes conflict with it: Card supports text-only content, and Select/Checkbox already use shared CSS variables and input-border tokens. See [approved shared-source clarifications](shared-component-alignment.md) for exact behavior and revision. Shadcn is not required. Formik/Yup remains Stockwise's form stack; native Input props and FormField render props support it. See the implementation document for the copied revision, dependencies and local extensions.
 
 Before implementing the affected phase 3 behavior, align on PD14:
 

@@ -68,7 +68,7 @@ Flyway Community has no undo migrations (that is a paid feature). Options: (a) a
 **Who decides:** Data and rules owner. **Status:** resolved → DM16. Proposed: 20 products (including zero-stock, at-threshold and archived), 5 customers (one with credit), 7 days of sales, and one demo account per role. The full volumes (120 / 60 days / 14) come after Monday.
 
 ### PD13: Cross-team shared-component agreement
-**Who decides:** the four interface engineers together. **Status:** UNRESOLVED; Victor confirms the agreement has not concluded (2026-10-24).
+**Who decides:** the four interface engineers together. Victor Oyeleke confirmed the correct count on 2026-10-25 (DM53). **Status:** resolved on 2026-10-24 → DM37; DM53 corrects the engineer count. The earlier pending proposal below is retained as historical context; DM37 records the adopted copy-in source.
 
 The eight-page `shared-component-set-plan.pdf` is a proposal. Radix, copy-in distribution, component interfaces, the work split and dates are not accepted commitments. Shadcn is not a Stockwise requirement (DM35). Record the actual agreed foundation, token names, Formik/Yup compatibility, component interfaces, distribution and approving engineers before adoption. Do not create a shared repository or assign Victor Dialog/Toast based only on the PDF.
 
@@ -119,6 +119,8 @@ Questions include session persistence and expiry during pending writes, recovery
 
 ### Frontend implementation decisions, 2026-10-24
 
+DM37's original wording is retained as history. DM53 supersedes its reference to five engineers: Victor confirmed that the upstream count of four is correct.
+
 | ID | Date | Decision | Reason | Decided by | Logged by |
 |----|------|----------|--------|------------|-----------|
 | DM37 | 2026-10-24 | Adopt [interface-eng-shared-components](https://github.com/spr-tech/interface-eng-shared-components) as the five engineers' agreed copy-in interface source. React/TypeScript/Tailwind/Radix; preserve component ownership and token names, replace neutral values with Stockwise values. Supersedes DM35's pending status and resolves PD13 | Victor reports the agreement; upstream still names four engineers, so no fifth name or extra approval is invented | Five interface engineers, as reported by Victor Oyeleke | Codex |
@@ -151,6 +153,22 @@ No registration endpoint, real account, server-authentication implementation or 
 | DM43 | 2026-10-24 | Commit Victor's recent HomePage/CSS changes and the 16 design references under web/Screens before pushing feat/auth-ui and opening a PR into main. Preserve the supplied headline punctuation, removed description, 320px desktop coin offset and CSS formatting. Treat Screens as versioned design inputs, not runtime assets; no automatic merge/deployment | Victor explicitly requested committing his recent changes before creating the PR | Victor Oyeleke | Codex |
 
 Visual-review note: the supplied CSS still hides the headline on mobile. With the description removed, mobile Home has no supporting copy; this is retained as supplied for human review rather than silently changed during publication.
+
+### Shared-source documentation correction, 2026-10-25
+
+| ID | Date | Decision | Reason | Decided by | Logged by |
+|----|------|----------|--------|------------|-----------|
+| DM53 | 2026-10-25 | Correct the shared agreement to four interface engineers, matching upstream; supersede DM37's engineer count only. Record that Card supports text-only content when image is omitted, and Select/Checkbox already use shared CSS variables and --color-border-input for their control edges at reviewed revision dbe1cac1f5e6e0838331e35b8da482ab4a1497fc. Update current guidance and retain corrected historical provenance | Victor confirmed upstream is correct and approved recording the resolved Card and Select/Checkbox README discrepancies. Documentation scope only; implementation proposals remain pending | Victor Oyeleke | Codex |
+
+**Approved by:** Victor Oyeleke. **Logged by:** Codex. Details, immutable source links and component ownership: [shared component source clarifications](docs/shared-component-alignment.md). The original copy-in revision remains unchanged; no runtime, dependency or API-contract update is approved by this documentation correction.
+
+### Shared-source documentation publication, 2026-10-25
+
+| ID | Date | Decision | Reason | Decided by | Logged by |
+|----|------|----------|--------|------------|-----------|
+| DM54 | 2026-10-25 | Commit DM53 and its related Markdown guidance on fix/shared-component-documentation, based directly on current origin/main, then push and open a PR into main. Preserve the original customer branch and all unrelated UI edits. Adapt the approved documentation correction to main's older documentation without importing unmerged feature commits | Victor explicitly requested a PR for the recent documentation change and confirmation of a commit | Victor Oyeleke (publication scope); Codex (isolated checkout and documentation adaptation) | Codex |
+
+Publication confirmed: commit `285cf91`, branch `fix/shared-component-documentation`, [PR #6](https://github.com/AMAZEEN12/Stockwise/pull/6), base `main`, state `open`, draft `false`, merged `false`. Documentation checks passed; original working files and branch were preserved. Logged by Codex on 2026-10-25.
 
 ## 3. Contract change log
 
