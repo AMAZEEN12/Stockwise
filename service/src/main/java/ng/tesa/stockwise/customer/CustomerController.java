@@ -1,6 +1,7 @@
 package ng.tesa.stockwise.customer;
 
 import java.net.URI;
+import java.util.UUID;
 
 import jakarta.validation.Valid;
 import jakarta.validation.constraints.Max;
@@ -9,13 +10,16 @@ import jakarta.validation.constraints.NotBlank;
 import jakarta.validation.constraints.Size;
 
 import org.springframework.http.ResponseEntity;
+import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestBody;
+import org.springframework.web.bind.annotation.RequestHeader;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
 
+import ng.tesa.stockwise.auth.CurrentUser;
 import ng.tesa.stockwise.common.Page;
 
 /** Customer endpoints (spec R7). Adding a customer is OWNER or ASSISTANT (SecurityConfig). */
@@ -43,9 +47,18 @@ public class CustomerController {
         return customers.list(q, new Page.Request(page, size));
     }
 
+    /**
+     * With an {@code Idempotency-Key} (optional, contract v0.2.0) a retry returns the original
+     * customer; without one, every call creates (v0.1.0 behaviour).
+     */
     @PostMapping
-    public ResponseEntity<Customer> create(@Valid @RequestBody CreateRequest request) {
-        Customer customer = customers.create(new Customer.New(request.displayName(), request.contactPlaceholder()));
+    public ResponseEntity<Customer> create(@RequestHeader(name = "Idempotency-Key", required = false) UUID idempotencyKey,
+                                           @Valid @RequestBody CreateRequest request,
+                                           @AuthenticationPrincipal CurrentUser user) {
+        var newCustomer = new Customer.New(request.displayName(), request.contactPlaceholder());
+        Customer customer = idempotencyKey == null
+                ? customers.create(newCustomer)
+                : customers.create(newCustomer, idempotencyKey, user.id());
         return ResponseEntity.created(URI.create("/api/v1/customers/" + customer.id())).body(customer);
     }
 }
