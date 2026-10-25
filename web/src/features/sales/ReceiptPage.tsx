@@ -20,6 +20,6 @@ export function ReceiptPage() {
       {!!saved?.creditApplied && <div className="credit-breakdown"><p><span>Subtotal</span><span>{formatMoney(sale.totalKobo)}</span></p><p><span>Store credit applied</span><span>−{formatMoney(saved.creditApplied)}</span></p></div>}
       <div className="receipt-total"><strong>Total</strong><strong>{formatMoney(sale.totalKobo-(saved?.creditApplied || 0))}</strong></div><p className="micro">{sale.paymentType === 'CREDIT' ? 'On credit' : 'Paid'}{saved?.customerName ? ` · ${saved.customerName}` : ''}</p>
       {saved?.simulated && <small className="settlement-note">Simulated demonstration receipt</small>}
-    </section><div className="receipt-actions"><Link className="primary-link" to="/app/sell">New sale</Link><Button size="lg" variant="secondary" disabled aria-describedby="history-note">View in Sales</Button></div><p id="history-note" className="micro">Sales history is coming later.</p>
+    </section><div className="receipt-actions"><Link className="primary-link" to="/app/sell">New sale</Link><Button size="lg" variant="secondary" disabled aria-describedby="history-note">View in Sales</Button></div><p id="history-note" className="micro">Open Sales from the menu to view history. Receipt linking is coming later.</p>
   </>}</div>;
 }

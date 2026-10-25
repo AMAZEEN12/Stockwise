@@ -34,3 +34,5 @@ Product POST is non-idempotent in v0.1.0: do not automatically retry an uncertai
 ## Outstanding design decisions
 
 New sale and Receipt are in scope; Sales history design is deferred by Victor. View in Sales remains visibly unavailable with an explanation until that destination exists. New bordered quantity controls from the updated frames take precedence across cart states. The 9,999,999-unit money-limit example is illustrative and exceeds the actual 10,000-unit contract limit; the UI enforces the contract. Pending-decision annotation badges are design notes, not production controls.
+
+Sales History follow-up, 2026-10-25 (DM57): Victor subsequently authorized the supplied history screens using existing GET /sales and ID-only responses. This supersedes the earlier history deferral for this implementation scope only. History entries remain non-interactive; receipt linking remains deferred. See sales-history-ui.md for chosen scope and pending semantics.

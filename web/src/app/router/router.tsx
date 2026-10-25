@@ -13,6 +13,7 @@ export const router = createBrowserRouter([
     {index: true, loader: () => redirect('/app/products')},
     {path:'sell', lazy:async () => ({Component:(await import('../../features/sales/NewSalePage')).NewSalePage})},
     {path:'customers', lazy:async () => ({Component:(await import('../../features/customers/CustomersPage')).CustomersPage})},
+    {path:'sales', lazy:async () => ({Component:(await import('../../features/sales/SalesHistoryPage')).SalesHistoryPage})},
     {path:'receipts/:saleId', lazy:async () => ({Component:(await import('../../features/sales/ReceiptPage')).ReceiptPage})},
     {path: 'products', lazy: async () => ({Component: (await import('../../features/products/ProductsPage')).ProductsPage}), children: [
       {path: 'new', lazy: async () => ({Component: (await import('../../features/products/AddProductPage')).AddProductPage})},

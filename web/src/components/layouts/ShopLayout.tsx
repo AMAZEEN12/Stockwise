@@ -18,7 +18,7 @@ export function ShopLayout() {
     <NavLink to="/app/sell" onClick={() => setMenu(false)}>Sell</NavLink>
     <NavLink to="/app/products" onClick={() => setMenu(false)}>Products</NavLink>
     <NavLink to="/app/customers" onClick={() => setMenu(false)}>Customers</NavLink>
-    <Button variant="ghost" disabled title="Sales history is coming later">Sales</Button>
+    <NavLink to="/app/sales" onClick={() => setMenu(false)}>Sales</NavLink>
   </nav>;
   const account = <div className="shop-account"><p>{user.displayName}</p><StatusBadge appearance="outline" className="role-badge">{user.role}</StatusBadge>
     <Button variant="ghost" className="sign-out" onClick={() => {clearSession(); store.dispatch(authApi.util.resetApiState()); void navigate('/');}}>Sign out</Button>

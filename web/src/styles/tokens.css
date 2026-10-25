@@ -1,17 +1,17 @@
 :root {
   color-scheme: dark;
-  --color-bg: #0B0B0A;
+  --color-bg: #0b0b0a;
   --color-surface: #121211;
   --color-border: rgb(193 193 193 / 20%);
-  --color-border-input: #8C8C8A;
-  --color-text: #FFFFFF;
-  --color-text-muted: #C1C1C1;
-  --color-primary: #B7E737;
-  --color-primary-hover: #C4EE54;
-  --color-on-primary: #0B0B0A;
-  --color-danger: #FF8F85;
-  --color-danger-hover: #FFA79F;
-  --color-on-danger: #0B0B0A;
+  --color-border-input: #8c8c8a;
+  --color-text: #ffffff;
+  --color-text-muted: #c1c1c1;
+  --color-primary: #b7e737;
+  --color-primary-hover: #c4ee54;
+  --color-on-primary: #0b0b0a;
+  --color-danger: #ff8f85;
+  --color-danger-hover: #ffa79f;
+  --color-on-danger: #0b0b0a;
   --color-success: var(--color-primary);
   --color-on-success: var(--color-on-primary);
   --color-warning: var(--color-text-muted);
@@ -22,11 +22,15 @@
   --color-overlay: #000000;
   --color-overlay-auth: rgb(0 0 0 / 52%);
   --color-overlay-shop: rgb(0 0 0 / 65%);
-  --color-danger-subtle: color-mix(in srgb, var(--color-danger) 8%, transparent);
+  --color-danger-subtle: color-mix(
+    in srgb,
+    var(--color-danger) 8%,
+    transparent
+  );
   --shadow-dialog: 0 20px 60px rgb(0 0 0 / 35%);
   --shadow-coin: 0 30px 32px rgb(0 0 0 / 65%);
   --shadow-coin-glow: 0 0 18px rgb(183 231 55 / 9%);
-  --color-focus: #B7E737;
+  --color-focus: #b7e737;
   --focus-ring-width: 3px;
   --focus-ring-offset: 2px;
   --radius-sm: 10px;
@@ -39,10 +43,10 @@
   --radius-panel: 12px;
   --radius-pill: 999px;
   --radius-circle: 50%;
-  --font-sans: 'Inter Tight', sans-serif;
-  --font-wordmark: 'Syne', sans-serif;
-  --font-accent: 'Instrument Serif', serif;
-  --font-mono: 'JetBrains Mono', monospace;
+  --font-sans: "Inter Tight", sans-serif;
+  --font-wordmark: "Syne", sans-serif;
+  --font-accent: "Instrument Serif", serif;
+  --font-mono: "JetBrains Mono", monospace;
 }
 
 @theme inline {
@@ -51,6 +55,6 @@
   --color-lime: var(--color-primary);
   --color-muted: var(--color-text-muted);
   --color-error: var(--color-danger);
-  --font-sans: 'Inter Tight', sans-serif;
-  --font-mono: 'JetBrains Mono', monospace;
+  --font-sans: "Inter Tight", sans-serif;
+  --font-mono: "JetBrains Mono", monospace;
 }

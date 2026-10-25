@@ -84,6 +84,16 @@ const server = createServer(async (request,response) => {
     const customer = {...body,displayName:body.displayName.trim(),id:randomUUID(),balanceKobo:0,storeCreditKobo:0,createdAt:new Date().toISOString()};
     customers.push(customer);send(201,customer);return;
   }
+  if (url.pathname === '/sales' && request.method === 'GET') {
+    const page=Number(url.searchParams.get('page') || 0);const size=Number(url.searchParams.get('size') || 20);
+    const from=url.searchParams.get('from');const to=url.searchParams.get('to');const paymentType=url.searchParams.get('paymentType');const customerId=url.searchParams.get('customerId');
+    const validDate=(value)=>!value || (/^\d{4}-\d{2}-\d{2}$/.test(value) && Number.isFinite(Date.parse(value)) && new Date(value).toISOString().slice(0,10)===value);
+    if(!Number.isInteger(page) || page<0 || !Number.isInteger(size) || size<1 || size>100 || !validDate(from) || !validDate(to) || (from && to && from>to) || (paymentType && !['PAID','CREDIT'].includes(paymentType)) || (customerId && !isUuid(customerId))) {problem(400,'VALIDATION_FAILED','Check sale filters and pagination.');return;}
+    const start=from ? Date.parse(`${from}T00:00:00+01:00`) : -Infinity;
+    const end=to ? Date.parse(`${to}T00:00:00+01:00`)+86400000 : Infinity;
+    const items=sales.filter((sale)=>Date.parse(sale.createdAt)>=start && Date.parse(sale.createdAt)<end && (!paymentType || sale.paymentType===paymentType) && (!customerId || sale.customerId===customerId)).sort((a,b)=>b.createdAt.localeCompare(a.createdAt) || b.id.localeCompare(a.id));
+    send(200,{items:items.slice(page*size,(page+1)*size),page,size,totalItems:items.length});return;
+  }
   if (url.pathname === '/sales' && request.method === 'POST') {
     if (user.role === 'ADMIN') {problem(403,'FORBIDDEN','Admins cannot record sales.'); return;}
     const key = request.headers['idempotency-key'];

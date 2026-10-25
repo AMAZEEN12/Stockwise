@@ -223,6 +223,25 @@ Prior verification and its limits remain in WORKLOG and the implementation notes
 
 Publication confirmed: feature commit `9cc489b` and main-integration/publication commit `6f70072` were pushed before creating [PR #9](https://github.com/AMAZEEN12/Stockwise/pull/9), `feat(ui): align shared components and add customer screens`, from `feat/shared-component-alignment` into `main`. GitHub returned state `open`, draft `false`, merged `false`, initial head `6f7007254692f00dba0ed2db6ec4937a9d95fa10`. The description explicitly includes customer commits de97504/cb19935 and discloses prior QA limitations. This documentation follow-up records the confirmed result. Logged by Codex on 2026-10-25.
 
+### Sales History implementation, 2026-10-25
+
+| ID | Date | Decision | Reason | Decided by | Logged by |
+|----|------|----------|--------|------------|-----------|
+| DM57 | 2026-10-25 | Implement the supplied 12 Sales History frames on feat/sales-history and commit the completed feature descriptively. Use Today, Yesterday, Last 7 days. Keep rows/cards non-interactive and defer receipt navigation. Retain the current contract's customer/staff IDs; defer display-name snapshots | Victor confirmed the range options, chose a read-only list, then explicitly authorized implementation with the existing ID-only contract | Victor Oyeleke | Codex |
+| DM58 | 2026-10-25 | Use the existing GET /sales, generated models, shared components and Stockwise tokens. Show full IDs with explicit labels, use last successful retrieval for WAT freshness, validate money and page consistency, and retain stale rows on failures. Load more re-reads the displayed prefix; sorting/snapshot/settlement semantics remain proposals. Scope mobile avatar omission to this route and retain demonstration/account controls. Document visual differences caused by labels/IDs and verify all supplied states | Complete the chosen contract-first scope without fabricating names, successful writes or an atomic history snapshot | Codex (technical choices under Victor's implementation authorization) | Codex |
+
+Details and pending API-owner clarifications: [Sales History implementation](docs/sales-history-ui.md). Decided by and approved by Victor Oyeleke for DM57 scope; logged by Codex. No backend change, active contract edit or additional engineer approval is claimed.
+
+### Sales History publication, 2026-10-25
+
+| ID | Date | Decision | Reason | Decided by | Logged by |
+|----|------|----------|--------|------------|-----------|
+| DM59 | 2026-10-25 | Confirm Sales History feature commit 761c5c2, preserve and commit Victor's three current CSS formatting changes, push feat/sales-history and open a PR into main. Include the verified implementation, chosen ID-only contract and date/read-only scope. Current main 9e59806 already includes the earlier shared-component/customer foundation; do not republish it as new scope. Preserve human review gates; no automatic merge or deployment | Victor requested ensuring a commit exists before making the PR. Normalized PostCSS AST comparisons confirm the three stylesheet edits change formatting only, including equivalent hex case, decimal notation and quotes | Victor Oyeleke (publication and supplied formatting scope); Codex (verification and publication mechanics) | Codex |
+
+Prior implementation verification remains in docs/sales-history-ui.md and WORKLOG: 23 unit tests, a full 74-scenario regression run, then 18 final history checks after the narrow client timestamp correction, plus the actual simulation/keyboard journey. No runtime tests were repeated for formatting/Markdown-only publication changes. Backend JAVA_HOME and existing bundle warning, visual differences and pending API semantics remain disclosed. No additional engineer approval is inferred.
+
+Publication confirmed: feature commit `761c5c2` and supplied-formatting/publication commit `d45a5ec` were pushed before creating [PR #10](https://github.com/AMAZEEN12/Stockwise/pull/10), title `feat(sales): add responsive sales history and filters`, from `feat/sales-history` into `main`. GitHub confirmed `open`, non-draft, unmerged, and mergeable without conflicts at initial head `d45a5ecaecb4740252d712d1817ab0d1d0e9c75e`. This follow-up records the actual publication on the same branch. Logged by Codex on 2026-10-25.
+
 ## 3. Contract change log
 
 | Date | Change | Why | Agreed by (two engineers) |
