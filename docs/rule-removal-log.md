@@ -18,4 +18,6 @@ Method: a harness deletes the protection from the source file, runs only the nam
 | 2026-10-24 | R5: same key, different body | request-hash comparison deleted from `SaleService.replay` | `IdempotencyIT#sameKeyWithDifferentBodyIsRefused` | **Failed**: "Expecting code to raise a throwable" (the different body was answered with the old sale) | agent, for Nnaemeka Chukwuma |
 | 2026-10-24 | Deadlock avoidance | product-ID lock ordering deleted from `SaleService.record` | `SaleConcurrencyIT#oppositeLineOrdersDoNotDeadlock` | **Failed**: not every opposite-order cart was recorded (Postgres deadlock) | agent, for Nnaemeka Chukwuma |
 
-Still to come: the CI run of `SaleConcurrencyIT` on the `evidence/no-stock-guard` branch (EXECUTION step 12, needs `concurrency-evidence.yml`), and the R15 role check (`AuthorizationIT`, step 7).
+Step 12 local evidence (2026-10-25): branch `evidence/no-stock-guard` (107a3dd) removes the guard condition and the CHECK. `SaleConcurrencyIT` fails there (10 of 10 devices sold the last unit) and passes on `feat/sale-transaction`. Both logs are in [docs/evidence/concurrency/](evidence/concurrency/README.md).
+
+Still to come: the CI run of the same evidence (`concurrency-evidence.yml`, Blessing), and the R15 role check (`AuthorizationIT`, step 7).
