@@ -1,5 +1,7 @@
 # Test plan: Stockwise, stock and customer credit for one small shop
 
+2026-10-26 amendment, DM63-DM64 (scope decided by Victor Oyeleke; technical checks/logged by Codex): [sales usability sequence](../docs/sales-usability-plan.md). First catalogue branch covers immediate alphabetical products, paging/prefix reload, archived-only pages, out-of-stock disabling, name/reference search/reset, stale/error retry, query isolation, safe amounts and desktop/mobile keyboard/layout/axe. Retain all prior sale/recovery assertions. Run current contract lint, service verify, frontend lint/typecheck/unit/build and full browser regression; record actual outcomes and setup limits in WORKLOG. Later fix branches add regressions before the fix without subsequently editing them.
+
 Derived from: [spec.md](spec.md) (accepted 2026-10-23), [plan.md](plan.md) (accepted 2026-10-23) · Status: accepted (2026-10-23 by Nnaemeka Chukwuma)
 Decisions in force: [decisions.md](../decisions.md) DM1-DM25 (testing: DM22 coverage, DM23 test protection, DM24 visual, DM25 evals)
 Supporting skills: none
