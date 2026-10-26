@@ -12,6 +12,8 @@ Shared-source documentation amendment, 2026-10-25 (DM53): four interface enginee
 
 Sales usability amendment, 2026-10-26 (DM63-DM64): Victor authorized the five-item [sales usability sequence](../docs/sales-usability-plan.md), starting with a default searchable sale catalogue on feat/sale-product-catalog. Separate customer-balance, picker, quantity and coin branches follow from merged main, with human review/merge before dependent work. Item 1 uses existing product paging/search only; activity flags/order guarantees remain proposed until API owners agree. Decided by Victor Oyeleke (scope); Codex (catalogue mechanics). Logged by Codex.
 
+Sales quantity amendment, 2026-10-26 (DM66): after PR #22 merged, Victor chose selected-product counters inside catalogue rows, removal of the separate cart cards and sale-page empty-cart prompt, heading-level refresh, and a taller bounded results list. Implement on `fix/sale-quantity-controls` from merged main `9c00aac`, preserving DM65's customer drawer and all sale recovery, stock and submission guards. Customer balances remain contract-blocked and mobile coin visibility remains a later independent branch. Decided by Victor Oyeleke; logged by Codex.
+
 All paths are relative to the **Stockwise repository root** (the local `stockwise/` folder, DM19). Java package root: `ng.tesa.stockwise`.
 
 ## Area owners (DM8, DM21)

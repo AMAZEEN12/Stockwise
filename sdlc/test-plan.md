@@ -2,6 +2,8 @@
 
 2026-10-26 amendment, DM63-DM64 (scope decided by Victor Oyeleke; technical checks/logged by Codex): [sales usability sequence](../docs/sales-usability-plan.md). First catalogue branch covers immediate alphabetical products, paging/prefix reload, archived-only pages, out-of-stock disabling, name/reference search/reset, stale/error retry, query isolation, safe amounts and desktop/mobile keyboard/layout/axe. Retain all prior sale/recovery assertions. Run current contract lint, service verify, frontend lint/typecheck/unit/build and full browser regression; record actual outcomes and setup limits in WORKLOG. Later fix branches add regressions before the fix without subsequently editing them.
 
+2026-10-26 amendment, DM66 (decided by Victor Oyeleke; logged by Codex): verify selected rows remain visible across search/pagination, quantity controls stay horizontal with 44px targets, minus stops at one, typed limits and stock maxima remain enforced, zero-stock conflict rows remain removable and continue blocking confirmation, Refresh occupies the catalogue heading, genuine empty/no-result states remain, and 360px layouts have no horizontal overflow. Existing tests remain unchanged on this fix branch.
+
 Derived from: [spec.md](spec.md) (accepted 2026-10-23), [plan.md](plan.md) (accepted 2026-10-23) · Status: accepted (2026-10-23 by Nnaemeka Chukwuma)
 Decisions in force: [decisions.md](../decisions.md) DM1-DM25 (testing: DM22 coverage, DM23 test protection, DM24 visual, DM25 evals)
 Supporting skills: none

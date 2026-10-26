@@ -5,7 +5,6 @@ import { ConfirmDialog } from "../../components/ui/dialog";
 import { FormField } from "../../components/ui/form-field";
 import { Input } from "../../components/ui/input";
 import { Checkbox } from "../../components/ui/checkbox";
-import { EmptyState } from "../../components/ui/empty-state";
 import { LoadingState } from "../../components/ui/loading-state";
 import { useToast } from "../../components/ui/toast";
 import { StatusPanel } from "../../components/ui/status-panel";
@@ -530,120 +529,17 @@ export function NewSalePage() {
               )}
             </StatusPanel>
           )}
-          <SaleProductCatalogue disabled={frozen || invalidRecovery} onSelect={add} />
-          {!cart.length && (
-            <EmptyState
-              layout="inline"
-              className="empty-cart"
-              title="Add a product to start a sale"
-              description=""
-            />
-          )}
-          {cart.map((line) => (
-            <article
-              className={`cart-line${line.issue || line.quantity === 0 || line.quantity > 10000 ? " cart-line-error" : ""}`}
-              key={line.product.id}
-            >
-              <div className="cart-line-heading">
-                <strong>{line.product.name}</strong>
-                <span>
-                  {total === null
-                    ? "—"
-                    : formatMoney(
-                        sumKobo([
-                          {
-                            priceKobo: line.product.priceKobo,
-                            quantity: line.quantity,
-                          },
-                        ]),
-                      )}
-                </span>
-              </div>
-              <p className="micro">
-                {Number.isSafeInteger(line.product.priceKobo) &&
-                line.product.priceKobo >= 0
-                  ? formatMoney(line.product.priceKobo)
-                  : "—"}{" "}
-                each
-              </p>
-              <div className="quantity-controls">
-                <Button
-                  variant="ghost"
-                  className="icon-button"
-                  iconOnly
-                  aria-label={`Decrease ${line.product.name}`}
-                  disabled={frozen || line.quantity <= 0}
-                  onClick={() =>
-                    editQuantity(
-                      line.product.id,
-                      Math.max(0, line.quantity - 1),
-                    )
-                  }
-                >
-                  −
-                </Button>
-                <FormField label="Quantity" className="quantity-field">
-                  {(field) => (
-                    <Input
-                      {...field}
-                      aria-label={`Quantity for ${line.product.name}`}
-                      inputMode="numeric"
-                      value={line.quantity}
-                      disabled={frozen}
-                      onChange={(event) => {
-                        if (/^\d{0,7}$/.test(event.target.value))
-                          editQuantity(
-                            line.product.id,
-                            Number(event.target.value),
-                          );
-                      }}
-                    />
-                  )}
-                </FormField>
-                <Button
-                  variant="ghost"
-                  className="icon-button"
-                  iconOnly
-                  aria-label={`Increase ${line.product.name}`}
-                  disabled={
-                    frozen ||
-                    line.quantity >= Math.min(line.product.quantity, 10000)
-                  }
-                  onClick={() =>
-                    editQuantity(line.product.id, line.quantity + 1)
-                  }
-                >
-                  ＋
-                </Button>
-                <Button
-                  variant="ghost"
-                  className="remove-line"
-                  iconOnly
-                  aria-label={`Remove ${line.product.name}`}
-                  disabled={frozen}
-                  onClick={() => {
-                    setCart((current) =>
-                      current.filter(
-                        (item) => item.product.id !== line.product.id,
-                      ),
-                    );
-                  }}
-                >
-                  ×
-                </Button>
-              </div>
-              {(line.issue || line.quantity > 10000) && (
-                <p className="line-error">
-                  <span className="error-symbol" aria-hidden="true">
-                    !
-                  </span>
-                  {line.quantity > 10000
-                    ? "Quantity cannot exceed 10,000."
-                    : line.issue}
-                </p>
-              )}
-            </article>
-          ))}
+          <SaleProductCatalogue
+            disabled={frozen || invalidRecovery}
+            cart={cart}
+            onSelect={add}
+            onQuantityChange={editQuantity}
+            onRemove={(productId) =>
+              setCart((current) =>
+                current.filter((line) => line.product.id !== productId),
+              )
+            }
+          />
         </section>
         <aside className="sale-checkout" aria-label="Payment and total">
           <div className="payment-card">
