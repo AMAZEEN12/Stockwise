@@ -62,7 +62,7 @@
   flex-direction: column;
   flex: 1;
   min-height: 0;
-  overflow-y: auto;
+  overflow: hidden;
   overscroll-behavior: contain;
 }
 .customer-filter-bar {
@@ -102,10 +102,13 @@
 .customer-picker-list {
   display: grid;
   gap: 10px;
+  flex: 1;
+  min-height: 0;
   max-height: 280px;
   overflow-y: auto;
   overscroll-behavior: contain;
   padding-right: 4px;
+  padding-bottom: 16px;
 }
 .customer-option {
   display: flex;
@@ -379,6 +382,7 @@
   }
   .customer-picker-list {
     max-height: 220px;
+    padding-bottom: 16px;
   }
   .customer-option {
     font-size: 14px;
@@ -432,7 +436,8 @@
     padding: 14px 20px;
   }
   .customer-picker-list {
-    max-height: calc(100dvh - 270px);
+    max-height: calc(100dvh - 280px);
+    padding-bottom: 16px;
   }
 }
 
