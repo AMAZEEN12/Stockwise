@@ -4,10 +4,10 @@ Approved implementation scope: Victor Oyeleke, 2026-10-26 (DM63). Technical choi
 
 | Order | Branch | Required feature commit | State |
 |---|---|---|---|
-| 1 | feat/sale-product-catalog | feat(sales): show searchable product catalogue | Implementing from main 6bf48b8 |
-| 2 | feat/customer-credit-balances | feat(customers): distinguish debt and store credit | Await first PR merge and agreed activity contract |
-| 3 | fix/credit-customer-picker-responsive | fix(sales): keep credit customer picker within viewport | Queued |
-| 4 | fix/sale-quantity-controls | fix(sales): align quantity controls horizontally | Queued |
+| 1 | feat/sale-product-catalog | feat(sales): show searchable product catalogue | Merged in PR #21; follow-up drawer/docs merged in PR #22 |
+| 2 | feat/customer-credit-balances | feat(customers): distinguish debt and store credit | Await agreed independent activity fields |
+| 3 | fix/credit-customer-picker-responsive | fix(sales): keep credit customer picker within viewport | Completed by DM65 and merged in PR #22; removed from the remaining sequence |
+| 4 | fix/sale-quantity-controls | fix(sales): align quantity controls horizontally | Implemented in 9785810; PR #23 open for human review |
 | 5 | fix/mobile-coin-visibility | fix(ui): show coin control on mobile | Queued; actual coin is decorative |
 | Deferred | feat/product-popularity-sort | Agree after scope approval | No popularity implementation |
 
@@ -15,8 +15,9 @@ Approved implementation scope: Victor Oyeleke, 2026-10-26 (DM63). Technical choi
 
 - Debt is money owed by the customer; store credit is value held by the shop for that customer. Keep them separate; do not net them automatically. Applying store credit to a future purchase is a separate settlement rule, not repayment of existing debt.
 - Track each balance's activity independently. Unused balances show a dash; after relevant activity, display the amount, including zero through the shared formatter (currently two decimals). A paid sale alone does not activate either history. Retain balanceKobo/storeCreditKobo; propose hasDebtActivity/hasStoreCreditActivity derived authoritatively from financial history. Amounts alone cannot establish activity. See customers-contract-proposal.md; no other engineer's approval is inferred.
-- Preserve the compound desktop Dialog and mobile sheet, customer search/create/select, focus return and busy/uncertain-save safeguards. Bound the visible viewport and scroll results internally; verify mobile keyboard behaviour. No anchored desktop dropdown/flipping is required. Credit already requires customerId when paymentType is CREDIT in the contract, service and database.
+- Preserve the DM65 desktop right drawer and compact centered mobile modal, customer search/create/select, focus return and busy/uncertain-save safeguards. Bound the visible viewport and scroll results internally. Credit already requires customerId when paymentType is CREDIT in the contract, service and database.
 - Align decrement/input/increment horizontally with equal 44px minimum targets. Minus stops at one; stock-conflict recovery may still produce zero rows, which remain visible and block confirmation until corrected/removed. Preserve the 10,000 cap, fresh-stock checks and typed invalid-value feedback.
+- DM66 places each selected product and its controls in a selected row inside the catalogue. Selected rows stay above search results so filtering and prefix pagination cannot hide the cart. Remove the separate cart cards and only the sale-page empty-cart prompt; retain genuine empty-catalogue/no-result states and the Products page Add product action. Refresh belongs at the heading's top right, and the results list may use more viewport height while keeping the mobile total reachable.
 - The homepage coin is decorative, aria-hidden and desktop-only in the original notes. Mobile visibility intentionally supersedes that restriction; preserve reduced motion/desktop behaviour and give it non-overlapping mobile space. Do not invent an action or balance for it.
 - Defer popularity until audience, period, reversal/cancellation treatment, ties and products without sales have agreed semantics.
 
