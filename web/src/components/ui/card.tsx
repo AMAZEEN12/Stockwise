@@ -58,7 +58,7 @@ export const Card = forwardRef<HTMLDivElement, CardProps>(
       // The link fills the card, so its own outline would be clipped by
       // overflow-hidden. Draw the keyboard focus ring on the card instead.
       "has-[>a:focus-visible]:[outline:var(--focus-ring-width)_solid_var(--color-focus)]",
-      "has-[>a:focus-visible]:[outline-offset:var(--focus-ring-offset)]",
+      "has-[>a:focus-visible]:outline-offset-(--focus-ring-offset)",
       className,
     ]
       .filter(Boolean)

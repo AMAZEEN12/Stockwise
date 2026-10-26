@@ -310,8 +310,8 @@
     width: 100%;
   }
   .shop-toast-viewport {
-    right: 16px;
-    bottom: 16px;
+    right: max(16px, env(safe-area-inset-right, 0px));
+    bottom: max(16px, calc(16px + env(safe-area-inset-bottom, 0px)));
   }
   .customers-page .customers-cards > li {
     padding: 0;
