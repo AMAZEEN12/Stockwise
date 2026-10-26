@@ -52,6 +52,9 @@ logging:
   level:
     root: INFO
     ng.tesa.stockwise: INFO
+  pattern:
+    # N6: every log line shows the request ID (set by RequestIdFilter), so one journey can be followed.
+    level: "%5p [%X{requestId:-}]"
 
 ---
 # Local development: docker compose up -d db, then run with -Dspring-boot.run.profiles=local,demo
@@ -85,3 +88,8 @@ server:
   error:
     include-stacktrace: never
     include-message: never
+logging:
+  structured:
+    format:
+      # N6: structured JSON logs on the hosts. ECS adds every MDC value, so each line has "requestId".
+      console: ecs

@@ -139,6 +139,7 @@ paths:
             maxLength: 60
         - name: stockState
           in: query
+          description: Omit to list every product, archived ones included.
           schema:
             $ref: '#/components/schemas/StockState'
         - $ref: '#/components/parameters/Page'
@@ -368,6 +369,11 @@ paths:
         Client's part: generate one UUID when the user taps Confirm, keep it until a 201, 409
         or 422 arrives, and resend the **same** key on timeout or network loss. Show "Not
         confirmed" (never "Saved") until 201.
+        
+        Further rules: a product may appear in only one line, and `dueDate` is allowed only on a
+        CREDIT sale (both 400 `VALIDATION_FAILED`); an unknown or archived product, or an unknown customer, is 404 `NOT_FOUND` naming the field;
+        the response lists lines ordered by `productId`; a replay with the same lines in a
+        different order counts as the same body.
       parameters:
         - $ref: '#/components/parameters/RequestId'
         - $ref: '#/components/parameters/IdempotencyKey'
@@ -626,7 +632,10 @@ components:
           type: string
         code:
           type: string
-          description: Machine-readable error code the interface acts on.
+          description: |
+            Machine-readable error code the interface acts on. `VALIDATION_FAILED` is also sent
+            with status 405 (method not allowed) and 415 (unsupported content type).
+            `INTERNAL_ERROR` (500) means an unexpected failure; quote the `requestId` when reporting it.
           enum:
             - VALIDATION_FAILED
             - UNAUTHENTICATED
@@ -636,6 +645,7 @@ components:
             - INSUFFICIENT_STOCK
             - IDEMPOTENCY_KEY_REUSED
             - DATABASE_UNAVAILABLE
+            - INTERNAL_ERROR
         requestId:
           type: string
           format: uuid
