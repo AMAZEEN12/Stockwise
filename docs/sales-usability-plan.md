@@ -8,7 +8,7 @@ Approved implementation scope: Victor Oyeleke, 2026-10-26 (DM63). Technical choi
 | 2 | feat/customer-credit-balances | feat(customers): distinguish debt and store credit | Await agreed independent activity fields |
 | 3 | fix/credit-customer-picker-responsive | fix(sales): keep credit customer picker within viewport | Completed by DM65 and merged in PR #22; removed from the remaining sequence |
 | 4 | fix/sale-quantity-controls | fix(sales): align quantity controls horizontally | Superseded/nullified as a remaining task; DM66 UI merged in PR #23 |
-| 5 | fix/mobile-coin-visibility | fix(ui): show coin control on mobile | Implementing from merged main aaaca8e; actual coin is decorative |
+| 5 | fix/mobile-coin-visibility | fix(ui): show coin control on mobile | Implemented in 7035c3a; PR #24 open for human review |
 | Deferred | feat/product-popularity-sort | Agree after scope approval | No popularity implementation |
 
 ## Approved choices
