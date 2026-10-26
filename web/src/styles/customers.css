@@ -26,13 +26,16 @@
   gap: 0;
   border-radius: var(--radius-card);
   box-shadow: none;
-  overflow-y: auto;
+  overflow: hidden;
   overscroll-behavior: contain;
+  display: flex;
+  flex-direction: column;
 }
 .customer-picker-dialog > div:first-child {
   padding: 20px 28px;
   border-bottom: 1px solid var(--color-border);
   align-items: center;
+  flex-shrink: 0;
 }
 .customer-dialog-title {
   font: 600 24px/1.2 var(--font-sans);
@@ -55,6 +58,15 @@
 }
 .customer-picker-body {
   padding: 20px 28px;
+  display: flex;
+  flex-direction: column;
+  flex: 1;
+  min-height: 0;
+  overflow-y: auto;
+  overscroll-behavior: contain;
+}
+.customer-filter-bar {
+  flex-shrink: 0;
 }
 .customer-search {
   position: relative;
@@ -74,6 +86,7 @@
   opacity: 1;
 }
 .customer-add-inline {
+  flex-shrink: 0;
   width: 100%;
   min-height: 60px;
   border: 1px dashed var(--color-primary);
@@ -89,6 +102,10 @@
 .customer-picker-list {
   display: grid;
   gap: 10px;
+  max-height: 280px;
+  overflow-y: auto;
+  overscroll-behavior: contain;
+  padding-right: 4px;
 }
 .customer-option {
   display: flex;
@@ -127,6 +144,9 @@
   border: 1px solid var(--color-primary);
   border-radius: var(--radius-panel);
   margin-bottom: 12px;
+  max-height: 360px;
+  overflow-y: auto;
+  overscroll-behavior: contain;
 }
 .customer-form {
   font-size: 14px;
@@ -337,29 +357,28 @@
 }
 @media (max-width: 768px) {
   .customer-picker-dialog {
-    inset: 158px 0 0;
+    top: 50%;
+    left: 50%;
+    bottom: auto;
+    right: auto;
+    translate: -50% -50%;
     transform: none;
-    translate: none;
-    width: 100%;
-    max-width: none;
-    max-height: calc(100dvh - 100px);
-    border-radius: var(--radius-card) var(--radius-card) 0 0;
+    width: min(440px, calc(100vw - 32px));
+    max-width: calc(100vw - 32px);
+    max-height: min(520px, calc(100dvh - 48px));
+    border-radius: var(--radius-card);
   }
   .customer-picker-dialog:before {
-    content: "";
-    display: block;
-    width: 40px;
-    height: 4px;
-    background: var(--color-border-input);
-    border-radius: var(--radius-pill);
-    margin: 10px auto 0;
-    flex-shrink: 0;
+    display: none;
   }
   .customer-picker-dialog > div:first-child {
     padding: 16px 20px;
   }
   .customer-picker-body {
     padding: 16px 20px;
+  }
+  .customer-picker-list {
+    max-height: 220px;
   }
   .customer-option {
     font-size: 14px;
@@ -404,9 +423,16 @@
 }
 @media (max-height: 650px) {
   .customer-picker-dialog {
-    top: 16px;
-    bottom: 16px;
     max-height: calc(100dvh - 32px);
+  }
+  .customer-picker-dialog > div:first-child {
+    padding: 14px 20px;
+  }
+  .customer-picker-body {
+    padding: 14px 20px;
+  }
+  .customer-picker-list {
+    max-height: calc(100dvh - 270px);
   }
 }
 
