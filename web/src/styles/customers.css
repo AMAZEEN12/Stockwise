@@ -19,20 +19,29 @@
 }
 .customer-picker-dialog {
   z-index: 81;
-  width: 520px;
-  max-width: calc(100vw - 32px);
-  max-height: calc(100dvh - 48px);
+  width: 480px;
+  max-width: 100vw;
+  height: 100dvh;
+  max-height: 100dvh;
+  top: 0;
+  bottom: 0;
+  right: 0;
+  left: auto;
+  transform: none;
+  translate: none;
   padding: 0;
   gap: 0;
-  border-radius: var(--radius-card);
-  box-shadow: none;
+  border-radius: 0;
+  border: 0;
+  border-left: 1px solid var(--color-border);
+  box-shadow: -4px 0 24px rgba(0, 0, 0, 0.4);
   overflow: hidden;
   overscroll-behavior: contain;
   display: flex;
   flex-direction: column;
 }
 .customer-picker-dialog > div:first-child {
-  padding: 20px 28px;
+  padding: 20px 24px;
   border-bottom: 1px solid var(--color-border);
   align-items: center;
   flex-shrink: 0;
@@ -57,7 +66,7 @@
   opacity: 0.5;
 }
 .customer-picker-body {
-  padding: 20px 28px;
+  padding: 20px 24px;
   display: flex;
   flex-direction: column;
   flex: 1;
@@ -100,15 +109,15 @@
   margin-bottom: 12px;
 }
 .customer-picker-list {
-  display: grid;
+  display: flex;
+  flex-direction: column;
   gap: 10px;
   flex: 1;
   min-height: 0;
-  max-height: 280px;
   overflow-y: auto;
   overscroll-behavior: contain;
   padding-right: 4px;
-  padding-bottom: 16px;
+  padding-bottom: 24px;
 }
 .customer-option {
   display: flex;
@@ -368,8 +377,11 @@
     transform: none;
     width: min(440px, calc(100vw - 32px));
     max-width: calc(100vw - 32px);
-    max-height: min(520px, calc(100dvh - 48px));
+    height: auto;
+    max-height: min(540px, calc(100dvh - 48px));
+    border: 1px solid var(--color-border);
     border-radius: var(--radius-card);
+    box-shadow: none;
   }
   .customer-picker-dialog:before {
     display: none;
@@ -381,8 +393,8 @@
     padding: 16px 20px;
   }
   .customer-picker-list {
-    max-height: 220px;
-    padding-bottom: 16px;
+    max-height: 240px;
+    padding-bottom: 20px;
   }
   .customer-option {
     font-size: 14px;
@@ -426,18 +438,11 @@
   }
 }
 @media (max-height: 650px) {
-  .customer-picker-dialog {
-    max-height: calc(100dvh - 32px);
-  }
   .customer-picker-dialog > div:first-child {
     padding: 14px 20px;
   }
   .customer-picker-body {
     padding: 14px 20px;
-  }
-  .customer-picker-list {
-    max-height: calc(100dvh - 280px);
-    padding-bottom: 16px;
   }
 }
 
