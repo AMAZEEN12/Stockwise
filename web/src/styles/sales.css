@@ -25,6 +25,58 @@
 .sale-items {
   min-width: 0;
 }
+.sale-catalogue-heading {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: baseline;
+  justify-content: space-between;
+  gap: 8px;
+}
+.sale-catalogue-heading h2 {
+  font-size: 18px;
+  font-weight: 600;
+}
+.sale-catalogue-heading p {
+  color: var(--color-text-muted);
+}
+.sale-catalogue-list {
+  display: grid;
+  gap: 8px;
+  max-height: clamp(180px, 38dvh, 360px);
+  overflow-y: auto;
+  overscroll-behavior: contain;
+  padding: 4px;
+  margin: 0;
+  list-style: none;
+}
+.sale-catalogue .search-result {
+  width: 100%;
+  min-height: 60px;
+}
+.sale-catalogue .search-result > .search-result-content {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  width: 100%;
+  min-width: 0;
+  white-space: normal;
+}
+.sale-catalogue .search-result-content > span:first-child {
+  display: flex;
+  flex-direction: column;
+  min-width: 0;
+  overflow-wrap: anywhere;
+}
+.sale-catalogue .search-result-content > span:last-child {
+  flex-shrink: 0;
+  white-space: nowrap;
+}
+.sale-catalogue-actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+}
 .sale-search {
   position: relative;
   margin-bottom: 12px;

@@ -58,8 +58,9 @@ const server = createServer(async (request,response) => {
   const user=session.user;
   if (url.pathname === '/me' && request.method === 'GET') {send(200,user); return;}
   if (url.pathname === '/products' && request.method === 'GET') {
-    const q = (url.searchParams.get('q') || '').toLowerCase();
-    const items = products.filter((product) => `${product.name} ${product.reference}`.toLowerCase().includes(q) && (!url.searchParams.get('category') || product.category === url.searchParams.get('category')) && (!url.searchParams.get('stockState') || stockState(product) === url.searchParams.get('stockState')));
+    const q = (url.searchParams.get('q') || '').trim().toLowerCase();
+    const items = products.filter((product) => `${product.name} ${product.reference}`.toLowerCase().includes(q) && (!url.searchParams.get('category') || product.category === url.searchParams.get('category')) && (!url.searchParams.get('stockState') || stockState(product) === url.searchParams.get('stockState')))
+      .sort((a,b)=>{const first=a.name.toLowerCase();const second=b.name.toLowerCase();return first<second ? -1 : first>second ? 1 : a.id<b.id ? -1 : a.id>b.id ? 1 : 0;});
     const page = Number(url.searchParams.get('page') || 0); const size = Number(url.searchParams.get('size') || 20);
     if (!Number.isInteger(page) || page < 0 || !Number.isInteger(size) || size < 1 || size > 100) {problem(400,'VALIDATION_FAILED','Invalid pagination.'); return;}
     send(200,{items:items.slice(page*size,(page+1)*size).map((product) => ({...product,stockState:stockState(product)})),page,size,totalItems:items.length}); return;
