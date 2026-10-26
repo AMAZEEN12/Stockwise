@@ -2,7 +2,6 @@ import { useEffect, useState } from "react";
 import { Link, useNavigate, useOutletContext } from "react-router";
 import { Button } from "../../components/ui/button";
 import { ConfirmDialog } from "../../components/ui/dialog";
-import { FilterBar } from "../../components/ui/filter-bar";
 import { FormField } from "../../components/ui/form-field";
 import { Input } from "../../components/ui/input";
 import { Checkbox } from "../../components/ui/checkbox";
@@ -10,7 +9,7 @@ import { EmptyState } from "../../components/ui/empty-state";
 import { LoadingState } from "../../components/ui/loading-state";
 import { useToast } from "../../components/ui/toast";
 import { StatusPanel } from "../../components/ui/status-panel";
-import { useProductsQuery } from "../../service/api/products.api";
+import { SaleProductCatalogue } from "./SaleProductCatalogue";
 import { useCustomersQuery } from "../../service/api/customers.api";
 import { CustomerPicker } from "../customers/CustomerPicker";
 import type { Customer } from "../../models/responses/customers.response";
@@ -60,7 +59,6 @@ export function NewSalePage() {
     owned?.cart || draft?.cart || [],
   );
   const [pending, setPending] = useState<PendingSale | null>(owned);
-  const [query, setQuery] = useState("");
   const [paymentType, setPaymentType] = useState<"PAID" | "CREDIT">(
     owned?.body.paymentType || draft?.paymentType || "PAID",
   );
@@ -82,10 +80,6 @@ export function NewSalePage() {
   const navigate = useNavigate();
   const { toast } = useToast();
   const customers = useCustomersQuery();
-  const search = useProductsQuery(
-    { q: query, size: 20 },
-    { skip: !query.trim() },
-  );
   const [createSale] = useCreateSaleMutation();
   useEffect(() => {
     if (!pending)
@@ -157,7 +151,6 @@ export function NewSalePage() {
       }
       return [...current, { product, quantity: 1 }];
     });
-    setQuery("");
     setState("idle");
   };
   const editQuantity = (id: string, value: number) => {
@@ -537,77 +530,7 @@ export function NewSalePage() {
               )}
             </StatusPanel>
           )}
-          <FilterBar
-            className="sale-filter-bar"
-            searchLabel="Search products to add"
-            searchPlaceholder="Search products to add"
-            query={query}
-            onQueryChange={setQuery}
-            activeCount={0}
-            onClearAll={() => setQuery("")}
-            searchInputProps={{
-              type: "text",
-              className: "shop-input",
-              disabled: frozen || invalidRecovery,
-            }}
-            resultMessage={
-              query && search.data && !search.isFetching
-                ? `${search.data.items.filter((p) => p.active).length} products found`
-                : undefined
-            }
-          />
-          {query && (
-            <div className="sale-search-results">
-              {search.isFetching ? (
-                <LoadingState label="Searching products…" />
-              ) : search.isError ? (
-                <StatusPanel error title="Could not search products">
-                  <Button
-                    variant="secondary"
-                    size="lg"
-                    onClick={() => void search.refetch()}
-                  >
-                    Retry search
-                  </Button>
-                </StatusPanel>
-              ) : !search.data?.items.filter((p) => p.active).length ? (
-                <EmptyState
-                  layout="panel"
-                  className="status-panel"
-                  title="No matching products"
-                  description="Try a different name or reference."
-                />
-              ) : (
-                search.data.items
-                  .filter((p) => p.active)
-                  .map((product) => (
-                    <Button
-                      variant="ghost"
-                      contentClassName="search-result-content"
-                      className="search-result"
-                      disabled={frozen || product.quantity === 0}
-                      key={product.id}
-                      onClick={() => add(product)}
-                    >
-                      <span>
-                        <strong>{product.name}</strong>
-                        <small className="micro">
-                          {product.quantity > 0
-                            ? `${product.quantity} in stock`
-                            : "Out of stock"}
-                        </small>
-                      </span>
-                      <span>
-                        {Number.isSafeInteger(product.priceKobo) &&
-                        product.priceKobo >= 0
-                          ? formatMoney(product.priceKobo)
-                          : "Amount unavailable"}
-                      </span>
-                    </Button>
-                  ))
-              )}
-            </div>
-          )}
+          <SaleProductCatalogue disabled={frozen || invalidRecovery} onSelect={add} />
           {!cart.length && (
             <EmptyState
               layout="inline"

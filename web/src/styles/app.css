@@ -1,7 +1,7 @@
 @import "tailwindcss";
-@source "../";
 @import "./tokens.css";
 @import "./shared-components.css";
+@source "../";
 
 @layer base {
   * {
