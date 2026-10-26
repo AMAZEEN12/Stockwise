@@ -8,7 +8,6 @@ import { Input } from "../../components/ui/input";
 import { Checkbox } from "../../components/ui/checkbox";
 import { EmptyState } from "../../components/ui/empty-state";
 import { LoadingState } from "../../components/ui/loading-state";
-import { StatusBadge } from "../../components/ui/status-badge";
 import { useToast } from "../../components/ui/toast";
 import { StatusPanel } from "../../components/ui/status-panel";
 import { useProductsQuery } from "../../service/api/products.api";
@@ -79,6 +78,7 @@ export function NewSalePage() {
   const [requestId, setRequestId] = useState("");
   const [changes, setChanges] = useState<string[]>([]);
   const [accepted, setAccepted] = useState(false);
+  const [applyStoreCredit, setApplyStoreCredit] = useState(true);
   const navigate = useNavigate();
   const { toast } = useToast();
   const customers = useCustomersQuery();
@@ -111,9 +111,10 @@ export function NewSalePage() {
       })),
     );
     if (customer) checkedKobo(customer.balanceKobo);
-    credit = customer
-      ? Math.min(total, checkedKobo(customer.storeCreditKobo))
-      : 0;
+    credit =
+      customer && applyStoreCredit
+        ? Math.min(total, checkedKobo(customer.storeCreditKobo))
+        : 0;
   } catch {
     total = null;
     credit = 0;
@@ -769,13 +770,29 @@ export function NewSalePage() {
                   </p>
                 )}
                 {customer && customer.storeCreditKobo > 0 && (
-                  <StatusBadge
-                    tone="info"
-                    appearance="outline"
-                    className="credit-badge micro"
-                  >
-                    Store credit {displayMoney(customer.storeCreditKobo)}
-                  </StatusBadge>
+                  <div className="store-credit-box">
+                    <label className="store-credit-toggle">
+                      <input
+                        type="checkbox"
+                        checked={applyStoreCredit}
+                        disabled={frozen}
+                        onChange={(event) =>
+                          setApplyStoreCredit(event.target.checked)
+                        }
+                      />
+                      <span>
+                        Apply store credit (
+                        {displayMoney(customer.storeCreditKobo)})
+                      </span>
+                    </label>
+                    {unavailableCredit && (
+                      <p className="micro text-[var(--color-danger)]">
+                        Store-credit recording is awaiting service support.
+                        Uncheck above to complete this sale without credit
+                        deduction.
+                      </p>
+                    )}
+                  </div>
                 )}
                 {paymentType === "CREDIT" && (
                   <FormField

@@ -7,6 +7,11 @@
   * {
     box-sizing: border-box;
   }
+  html {
+    -webkit-tap-highlight-color: transparent;
+    -webkit-text-size-adjust: 100%;
+    overscroll-behavior-y: none;
+  }
   html,
   body,
   #root {
@@ -22,12 +27,20 @@
     -webkit-font-smoothing: antialiased;
   }
   button,
-  input {
+  input,
+  textarea,
+  select {
     font: inherit;
+    font-size: 16px;
   }
   button,
-  a {
+  a,
+  [role="button"] {
     -webkit-tap-highlight-color: transparent;
+    touch-action: manipulation;
+    user-select: none;
+    -webkit-user-select: none;
+    -webkit-touch-callout: none;
   }
   button:not(:disabled),
   a {
@@ -439,17 +452,17 @@
 }
 @media (max-width: 767px) {
   .home-header {
-    height: 77px;
-    margin: 0 16px;
-    padding-top: 16px;
+    height: calc(77px + env(safe-area-inset-top, 0px));
+    margin: 0 max(16px, env(safe-area-inset-right, 0px)) 0 max(16px, env(safe-area-inset-left, 0px));
+    padding-top: calc(16px + env(safe-area-inset-top, 0px));
   }
   .account-link {
     font-size: 16px;
     padding: 0 18.5px;
   }
   .home-main {
-    min-height: calc(100dvh - 77px);
-    padding: 5px 16px 24px;
+    min-height: calc(100dvh - 77px - env(safe-area-inset-top, 0px));
+    padding: 5px max(16px, env(safe-area-inset-right, 0px)) calc(24px + env(safe-area-inset-bottom, 0px)) max(16px, env(safe-area-inset-left, 0px));
   }
   .wordmark svg {
     margin: 0;
@@ -475,6 +488,7 @@
   .auth-dialog {
     padding: 24px;
     gap: 22px;
+    overscroll-behavior: contain;
   }
   .auth-title {
     font-size: 28px;

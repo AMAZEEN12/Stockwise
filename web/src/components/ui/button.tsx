@@ -104,7 +104,8 @@ export const Button = forwardRef<HTMLButtonElement, ButtonProps>(function Button
       className={cn(
         "relative inline-flex items-center justify-center gap-2 font-medium",
         "rounded-md font-sans",
-        "transition-colors",
+        "transition-[transform,colors] duration-100 ease-out select-none touch-manipulation",
+        "active:scale-[0.98] disabled:active:scale-100",
         "focus-visible:[outline:var(--focus-ring-width)_solid_var(--color-focus)]",
         "focus-visible:outline-offset-(--focus-ring-offset)",
         "disabled:cursor-not-allowed disabled:opacity-50",

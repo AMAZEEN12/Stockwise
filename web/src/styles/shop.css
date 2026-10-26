@@ -427,7 +427,9 @@
   .shop-main {
     margin-left: 0;
     padding: 20px;
-    padding-bottom: 100px;
+    padding-left: max(20px, env(safe-area-inset-left, 0px));
+    padding-right: max(20px, env(safe-area-inset-right, 0px));
+    padding-bottom: max(100px, calc(100px + env(safe-area-inset-bottom, 0px)));
   }
   .shop-main h1 {
     font-size: 34px;
@@ -435,9 +437,11 @@
   .shop-mobile-header {
     display: flex;
     align-items: center;
-    height: 56px;
+    height: calc(56px + env(safe-area-inset-top, 0px));
+    padding-top: env(safe-area-inset-top, 0px);
     border-bottom: 1px solid var(--color-border);
-    padding: 0 20px;
+    padding-left: max(20px, env(safe-area-inset-left, 0px));
+    padding-right: max(20px, env(safe-area-inset-right, 0px));
     gap: 12px;
   }
   .shop-mobile-header .shop-brand {
@@ -541,29 +545,31 @@
   }
   .add-product {
     position: fixed;
-    bottom: 24px;
-    right: 20px;
+    bottom: max(24px, calc(24px + env(safe-area-inset-bottom, 0px)));
+    right: max(20px, env(safe-area-inset-right, 0px));
     z-index: 20;
     border-radius: var(--radius-pill);
     height: 52px;
     padding: 0 20px;
+    box-shadow: 0 4px 16px rgba(0, 0, 0, 0.4);
   }
   .product-sheet {
     width: 100%;
     background: var(--color-bg);
   }
   .sheet-header {
-    height: 76px;
-    padding: 16px 20px;
+    height: calc(76px + env(safe-area-inset-top, 0px));
+    padding: calc(16px + env(safe-area-inset-top, 0px)) 20px 16px;
   }
   .sheet-header h2 {
     font-size: 28px;
   }
   .sheet-body {
     padding: 16px 20px;
+    overscroll-behavior: contain;
   }
   .sheet-footer {
-    padding: 16px 20px;
+    padding: 16px 20px calc(16px + env(safe-area-inset-bottom, 0px));
     background: var(--color-surface);
   }
   .product-field {
@@ -584,7 +590,7 @@
     max-width: 90vw;
     background: var(--color-surface);
     z-index: 61;
-    padding: 28px 16px;
+    padding: calc(28px + env(safe-area-inset-top, 0px)) 16px calc(28px + env(safe-area-inset-bottom, 0px));
     border-right: 1px solid var(--color-border);
   }
   .mobile-menu nav {
@@ -609,5 +615,6 @@
   .shop-confirm {
     width: calc(100vw - 32px);
     max-height: calc(100dvh - 32px);
+    overscroll-behavior: contain;
   }
 }
