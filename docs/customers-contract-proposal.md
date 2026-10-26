@@ -4,6 +4,10 @@
 
 ## Existing contract used now
 
+Current-state correction, 2026-10-26 (DM63-DM64; logged by Codex): v0.2.0 proposal A is merged in PR #17 and signed by Nnaemeka Chukwuma/Isaac Bassey in decisions.md section 3. POST /customers supports optional Idempotency-Key with 422 on reuse mismatch. The implementation description below is historical for the original UI; its current frontend still omits the optional header, so retain uncertain-create guards and do not add automatic retries under this catalogue task.
+
+Independent activity proposal, approved as UI scope by Victor Oyeleke on 2026-10-26 (DM63), logged by Codex: retain balanceKobo/storeCreditKobo and add server-owned hasDebtActivity/hasStoreCreditActivity. New unused balances show dashes; each becomes a formatted amount after its own relevant transaction/adjustment and stays numeric after returning to zero. Paid sales alone do not activate either flag. Derive history authoritatively, including seeded/reversed/fully repaid cases; do not infer unused from zero or createdAt. Do not automatically offset debt/store credit. Fields require Isaac Bassey/Nnaemeka Chukwuma agreement, tests and generated types before wiring the UI; Victor's UI approval is not their API sign-off.
+
 `GET /customers?q=&page=&size=`: any authenticated role, zero-based pages, size 1..100, q up to 100 characters. Response CustomerPage contains items/page/size/totalItems. `POST /customers`: OWNER/ASSISTANT, no Idempotency-Key semantics, returns 201 Customer or 400/401/403 Problem. Request: displayName required (1..120), contactPlaceholder optional (max 60), no extra properties. Contact is fictional text, not a validated real telephone number. Blank contact is omitted, names are trimmed and whitespace-only names rejected consistently with the existing database constraint. Response money stays integer kobo; unsafe values are not formatted as trustworthy amounts.
 
 No customer detail, ledger, repayment, edit, archive or delete API is added/called in this phase. Existing endpoints are sufficient for the supplied list/create/select flows. Keep active OpenAPI and generated types unchanged until two-engineer sign-off.

@@ -1,11 +1,15 @@
 # Work log: Stockwise (Team 3 main product)
 
-Change slug: `stockwise` · Started: 2026-10-23 · Last updated: 2026-10-25 (handover) by the agent for Nnaemeka Chukwuma; earlier 2026-10-25 entries by Codex (logging assistant for Victor Oyeleke)
+Change slug: `stockwise` · Started: 2026-10-23 · Last updated: 2026-10-26 by Codex (logging assistant for Victor Oyeleke); earlier handover by the agent for Nnaemeka Chukwuma
 Source document: `Tesa cohort 6 software engineering capstone project.pdf` (TeSA Africa, "Four Real-World Products", 26 pages; Stockwise is product 3, pages 10-11; shared requirements pages 23-26)
 
 > Any agent opening this project: read this file first, then the "Conventions and guidelines" and "Decisions" sections, then the artifacts in this folder. Continue from "Resume here". Don't re-ask anything already answered below.
 
 ## Resume here
+Current frontend work, 2026-10-26 (Victor Oyeleke; logged by Codex): DM63 authorizes the five-item [sales usability sequence](../docs/sales-usability-plan.md), with independent balance activity, existing desktop customer dialog/mobile sheet and minus stopping at one. Implementing item 1 on feat/sale-product-catalog from latest merged main 6bf48b8. Preserve existing app.css outside the feature. Verify, commit/push/open the catalogue PR, then obtain human review/merge before the next dependent branch. API activity flags and explicit ordering remain proposals. Contract v0.2.0 proposal A is merged via #17 with two-engineer sign-off; #18-#20 are also merged. Earlier handover claims below are historical, not current PR/deploy status.
+
+### Earlier deployment handover
+
 Handover written 2026-10-25 (evening, the day before the Monday 26 Oct checkpoint) by the agent for Nnaemeka Chukwuma. Checked against GitHub at that time.
 
 - **Stage:** Implementation (EXECUTION.md). Code for the Monday journey is **merged**. **Nothing is deployed yet.**
@@ -511,3 +515,37 @@ The initial two browser-found defects were corrected in the implementation witho
 
   `./mvnw clean verify`: 88 tests green. The R15 removal checks are logged. The image was run against Postgres 17 with the demo profile: the seeded owner logged in and saw 20 products and today's sales, and the assistant got 403 adding a product. **Isaac (API and access) and Blessing (skeleton) should review it as their own.** Still needed before the demo: CI and deploy workflows, the Neon, Render and Vercel setup, the live addresses in the README, `last-unit.mjs` on the deployed service, and the full journey from a clean browser.
 - - 2026-10-25 · Isaac Bassey (API and access owner), with an AI assistant · Reviewed the merged API layer (PR #12) and commented on it. Branch `feat/api-request-id-logs`: `RequestIdFilter` logs one line per request with its request ID (method, path, status, time; no query string, headers, tokens or bodies; `GET /` skipped); `logging.pattern.level` prints the request ID; the `prod` profile logs ECS JSON (N6). New `RequestLogIT` (2 tests). Contract documentation additions folded into v0.2.0 and the v0.1.0 sign-off in decisions.md §3; web types regenerated. `./mvnw verify` on his machine: BUILD SUCCESS, 87 integration tests. Still to do: review PR #17 (contract v0.2.0 proposal A and migration V4, merged without the API owner's review).
+
+
+### Default sale catalogue verification in progress, 2026-10-26 (DM63-DM64)
+
+Decided by Victor Oyeleke (scope); Codex (implementation/verification mechanics). Logged by Codex.
+
+- Branch feat/sale-product-catalog created from latest merged main 6bf48b8 after fetch and ff-only pull (already up to date). Pre-existing web/src/styles/app.css is preserved separately; ignored snapshot in web/.mock/sale-catalogue-input/.
+- Shared-component skill is not locally present (removed from the tracked repository); inspected local APIs and docs/shared-component-alignment.md. Reused existing primitives and DM41 canonical classes.
+- Added default catalogue, bounded internal list scrolling, existing q/page/size search/paging, archived-page traversal, deterministic displayed order and retry/query isolation. Simulation now sorts before paging like the service. No active contract/generated schema/backend/migration edits or new dependencies.
+- Lint: exit 0, zero warnings. Strict typecheck: exit 0 after correcting the new test's Axios params typing; assertions unchanged. Initial new-script lint found browser globals in its page.evaluate callback; qualified globalThis, then lint passed.
+- Unit: 11 files, 35 passed; 87.56s. Initial sandbox run could not load Vitest config because esbuild was denied parent-directory access; same suite passed with escalation.
+- Contract: valid, 312ms. Production build: 2301 modules, 55.57s; existing main-chunk warning remains at 555.78 kB/gzip 183.08 kB.
+- Focused catalogue Chromium: 8/8 desktop/mobile passed in 1.0m, including immediate products, ordering, paging, archived/zero stock, reference search, keyboard add, loading/error/empty/no-match, prefix retry, query isolation, bounds and axe serious/critical checks. Desktop/mobile captures inspected; new default catalogue is an intentional layout amendment, not a pixel-perfect reference claim.
+- Full browser regression and unintercepted simulation journey are pending; no final pass claimed yet. QA uses owned ports and preserves user previews; build finished before browser runs.
+- Service .\mvnw.cmd verify failed before Maven started: Cannot index into a null array / Cannot start maven from wrapper. JAVA_HOME is unset and Get-Command java found no executable. No backend pass is claimed.
+- API ordering and independent debt/store-credit activity remain owner proposals. Proposal A customer idempotency is already merged/signed; current UI still omits its optional key. Future branches remain queued under the approved merge order.
+
+
+### Catalogue full regression and merged-main comparison, 2026-10-26
+
+- Full Chromium run completed: 87 passed / 7 failed (29.1m), 94 total. All eight catalogue scenarios passed again. Existing auth/picker/checkbox timing failures are kept in the result, not hidden by changing tests or deadlines.
+- The exact Store credit amount-text assertion failed on both viewports. The merged mobile-native UI uses an Apply store credit checkbox label instead. The store-credit block is byte-identical to origin/main; CustomerPicker/CustomerForm are unchanged too.
+- Isolated detached merged-main worktree at web/.mock/sale-catalogue-baseline, commit 6bf48b8: same application/tests, only Vite cacheDir isolated to avoid touching shared preview caches. Ran the five affected flows on both viewports: 8 passed / 2 failed (2.8m). Both failures reproduce the same Store credit amount-text assertion on main. No assertion is loosened, skipped or deleted; unrelated store-credit presentation is left for its own reviewed scope.
+- Original full-run timing failures: desktop picker create/select and shared checkbox; mobile /me retry/401, pending login and picker create/select. The eight corresponding flow/viewports are being rerun unchanged on the feature branch. No all-green browser claim is made. Independent unintercepted catalogue journey remains pending.
+- Decided by Codex (baseline isolation and focused rerun within Victor's DM63 verification scope); logged by Codex. Review gates remain; expose the known failures in the PR and do not auto-merge.
+
+### Customer selector slide-over right drawer (Approach 1), 2026-10-26 (DM65)
+
+- Implemented Approach 1 for customer selection on sale: converted desktop customer picker to a slide-over right drawer (`placement="right"`, full-height `100dvh`, `border-left: 1px solid var(--color-border)`).
+- Resolved Chromium CSS grid scroll-clipping bug by converting `.customer-picker-list` from `display: grid` to `display: flex; flex-direction: column; gap: 10px; flex: 1; min-height: 0; padding-bottom: 24px;`. The final customer card is fully visible without clipping.
+- Kept header, search filter bar and `+ Add new customer` button pinned at the top.
+- Mobile retains a compact, centered modal with 16px margins (`width: min(440px, calc(100vw - 32px))`, `border-radius: var(--radius-card)`) rather than an edge-to-edge sheet.
+- Verification: ESLint passed (0 errors, 0 warnings); TypeScript typecheck passed; 35 unit tests passed; production build clean in 46.83s; Playwright bounds/interaction checks passed.
+- Decided by Victor Oyeleke; implemented and logged by Codex.

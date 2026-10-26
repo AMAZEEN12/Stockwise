@@ -4,6 +4,8 @@ Date: 2026-10-24. Scope decided by Victor Oyeleke; proposals by Codex; logged by
 
 ## Implemented contract boundary
 
+2026-10-26 update (DM63-DM64; scope decided by Victor Oyeleke; technical choices/logged by Codex): default sale catalogue uses current GET /products?q=&page=&size=. Existing SQL orders by lower(name), id. Proposed clarification for Isaac Bassey/Nnaemeka Chukwuma: guarantee ordering before pagination and agree Unicode/collation semantics. No search/sort/direction parameter is sent or added to OpenAPI. The client sorts displayed prefixes, hides archived rows and reads past archived-only pages; active filtering remains proposal D. Prefix refresh does not promise an atomic snapshot. See [sales usability plan](sales-usability-plan.md).
+
 Use v0.1.0 GET/POST /products, GET /products/{productId}, GET /customers, POST /sales and GET /sales/{saleId}. Use generated models, integer kobo, UUID request IDs and one unchanged submission key/body across an uncertain write. No registration, category, quote, status-lookup, edit, archive or history endpoint is invented.
 
 Product category is a free-text string in the current contract. Use a combobox backed by all catalogue pages, permitting a new category. All catalogue filters include inactive rows when the server returns them; stockState=ARCHIVED selects archived rows. Sale search filters inactive products locally and does not let them enter the cart. Archive/edit controls are deferred.

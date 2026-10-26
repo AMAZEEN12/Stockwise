@@ -10,6 +10,8 @@ Shared-component implementation amendment, 2026-10-25 (DM55), approved by Victor
 
 Shared-source documentation amendment, 2026-10-25 (DM53): four interface engineers, confirmed and approved by Victor Oyeleke; logged by Codex. Use [shared component source clarifications](../docs/shared-component-alignment.md) for Card's optional image area and the resolved Select/Checkbox token/border README notes at the reviewed revision. This amendment records source behavior; component migrations remain separate proposals.
 
+Sales usability amendment, 2026-10-26 (DM63-DM64): Victor authorized the five-item [sales usability sequence](../docs/sales-usability-plan.md), starting with a default searchable sale catalogue on feat/sale-product-catalog. Separate customer-balance, picker, quantity and coin branches follow from merged main, with human review/merge before dependent work. Item 1 uses existing product paging/search only; activity flags/order guarantees remain proposed until API owners agree. Decided by Victor Oyeleke (scope); Codex (catalogue mechanics). Logged by Codex.
+
 All paths are relative to the **Stockwise repository root** (the local `stockwise/` folder, DM19). Java package root: `ng.tesa.stockwise`.
 
 ## Area owners (DM8, DM21)
