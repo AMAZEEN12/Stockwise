@@ -46,6 +46,13 @@
   align-items: center;
   flex-shrink: 0;
 }
+.customer-picker-dialog-body,
+.customer-picker-dialog > div:nth-child(2) {
+  display: flex;
+  flex-direction: column;
+  flex: 1;
+  min-height: 0;
+}
 .customer-dialog-title {
   font: 600 24px/1.2 var(--font-sans);
   letter-spacing: -0.65px;
