@@ -23,9 +23,13 @@ public record Product(
     }
 
     /** Contract query parameters of {@code GET /products}; a null filter is not applied. */
-    public record Filter(String q, String category, StockState stockState) {
+    public record Filter(String q, String category, StockState stockState, Boolean active) {
+        public Filter(String q, String category, StockState stockState) {
+            this(q, category, stockState, null);
+        }
+
         public static Filter none() {
-            return new Filter(null, null, null);
+            return new Filter(null, null, null, null);
         }
     }
 

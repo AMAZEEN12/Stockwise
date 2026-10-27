@@ -108,6 +108,26 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/product-categories": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /**
+         * List distinct product categories
+         * @description Safe. Any role. Returns all distinct non-empty product categories in case-insensitive alphabetical order.
+         */
+        get: operations["listProductCategories"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/customers": {
         parameters: {
             query?: never;
@@ -118,6 +138,9 @@ export interface paths {
         /**
          * List customers
          * @description Safe. Any role.
+         *     - Results ordered deterministically by `LOWER(display_name) ASC, id ASC`.
+         *     - Duplicate display names and contacts are explicitly permitted; the UUID is the customer identity.
+         *     - `q` matches case-insensitively against trimmed customer display names.
          */
         get: operations["listCustomers"];
         put?: never;
@@ -332,6 +355,11 @@ export interface components {
             size: number;
             /** Format: int64 */
             totalItems: number;
+            /**
+             * Format: date-time
+             * @description UTC timestamp when the page was queried and balances evaluated.
+             */
+            asOf: string;
         };
         SaleLineCreate: {
             /** Format: uuid */
@@ -550,6 +578,8 @@ export interface operations {
                 /** @description Keyword matched against name or reference (case-insensitive). */
                 q?: string;
                 category?: string;
+                /** @description Filter by active status (true for active only, false for archived/inactive only). Omit to include both active and inactive products. */
+                active?: boolean;
                 /** @description Omit to list every product, archived ones included. */
                 stockState?: components["schemas"]["StockState"];
                 /** @description Zero-based page number. */
@@ -652,10 +682,36 @@ export interface operations {
             404: components["responses"]["NotFound"];
         };
     };
+    listProductCategories: {
+        parameters: {
+            query?: never;
+            header?: {
+                /** @description Client-generated UUID used to trace one action across both tiers. */
+                "X-Request-Id"?: components["parameters"]["RequestId"];
+            };
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Distinct product categories in case-insensitive alphabetical order */
+            200: {
+                headers: {
+                    "X-Request-Id": components["headers"]["RequestId"];
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": string[];
+                };
+            };
+            400: components["responses"]["BadRequest"];
+            401: components["responses"]["Unauthorized"];
+        };
+    };
     listCustomers: {
         parameters: {
             query?: {
-                /** @description Keyword matched against display name. */
+                /** @description Keyword matched against display name (case-insensitive substring; empty or omitted returns all). */
                 q?: string;
                 /** @description Zero-based page number. */
                 page?: components["parameters"]["Page"];

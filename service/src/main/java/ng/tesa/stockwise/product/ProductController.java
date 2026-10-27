@@ -39,7 +39,7 @@ public class ProductController {
             @NotBlank @Size(max = 40) String reference,
             @NotBlank @Size(max = 200) String name,
             @NotBlank @Size(max = 60) String category,
-            @NotNull @PositiveOrZero Long priceKobo,
+            @NotNull @PositiveOrZero @Max(9007199254740991L) Long priceKobo,
             @NotNull @PositiveOrZero Integer quantity,
             @NotNull @PositiveOrZero Integer lowStockThreshold) {
     }
@@ -49,9 +49,10 @@ public class ProductController {
             @RequestParam(required = false) @Size(max = 100) String q,
             @RequestParam(required = false) @Size(max = 60) String category,
             @RequestParam(required = false) StockState stockState,
+            @RequestParam(required = false) Boolean active,
             @RequestParam(defaultValue = "0") @Min(0) int page,
             @RequestParam(defaultValue = "20") @Min(1) @Max(Page.MAX_SIZE) int size) {
-        return products.list(new Product.Filter(q, category, stockState), new Page.Request(page, size));
+        return products.list(new Product.Filter(q, category, stockState, active), new Page.Request(page, size));
     }
 
     @PostMapping

@@ -571,4 +571,36 @@ Decided by Victor Oyeleke (scope); Codex (implementation/verification mechanics)
 - Verification: ESLint passed with zero warnings; strict TypeScript passed; contract lint passed in 365ms; 35/35 unit tests in 11 files passed; production build passed (2301 modules, 29.75s) with the existing 555.78 kB/gzip 183.08 kB main-chunk warning.
 - Unchanged Home/auth Playwright suite passed 24/24 desktop/mobile scenarios in 2.6m on isolated owned port 5195. It covered 320/360/768/1024/1440 viewport bounds, dialogs, role landing, keyboard behavior, axe serious/critical checks and reduced-motion coin behavior. Desktop and mobile Home captures were inspected: desktop placement is unchanged; mobile coin is fully visible below/right of the wordmark with no overlap or horizontal overflow.
 - Service verification remains unavailable because this machine has no Java executable and `JAVA_HOME` is unset. No backend pass is claimed for this CSS-only change.
-- Feature commit `7035c3a` (`fix(ui): show coin control on mobile`) was pushed to `origin/fix/mobile-coin-visibility`. [PR #24](https://github.com/AMAZEEN12/Stockwise/pull/24) is open, non-draft and targets `main`; no merge or deployment was performed.
+- Feature commit `7035c3a` (`fix(ui): show coin control on mobile`) was pushed to `origin/fix/mobile-coin-visibility`. [PR #24](https://github.com/AMAZEEN12/Stockwise/pull/24) was subsequently reviewed and merged as `6287154`.
+
+### Contract v0.2.0 (Proposals B, C, D) completed, 2026-10-27
+
+- **Author / Owner:** Nnaemeka Chukwuma (Data and rules).
+- **Branch:** `feat/contract-v0-2` (rebased on latest `main` `6287154`).
+- **Scope implemented:**
+  - **Proposal B:** Customer search specification and deterministic ordering (`LOWER(display_name) ASC, id ASC`), duplicate display names explicitly permitted (UUID is identity), and `CustomerPage.asOf` UTC timestamp representing balance query snapshot freshness.
+  - **Proposal C:** Safe integer bounds on money (`Kobo` schema `maximum: 9007199254740991` kobo; request validation via `@Max(9007199254740991L)` on `ProductController.CreateRequest.priceKobo`).
+  - **Proposal D:** `GET /product-categories` returning distinct, non-empty categories sorted alphabetically (case-insensitive), and optional `active` boolean query parameter on `GET /products`.
+- **Backend Service Changes:**
+  - Added `CustomerPage` record carrying `(List<Customer> items, int page, int size, long totalItems, Instant asOf)` and updated `CustomerController.list()` to return `CustomerPage.of(result, Instant.now())`.
+  - Added `@Max(9007199254740991L)` to `ProductController.CreateRequest.priceKobo`.
+  - Added `Boolean active` to `Product.Filter` (preserving backwards-compatible 3-arg constructor).
+  - Updated `ProductRepository.list()` to filter by `active` when present.
+  - Added `ProductRepository.listCategories()` returning distinct, non-empty, case-insensitive alphabetically sorted categories.
+  - Added `ProductCategoryController` mapped to `/api/v1/product-categories`.
+- **Backend Verification:**
+  - `CustomerPageTest` (unit): verifies `asOf` timestamp population and record components.
+  - `ProductValidationTest` (unit): verifies `priceKobo = 9007199254740991L` passes while `9007199254740992L` fails with constraint violation.
+  - `ProductFilterTest` (unit): verifies filter creation and active parameter variants.
+  - `ProductRepositoryIT` (integration): updated to test `active` filter and `listCategories()`.
+  - Java compilation and targeted test execution: 10/10 tests passed (BUILD SUCCESS in 24.2s).
+- **Contract & Frontend Verification:**
+  - `contract/openapi.yaml`: updated with proposals B, C, D; `redocly lint` passed with 0 errors.
+  - Web types regenerated via `npm run generate:api` (`schema.d.ts`).
+  - `npm run typecheck`: clean (0 errors).
+  - `npm run lint`: clean (0 warnings, 0 errors).
+  - `npm test -- --run`: 35/35 tests passing across all 11 test suites.
+- **SDLC Artifacts & Sign-off:**
+  - `stockwise/decisions.md` §3: updated with Nnaemeka Chukwuma's sign-off for proposals B, C, D (pending Isaac Bassey) and confirmation of prior documentation line.
+  - Formally accepted `intent.md`, `plan.md`, `test-plan.md`, and generated `EXECUTION.md` in `stockwise/sdlc/contract-v0-2/`.
+  - Updated `stockwise/sdlc/contract-v0-2/WORKLOG.md` (Q4 answered, activity logged).

@@ -101,6 +101,10 @@ public class ProductRepository {
         if (filter.stockState() != null) {
             where.add("(" + filter.stockState().sqlCondition() + ")");
         }
+        if (filter.active() != null) {
+            where.add("active = :active");
+            params.put("active", filter.active());
+        }
         String whereClause = where.isEmpty() ? "" : " WHERE " + String.join(" AND ", where);
 
         long total = jdbc.sql("SELECT count(*) FROM product" + whereClause)
@@ -115,6 +119,20 @@ public class ProductRepository {
                 .query((rs, row) -> map(rs))
                 .list();
         return new Page<>(items, page.page(), page.size(), total);
+    }
+
+    /**
+     * Contract v0.2.0: returns distinct, non-empty product categories in case-insensitive alphabetical order.
+     */
+    public List<String> listCategories() {
+        return jdbc.sql("""
+                SELECT DISTINCT category
+                FROM product
+                WHERE category IS NOT NULL AND trim(category) <> ''
+                ORDER BY lower(category), category
+                """)
+                .query(String.class)
+                .list();
     }
 
     static String escapeLike(String text) {

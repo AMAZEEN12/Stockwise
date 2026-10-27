@@ -1,6 +1,6 @@
 # Test plan: Contract v0.2.0, MVP-ready API additions
 
-Derived from: [intent.md](intent.md), [plan.md](plan.md) (both draft) · Status: **draft** · Parent: the main [test-plan.md](../test-plan.md) (accepted), whose rules all still apply.
+Derived from: [intent.md](intent.md), [plan.md](plan.md) (both accepted) · Status: **accepted** (accepted 2026-10-27 by Nnaemeka Chukwuma) · Parent: the main [test-plan.md](../test-plan.md) (accepted), whose rules all still apply.
 
 ## Feedback loop
 | Check | Command | Passing looks like |
@@ -25,7 +25,11 @@ Derived from: [intent.md](intent.md), [plan.md](plan.md) (both draft) · Status:
 | A: no header behaves as v0.1.0 | `CustomerIdempotencyIT#withoutKeyEachPostCreates` | integration |
 | A: key and hash together (database) | `CustomerIdempotencyIT#keyAndHashGoTogether` | integration (direct SQL) |
 | A: V4 reversible | `MigrationRollbackIT` | integration |
-| B, C, D | to be added with their implementation | |
+| B: CustomerPage asOf snapshot freshness | `CustomerPageTest#customerPageOfPopulatesAllFieldsIncludingAsOf` | unit |
+| B: customer search and stable ordering | `CustomerRepositoryIT#listFiltersByNameAndPages` | integration |
+| C: safe integer money upper bound (9007199254740991) | `ProductValidationTest#maxSafeIntegerPriceKoboIsValid`, `#priceKoboExceedingMaxSafeIntegerIsRefused` | unit |
+| D: product active query filter | `ProductFilterTest`, `ProductRepositoryIT#filtersCombineAndCanBeCleared` | unit / integration |
+| D: distinct sorted product categories | `ProductRepositoryIT#listCategoriesReturnsAlphabeticallySortedDistinctCategories` | integration |
 
 ## Bug fixes: test first
 As the main test plan: write the failing test, commit it, then fix without editing it (CI `check-test-guard.sh` on `fix/*` branches).

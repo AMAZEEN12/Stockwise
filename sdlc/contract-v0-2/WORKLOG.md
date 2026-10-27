@@ -82,7 +82,7 @@ Append-only. To change a decision, add a new entry that supersedes it.
 | Q1 | 2026-10-25 | Intake | Which proposals should this change implement? (Safe set now and the rest later / Everything now / Plan only) | "make it MVP ready" (taken as A-D now, E-H later: D1) | answered |
 | Q2 | 2026-10-25 | Intake | Who should be recorded as the decision maker for the scope choice? | "request by victor and implemented by nnaemeka" | answered |
 | Q3 | 2026-10-25 | Intake | Short path (intent, plan, test-plan, EXECUTION) or the full chain? Plus who decides. | Not answered directly; the next instruction was "continue with the migration and record everything done in the log", taken as the suggested default, the short path (D3) | defaulted |
-| Q4 | 2026-10-25 | Build | Accept intent.md, plan.md and test-plan.md (drafts)? | not yet asked | **open** |
+| Q4 | 2026-10-27 | Build | Accept intent.md, plan.md and test-plan.md (drafts)? | Accepted by Nnaemeka Chukwuma (Data and rules) along with EXECUTION.md | answered |
 
 Facts settled at intake without asking (from the proposals and the main log): the target is the existing Stockwise repository; the repository is the source of truth; the policies are the TeSA brief; A's migration is a high-risk path needing Isaac Bassey's review; contract changes need two engineers in `decisions.md` §3; supporting skills: none for the backend (the local `shared-components` skill applies to web work only).
 
@@ -111,4 +111,15 @@ Append-only, newest last.
   - PR #16 was merged at 21:10 UTC by AMAZEEN12, but into its stacked base `docs/handover-log`: its base wasn't switched to `main` after #15 merged. So `99bc2c9` and `e3a0035` were **not on `main`**.
   - `main` also gained `3c5a622` "Update deploy.yml" by AMAZEEN12 (adds an `npm ci` step for `web` before the Vercel deploy).
 - 2026-10-25 · agent · Opened [PR #17](https://github.com/AMAZEEN12/Stockwise/pull/17) from `feat/contract-v0-2` into `main` (2 commits, 19 files; merges cleanly with `3c5a622`), with Isaac Bassey's review requested in the description. This entry is the PR's third commit.
+- 2026-10-26 · team · PR #17 merged into `main` (`4300a70`), closing Proposal A. Signed off in `decisions.md` §3 by Isaac Bassey and Nnaemeka Chukwuma.
+- 2026-10-27 · user · "finish my part" (implement remaining proposals B, C, D of contract v0.2.0, accept artifacts, regenerate types, verify tests).
+- 2026-10-27 · agent ·
+  - Updated `contract/openapi.yaml`: Proposal B (`CustomerPage.asOf`, customer search semantics, duplicate name allowance), Proposal C (`Kobo` maximum 9007199254740991), Proposal D (`GET /product-categories`, `GET /products` active filter).
+  - Validated with `redocly lint`: 0 errors.
+  - Implemented service code: `CustomerPage` record, `CustomerController.list()` returning `CustomerPage` with `asOf`, `@Max(9007199254740991L)` on `ProductController.CreateRequest.priceKobo`, `Product.Filter` with `Boolean active`, `ProductRepository` active filtering and `listCategories()`, and `ProductCategoryController`.
+  - Added unit tests: `CustomerPageTest`, `ProductValidationTest`, `ProductFilterTest`. All passed (`mvnw test`).
+  - Added integration tests to `ProductRepositoryIT` for `active` filtering and category ordering.
+  - Regenerated web types: `npm run generate:api`. `npm run typecheck` clean, `npm run lint` clean, `npm test -- --run` 35/35 passing tests across all 11 suites.
+  - Updated `decisions.md` §3 (signed off proposals B, C, D by Nnaemeka Chukwuma, pending Isaac Bassey; confirmed prior documentation line).
+  - Formally accepted `intent.md`, `plan.md`, `test-plan.md`, and generated `EXECUTION.md`.
 - **Lesson for stacked PRs:** after the lower PR merges, change the upper PR's base to `main` **before** merging it. GitHub does this automatically only when the lower branch is deleted.

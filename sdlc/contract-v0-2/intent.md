@@ -1,6 +1,6 @@
 # Intent: Contract v0.2.0, MVP-ready API additions
 
-Derived from: [docs/customers-contract-proposal.md](../../docs/customers-contract-proposal.md), [docs/products-sales-contract-proposal.md](../../docs/products-sales-contract-proposal.md) · Parent: the main Stockwise [intent.md](../intent.md) and [spec.md](../spec.md) (accepted) · Status: **draft** (written 2026-10-25 at Nnaemeka Chukwuma's "continue"; not yet accepted)
+Derived from: [docs/customers-contract-proposal.md](../../docs/customers-contract-proposal.md), [docs/products-sales-contract-proposal.md](../../docs/products-sales-contract-proposal.md) · Parent: the main Stockwise [intent.md](../intent.md) and [spec.md](../spec.md) (accepted) · Status: **accepted** (accepted 2026-10-27 by Nnaemeka Chukwuma; proposal A merged in PR #17, proposals B, C, D implemented)
 Originator: Victor Oyeleke (interface), through the proposals · Implementer: Nnaemeka Chukwuma · Contract sign-off: Isaac Bassey and Nnaemeka Chukwuma · Source of truth: the repository
 Decisions in force: this change's [WORKLOG.md](WORKLOG.md) D1-D3 · Supporting skills: none
 
