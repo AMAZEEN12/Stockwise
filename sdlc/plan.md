@@ -14,6 +14,8 @@ Sales usability amendment, 2026-10-26 (DM63-DM64): Victor authorized the five-it
 
 Sales quantity amendment, 2026-10-26 (DM66): after PR #22 merged, Victor chose selected-product counters inside catalogue rows, removal of the separate cart cards and sale-page empty-cart prompt, heading-level refresh, and a taller bounded results list. Implement on `fix/sale-quantity-controls` from merged main `9c00aac`, preserving DM65's customer drawer and all sale recovery, stock and submission guards. Customer balances remain contract-blocked and mobile coin visibility remains a later independent branch. Decided by Victor Oyeleke; logged by Codex.
 
+Remaining sales-usability sequence, 2026-10-26 (DM67): PR #23 merged the catalogue-row quantity UI, nullifying item 4 as future work. Victor authorized two separate follow-ups: item 5 on `fix/mobile-coin-visibility`, then item 2 on `feat/customer-credit-balances` as a draft PR pending API-owner approval. Mobile coin work keeps the existing asset decorative/aria-hidden and places it in flow below the wordmark. Each PR retains its own commit, verification and documentation. Decided by Victor Oyeleke; logged by Codex.
+
 All paths are relative to the **Stockwise repository root** (the local `stockwise/` folder, DM19). Java package root: `ng.tesa.stockwise`.
 
 ## Area owners (DM8, DM21)

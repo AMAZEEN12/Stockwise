@@ -4,6 +4,8 @@
 
 2026-10-26 amendment, DM66 (decided by Victor Oyeleke; logged by Codex): verify selected rows remain visible across search/pagination, quantity controls stay horizontal with 44px targets, minus stops at one, typed limits and stock maxima remain enforced, zero-stock conflict rows remain removable and continue blocking confirmation, Refresh occupies the catalogue heading, genuine empty/no-result states remain, and 360px layouts have no horizontal overflow. Existing tests remain unchanged on this fix branch.
 
+2026-10-26 amendment, DM67 (decided by Victor Oyeleke; logged by Codex): item 5 verifies the decorative coin at supported mobile widths, no horizontal overflow or overlap with header/wordmark/auth dialog, unchanged desktop placement, aria-hidden semantics, and a static reduced-motion state. Existing tests remain unchanged on this fix branch.
+
 Derived from: [spec.md](spec.md) (accepted 2026-10-23), [plan.md](plan.md) (accepted 2026-10-23) · Status: accepted (2026-10-23 by Nnaemeka Chukwuma)
 Decisions in force: [decisions.md](../decisions.md) DM1-DM25 (testing: DM22 coverage, DM23 test protection, DM24 visual, DM25 evals)
 Supporting skills: none
