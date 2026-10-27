@@ -126,9 +126,12 @@ public class ProductRepository {
      */
     public List<String> listCategories() {
         return jdbc.sql("""
-                SELECT DISTINCT category
-                FROM product
-                WHERE category IS NOT NULL AND trim(category) <> ''
+                SELECT category
+                FROM (
+                    SELECT DISTINCT category
+                    FROM product
+                    WHERE category IS NOT NULL AND trim(category) <> ''
+                ) distinct_categories
                 ORDER BY lower(category), category
                 """)
                 .query(String.class)
