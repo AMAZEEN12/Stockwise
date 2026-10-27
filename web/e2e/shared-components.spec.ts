@@ -31,7 +31,7 @@ test('shared category select supports keyboard selection and clearing restores s
 });
 
 test('shared success toast dismisses automatically after customer creation',async ({page})=>{
-  const customer={id:'33333333-3333-4333-8333-333333333333',displayName:'Shared Toast Customer',balanceKobo:0,storeCreditKobo:0,createdAt:'2026-10-25T08:00:00Z'};
+  const customer={id:'33333333-3333-4333-8333-333333333333',displayName:'Shared Toast Customer',balanceKobo:0,storeCreditKobo:0,hasDebtActivity:false,hasStoreCreditActivity:false,createdAt:'2026-10-25T08:00:00Z'};
   let created=false;
   await page.route('**/customers?*',(route)=>route.fulfill({json:{items:created?[customer]:[],page:0,size:100,totalItems:Number(created)}}));
   await page.route('**/customers',(route)=>{

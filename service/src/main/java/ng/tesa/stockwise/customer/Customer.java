@@ -14,7 +14,20 @@ public record Customer(
         String contactPlaceholder,
         long balanceKobo,
         long storeCreditKobo,
+        boolean hasDebtActivity,
+        boolean hasStoreCreditActivity,
         Instant createdAt) {
+
+    /** Backwards-compatible constructor for existing tests and call sites without activity flags. */
+    public Customer(
+            UUID id,
+            String displayName,
+            String contactPlaceholder,
+            long balanceKobo,
+            long storeCreditKobo,
+            Instant createdAt) {
+        this(id, displayName, contactPlaceholder, balanceKobo, storeCreditKobo, false, false, createdAt);
+    }
 
     /** Contract {@code CustomerCreate}. A new customer owes nothing and holds no store credit. */
     public record New(String displayName, String contactPlaceholder) {

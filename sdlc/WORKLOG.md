@@ -1,12 +1,12 @@
 # Work log: Stockwise (Team 3 main product)
 
-Change slug: `stockwise` · Started: 2026-10-23 · Last updated: 2026-10-26 by Codex (logging assistant for Victor Oyeleke); earlier handover by the agent for Nnaemeka Chukwuma
+Change slug: `stockwise` · Started: 2026-10-23 · Last updated: 2026-10-27 by Codex (logging assistant for Victor Oyeleke); earlier handover by the agent for Nnaemeka Chukwuma
 Source document: `Tesa cohort 6 software engineering capstone project.pdf` (TeSA Africa, "Four Real-World Products", 26 pages; Stockwise is product 3, pages 10-11; shared requirements pages 23-26)
 
 > Any agent opening this project: read this file first, then the "Conventions and guidelines" and "Decisions" sections, then the artifacts in this folder. Continue from "Resume here". Don't re-ask anything already answered below.
 
 ## Resume here
-Current frontend work, 2026-10-27 (Victor Oyeleke; logged by Codex): PR #24 merged item 5 into main at `6287154`. Hotfix branch `fix/dialog-drawer-placement` implements DM69 directly off merged main to fix side-drawer positioning and customer selector scrolling across mobile and desktop. Dialog positioning classes in `dialog.tsx` now scope centering translates strictly to `placement === "center"` and apply dock styling for `placement === "left"` and `placement === "right"`, preventing modern CSS `translate` variables from shifting side drawers off-screen in minified production bundles (resolving the mobile nav menu cut-off and desktop Add Product offset). In addition, `CustomerPicker.tsx` passes `bodyClassName="customer-picker-dialog-body"`, styled with `min-height: 0` in `customers.css` to restore smooth internal scrolling. Victor explicitly authorized delivering this hotfix on a separate branch with a PR. Item 2 remains independently prepared on `feat/customer-credit-balances` (draft PR #25).
+Current frontend work, 2026-10-27 (Victor Oyeleke; logged by Codex): PR #24 merged item 5 into main at `6287154`. Hotfix branch `fix/dialog-drawer-placement` implements DM69 directly off merged main to fix side-drawer positioning and customer selector scrolling across mobile and desktop (merged as PR #27 at `b060869`). Item 2 is prepared on `feat/customer-credit-balances` (draft PR #25), adding required independent debt/store-credit activity flags (`hasDebtActivity`, `hasStoreCreditActivity`), deriving them from append-only ledger source types without a migration, and presenting `—` versus formatted amounts consistently in Customers and Customer Picker. Victor approved the behavior and draft implementation; Isaac Bassey and Nnaemeka Chukwuma approval remains required before merge. Do not mark the item 2 PR ready or merge it until both approvals are recorded in `decisions.md` section 3.
 
 ### Earlier deployment handover
 
@@ -604,3 +604,15 @@ Decided by Victor Oyeleke (scope); Codex (implementation/verification mechanics)
   - `stockwise/decisions.md` §3: updated with Nnaemeka Chukwuma's sign-off for proposals B, C, D (pending Isaac Bassey) and confirmation of prior documentation line.
   - Formally accepted `intent.md`, `plan.md`, `test-plan.md`, and generated `EXECUTION.md` in `stockwise/sdlc/contract-v0-2/`.
   - Updated `stockwise/sdlc/contract-v0-2/WORKLOG.md` (Q4 answered, activity logged).
+
+### Customer debt/store-credit activity draft, 2026-10-27 (DM68)
+
+- Branch `feat/customer-credit-balances` was created directly from merged main, independently of item 5. Victor requested a complete draft PR after item 5's separate PR #24; this is implementation for review, not API-owner approval.
+- Added required `Customer.hasDebtActivity` and `Customer.hasStoreCreditActivity` response fields. The repository derives debt activity from any non-`STORE_CREDIT` ledger row and store-credit activity from `STORE_CREDIT` rows. Append-only history preserves true after repayment, reversal or draw returns the current amount to zero; a new customer remains false/false. No migration, endpoint, money representation or automatic netting was added.
+- Regenerated `web/src/api/schema.d.ts`; the API adapter rejects missing/non-boolean flags. The development simulation supplies flags for fixtures/new customers and activates debt history after a credit amount is recorded.
+- Customers desktop table/mobile cards and the Customer Picker now label both balances. False displays `—`; true uses the shared integer-kobo formatter, including `₦0.00`. The selected picker trigger exposes the customer and both balances as its accessible name. Duplicate display-name selection remains UUID-based.
+- Verification: ESLint passed with zero warnings; strict TypeScript passed; contract lint passed in 175 ms; 12 unit files / 37 tests passed; production build passed with 2302 modules in 14.84 s. The existing main chunk warning remains 555.78 kB / 183.08 kB gzip.
+- Focused Playwright passed 32/32 desktop/mobile customer, picker, sale, recovery and role scenarios in 1.7 minutes, including axe and viewport checks. After the accessible selected-trigger refinement, all 8 picker scenarios passed again in 1.0 minute. Four preserved-capture checks passed; desktop/mobile Customers and Picker captures were inspected and show independent dashes, values and numeric zero without clipping or overlap.
+- The unintercepted isolated simulation/browser journey passed: customer creation/contact, refresh/search, UUID picker selection, credit sale, integer-kobo result, `hasDebtActivity=true`, and unused `hasStoreCreditActivity=false`.
+- Service verification could not start on this machine: `JAVA_HOME` is unset and no `java` executable is installed; `.\mvnw.cmd verify` exited 1 with `Cannot start maven from wrapper`. `CustomerActivityIT` and the Monday HTTP journey assertions are included for CI/API-owner review, but no local Java pass is claimed.
+- Contract status: Victor Oyeleke approved the UI behavior and draft implementation. Isaac Bassey and Nnaemeka Chukwuma remain pending in `decisions.md` section 3. Keep the PR draft and unmerged until both approve the fields and ledger derivation.
