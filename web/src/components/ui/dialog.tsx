@@ -105,7 +105,10 @@ export const Dialog = React.forwardRef<HTMLDivElement, DialogProps>(function Dia
           onOpenAutoFocus={onOpenAutoFocus}
           onCloseAutoFocus={onCloseAutoFocus}
           className={cn(
-            "shared-dialog fixed left-1/2 top-1/2 z-50 flex max-h-[calc(100dvh-2rem)] w-[calc(100vw-2rem)] max-w-lg -translate-x-1/2 -translate-y-1/2 flex-col gap-4 overflow-y-auto overscroll-contain rounded-md border border-[var(--color-border)] bg-[var(--color-surface)] p-6 text-[var(--color-text)] shadow-lg",
+            "shared-dialog fixed z-50 flex flex-col overflow-y-auto overscroll-contain border border-[var(--color-border)] bg-[var(--color-surface)] text-[var(--color-text)] shadow-lg",
+            placement === "center" && "left-1/2 top-1/2 -translate-x-1/2 -translate-y-1/2 max-h-[calc(100dvh-2rem)] w-[calc(100vw-2rem)] max-w-lg gap-4 rounded-md p-6",
+            placement === "right" && "inset-y-0 right-0 h-full max-h-screen w-full max-w-lg border-l rounded-none p-0 gap-0",
+            placement === "left" && "inset-y-0 left-0 h-full max-h-screen w-full max-w-lg border-r rounded-none p-0 gap-0",
             className,
           )}
         >
