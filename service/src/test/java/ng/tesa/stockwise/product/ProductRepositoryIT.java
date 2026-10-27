@@ -93,6 +93,8 @@ class ProductRepositoryIT extends DatabaseTestSupport {
         assertThat(ids(new Product.Filter("rice-5", null, null))).containsExactly(out);
         assertThat(ids(new Product.Filter("milk", "Dairy", StockState.IN_STOCK))).containsExactly(inStock);
         assertThat(ids(new Product.Filter("milk", "Grains", null))).isEmpty();
+        assertThat(ids(new Product.Filter(null, null, null, true))).containsExactlyInAnyOrder(inStock, low, out);
+        assertThat(ids(new Product.Filter(null, null, null, false))).containsExactly(archived);
     }
 
     /** R2: a keyword is plain text, so % and _ match only themselves. */
@@ -128,6 +130,17 @@ class ProductRepositoryIT extends DatabaseTestSupport {
         assertThatThrownBy(() -> new Page.Request(-1, 20)).isInstanceOf(IllegalArgumentException.class);
         assertThatThrownBy(() -> new Page.Request(0, 0)).isInstanceOf(IllegalArgumentException.class);
         assertThatThrownBy(() -> new Page.Request(0, 101)).isInstanceOf(IllegalArgumentException.class);
+    }
+
+    @Test
+    void listCategoriesReturnsAlphabeticallySortedDistinctCategories() {
+        products.create(new Product.New("P1", "Product 1", "Dairy", 10_000, 1, 0));
+        products.create(new Product.New("P2", "Product 2", "beverages", 10_000, 1, 0));
+        products.create(new Product.New("P3", "Product 3", "Dairy", 10_000, 1, 0));
+        products.create(new Product.New("P4", "Product 4", "Grains", 10_000, 1, 0));
+
+        List<String> categories = products.listCategories();
+        assertThat(categories).containsExactly("beverages", "Dairy", "Grains");
     }
 
     private List<UUID> ids(Product.Filter filter) {

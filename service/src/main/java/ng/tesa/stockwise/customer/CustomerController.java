@@ -1,6 +1,7 @@
 package ng.tesa.stockwise.customer;
 
 import java.net.URI;
+import java.time.Instant;
 import java.util.UUID;
 
 import jakarta.validation.Valid;
@@ -40,11 +41,12 @@ public class CustomerController {
     }
 
     @GetMapping
-    public Page<Customer> list(
+    public CustomerPage list(
             @RequestParam(required = false) @Size(max = 100) String q,
             @RequestParam(defaultValue = "0") @Min(0) int page,
             @RequestParam(defaultValue = "20") @Min(1) @Max(Page.MAX_SIZE) int size) {
-        return customers.list(q, new Page.Request(page, size));
+        Page<Customer> result = customers.list(q, new Page.Request(page, size));
+        return CustomerPage.of(result, Instant.now());
     }
 
     /**

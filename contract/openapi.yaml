@@ -5,8 +5,12 @@ info:
   summary: Stock and customer-credit ledger for one demonstration shop (TeSA Cohort 6, Team 3).
   description: |
     Contract v0.1 covers the **Monday 26 Oct MVP paths only** (EXECUTION.md step 2).
-    v0.2.0 adds only optional, backward-compatible features (sdlc/contract-v0-2): so far an optional
-    `Idempotency-Key` on `POST /customers`. A v0.1.0 client keeps working unchanged.
+    v0.2.0 adds only optional, backward-compatible features (sdlc/contract-v0-2):
+    - optional `Idempotency-Key` on `POST /customers` (proposal A);
+    - specified customer search ordering and `asOf` on `CustomerPage` (proposal B);
+    - safe integer bounds on money (`Kobo` maximum 9007199254740991) (proposal C);
+    - `GET /product-categories` and optional `active` query filter on `GET /products` (proposal D).
+    A v0.1.0 client keeps working unchanged.
     Remaining paths (restocks, repayments, reversals, ledger, dashboard, product edit/archive,
     movements) are added in later versions, each logged in `decisions.md` §3.
 
@@ -137,6 +141,11 @@ paths:
           schema:
             type: string
             maxLength: 60
+        - name: active
+          in: query
+          description: Filter by active status (true for active only, false for archived/inactive only). Omit to include both active and inactive products.
+          schema:
+            type: boolean
         - name: stockState
           in: query
           description: Omit to list every product, archived ones included.
@@ -229,17 +238,46 @@ paths:
         '404':
           $ref: '#/components/responses/NotFound'
 
+  /product-categories:
+    get:
+      tags: [products]
+      operationId: listProductCategories
+      summary: List distinct product categories
+      description: Safe. Any role. Returns all distinct non-empty product categories in case-insensitive alphabetical order.
+      parameters:
+        - $ref: '#/components/parameters/RequestId'
+      responses:
+        '200':
+          description: Distinct product categories in case-insensitive alphabetical order
+          headers:
+            X-Request-Id:
+              $ref: '#/components/headers/RequestId'
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  type: string
+        '400':
+          $ref: '#/components/responses/BadRequest'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+
   /customers:
     get:
       tags: [customers]
       operationId: listCustomers
       summary: List customers
-      description: Safe. Any role.
+      description: |
+        Safe. Any role.
+        - Results ordered deterministically by `LOWER(display_name) ASC, id ASC`.
+        - Duplicate display names and contacts are explicitly permitted; the UUID is the customer identity.
+        - `q` matches case-insensitively against trimmed customer display names.
       parameters:
         - $ref: '#/components/parameters/RequestId'
         - name: q
           in: query
-          description: Keyword matched against display name.
+          description: Keyword matched against display name (case-insensitive substring; empty or omitted returns all).
           schema:
             type: string
             maxLength: 100
@@ -601,6 +639,7 @@ components:
       type: integer
       format: int64
       minimum: 0
+      maximum: 9007199254740991
       x-unit: kobo
 
     Role:
@@ -837,7 +876,7 @@ components:
 
     CustomerPage:
       type: object
-      required: [items, page, size, totalItems]
+      required: [items, page, size, totalItems, asOf]
       properties:
         items:
           type: array
@@ -852,6 +891,10 @@ components:
         totalItems:
           type: integer
           format: int64
+        asOf:
+          type: string
+          format: date-time
+          description: UTC timestamp when the page was queried and balances evaluated.
 
     SaleLineCreate:
       type: object
