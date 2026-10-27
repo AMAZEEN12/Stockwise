@@ -11,7 +11,7 @@ const demoEnv=loadEnv('development',process.cwd(),'VITE_DEMO_');
 const accounts=['OWNER','ASSISTANT','ADMIN'].map((role,index)=>({...mockUser,
   id:index===0 ? mockUser.id : `a2222222-2222-4222-8222-${String(222222222222+index)}`,
   role,displayName:`Demo ${role[0]+role.slice(1).toLowerCase()}`,
-  email:demoEnv[`VITE_DEMO_${role}_EMAIL`] || `${role.toLowerCase()}@stockwise.demo`,
+  email:demoEnv[`VITE_DEMO_${role}_EMAIL`] || `${role.toLowerCase()}@stockwise.test`,
 }));
 const sessions=new Map();
 const customers = [

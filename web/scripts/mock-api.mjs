@@ -11,7 +11,7 @@ const contract = YAML.parse(await readFile(resolve(webRoot, '../contract/openapi
 // Prism validates request shapes; it does not authenticate passwords or implement roles.
 const user = {
   id: 'a2222222-2222-4222-8222-222222222222',
-  email: 'owner@stockwise.demo',
+  email: 'owner@stockwise.test',
   displayName: 'Demo Owner',
   role: 'OWNER',
 };
