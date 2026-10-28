@@ -1,0 +1,53 @@
+name: Lighthouse
+on:
+  workflow_dispatch:
+    inputs:
+      url:
+        description: Interface address (defaults to the WEB_URL repository variable)
+        required: false
+
+permissions:
+  contents: read
+
+jobs:
+  lighthouse:
+    runs-on: ubuntu-latest
+    env:
+      TARGET: ${{ inputs.url || vars.WEB_URL }}
+    steps:
+      - uses: actions/setup-node@v4
+        with: { node-version: 22 }
+      - name: Check the target
+        run: |
+          [ -n "$TARGET" ] || { echo "::error::Give a url or set the WEB_URL repository variable."; exit 1; }
+          curl -fsS -o /dev/null "$TARGET" || { echo "::error::$TARGET is not reachable."; exit 1; }
+      - name: Lighthouse, mobile and desktop
+        run: |
+          set -euo pipefail
+          flags="--headless=new --no-sandbox"
+          npx --yes lighthouse@12 "$TARGET" --chrome-flags="$flags" --only-categories=performance,accessibility \
+            --form-factor=mobile --output=json --output=html --output-path=./lh-mobile --quiet
+          npx --yes lighthouse@12 "$TARGET" --chrome-flags="$flags" --only-categories=performance,accessibility \
+            --preset=desktop --output=json --output=html --output-path=./lh-desktop --quiet
+      - name: Summarise
+        run: |
+          {
+            echo "### Lighthouse on $TARGET ($(date -u +%Y-%m-%d))"
+            echo "| Run | Performance | Accessibility | LCP | CLS | TBT |"
+            echo "|----|----|----|----|----|----|"
+            for f in mobile desktop; do
+              node -e '
+                const r = require("./lh-'$f'.report.json");
+                const a = r.audits, c = r.categories;
+                console.log(`| '$f' | ${Math.round(c.performance.score*100)} | ${Math.round(c.accessibility.score*100)} | ${a["largest-contentful-paint"].displayValue} | ${a["cumulative-layout-shift"].displayValue} | ${a["total-blocking-time"].displayValue} |`);
+              '
+            done
+          } | tee -a "$GITHUB_STEP_SUMMARY"
+      - uses: actions/upload-artifact@v4
+        with:
+          name: lighthouse-reports
+          path: |
+            lh-mobile.report.html
+            lh-mobile.report.json
+            lh-desktop.report.html
+            lh-desktop.report.json
