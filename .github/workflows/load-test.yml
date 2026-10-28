@@ -29,6 +29,9 @@ jobs:
       - name: k6 sales at steady shop load (warm)
         continue-on-error: true
         run: docker run --rm --user "$(id -u):$(id -g)" -v "$PWD:/work" -w /work -e API_URL -e OWNER_PASSWORD grafana/k6:latest run --summary-export results/sales-steady.json load/k6/sales-steady.js | tee results/sales-steady.txt
+      - name: k6 sales spread across products
+        continue-on-error: true
+        run: docker run --rm --user "$(id -u):$(id -g)" -v "$PWD:/work" -w /work -e API_URL -e OWNER_PASSWORD -e PEAK_VUS grafana/k6:latest run --summary-export results/sales-spread.json load/k6/sales-spread.js | tee results/sales-spread.txt
       - name: Prepare
         run: mkdir -p results
       - name: Cold start
