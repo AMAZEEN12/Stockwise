@@ -76,3 +76,14 @@ Historical engineer-count wording below is superseded by DM53 (2026-10-25): Vict
 - Victor authorized the reviewed five-item Stockwise-only plan and the three final choices. Recorded separate branches/required commits and human merge order in docs/sales-usability-plan.md. No other engineer approval is inferred.
 - Started feat/sale-product-catalog from latest merged main 6bf48b8, preserving the supplied app.css edit separately. Reused existing q/page/size, added immediate bounded catalogue/paging and failure/query isolation; no active contract or business-rule edit. Existing service ordering is documented as an explicit-contract proposal; simulation now matches it.
 - Added meaningful catalogue query and browser regressions without weakening existing checks. Backend wrapper could not start; JAVA_HOME is unset and no java executable was found. Initial sandboxed Vitest startup hit an esbuild filesystem permission error; retry uses the same suite with sandbox escalation. Actual final outcomes go in WORKLOG.
+
+## 2026-10-28: Delivery review of Genie and Stockwise, evidence tooling
+
+- Engineer and decision maker: Blessing Nwafor (Delivery and evidence). Assistant: Claude, in a chat session; no AI runs in CI.
+- Request: read both repositories and the brief; list what the Delivery owner still had to do; generate the missing evidence files (rule-removal log and runner, deployed concurrency script, load-test runner and report, rollback rehearsal, CODEOWNERS, README block, work record).
+- Human decisions: Blessing ran the rule-removal runner on a scratch branch (all ten removals reported as failing), chose which files to adopt, and corrected the assistant on her identity and on who wrote the workflows.
+- Checked-and-found-wrong:
+    1. The assistant gave `./mvnw ... -Dit.test=AuthorizationIT` for PowerShell. Blessing ran it and Maven failed with "Unknown lifecycle phase .test=AuthorizationIT" because PowerShell splits the option at the dot. Fix: quote every -D option; the runner script now does.
+    2. The assistant said that changing only `SecurityConfig` would make `AuthorizationIT` fail. Reading the code again showed `RequestController.assignTechnician` has a second role check, so the removal would still pass. The runner removes both layers; the ten runs then failed as expected.
+    3. The assistant said Blessing had no commits in Genie. Blessing pointed out that she is @AMAZEEN12; git shows 7 Genie commits and 19 in Stockwise under that account.
+- Verification: the runner output on Blessing's machine (summary of ten FAILS AS EXPECTED), the run folder, and the repository history.
