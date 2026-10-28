@@ -102,6 +102,21 @@ const server = createServer(async (request,response) => {
     const customer = {...body,displayName:body.displayName.trim(),id:randomUUID(),balanceKobo:0,storeCreditKobo:0,hasDebtActivity:false,hasStoreCreditActivity:false,createdAt:new Date().toISOString()};
     customers.push(customer);send(201,customer);return;
   }
+  if (url.pathname.startsWith('/customers/') && url.pathname.endsWith('/store-credit') && request.method === 'POST') {
+    if (!['OWNER','ADMIN'].includes(user.role)) {problem(403,'FORBIDDEN','Only Owner and Admin can issue store credit.'); return;}
+    const customerId = url.pathname.split('/')[2];
+    const customer = customers.find((c) => c.id === customerId);
+    if (!customer) {problem(404,'NOT_FOUND','Customer not found.'); return;}
+    const amountKobo = Number(body.amountKobo);
+    if (!Number.isSafeInteger(amountKobo) || amountKobo <= 0) {
+      problem(400,'VALIDATION_FAILED','Check fields.',[{field:'amountKobo',message:'Amount must be a positive integer.'}]);
+      return;
+    }
+    customer.storeCreditKobo += amountKobo;
+    customer.hasStoreCreditActivity = true;
+    send(201, customer);
+    return;
+  }
   if (url.pathname === '/sales' && request.method === 'GET') {
     const page=Number(url.searchParams.get('page') || 0);const size=Number(url.searchParams.get('size') || 20);
     const from=url.searchParams.get('from');const to=url.searchParams.get('to');const paymentType=url.searchParams.get('paymentType');const customerId=url.searchParams.get('customerId');
@@ -123,7 +138,7 @@ const server = createServer(async (request,response) => {
       if (saved.body !== serialized) {problem(422,'IDEMPOTENCY_KEY_REUSED','This key was already used with a different request.'); return;}
       send(201,saved.sale); return;
     }
-    if (!['PAID','CREDIT'].includes(body.paymentType) || !Array.isArray(body.lines) || body.lines.length < 1 || body.lines.length > 50 || body.lines.some((line) => !line || typeof line !== 'object' || !isUuid(line.productId) || !Number.isInteger(line.quantity) || line.quantity < 1 || line.quantity > 10000 || Object.keys(line).some((key) => !['productId','quantity'].includes(key))) || Object.keys(body).some((key) => !['paymentType','lines','customerId','dueDate'].includes(key)) || (body.paymentType === 'CREDIT' && !body.customerId) || (body.dueDate && (body.paymentType !== 'CREDIT' || !/^\d{4}-\d{2}-\d{2}$/.test(body.dueDate) || Number.isNaN(Date.parse(body.dueDate))))) {problem(400,'VALIDATION_FAILED','Check sale quantities, payment type and customer.'); return;}
+    if (!['PAID','CREDIT'].includes(body.paymentType) || !Array.isArray(body.lines) || body.lines.length < 1 || body.lines.length > 50 || body.lines.some((line) => !line || typeof line !== 'object' || !isUuid(line.productId) || !Number.isInteger(line.quantity) || line.quantity < 1 || line.quantity > 10000 || Object.keys(line).some((key) => !['productId','quantity'].includes(key))) || Object.keys(body).some((key) => !['paymentType','lines','customerId','dueDate','useStoreCredit'].includes(key)) || (body.paymentType === 'CREDIT' && !body.customerId) || (body.dueDate && (body.paymentType !== 'CREDIT' || !/^\d{4}-\d{2}-\d{2}$/.test(body.dueDate) || Number.isNaN(Date.parse(body.dueDate))))) {problem(400,'VALIDATION_FAILED','Check sale quantities, payment type and customer.'); return;}
     const customer = customers.find((person) => person.id === body.customerId);
     if (body.customerId && !customer) {problem(404,'NOT_FOUND','Customer not found.'); return;}
     const grouped = new Map();
@@ -139,7 +154,7 @@ const server = createServer(async (request,response) => {
     }
     const total = lines.reduce((sum,line) => sum+BigInt(line.lineTotalKobo),0n);
     if (total > BigInt(Number.MAX_SAFE_INTEGER)) {problem(400,'VALIDATION_FAILED','Amount is too large.'); return;}
-    const totalKobo = Number(total); const applied = customer ? Math.min(customer.storeCreditKobo,totalKobo) : 0;
+    const totalKobo = Number(total); const applied = customer && (body.useStoreCredit || body.useStoreCredit === undefined) ? Math.min(customer.storeCreditKobo,totalKobo) : 0;
     if (customer && body.paymentType === 'CREDIT' && BigInt(customer.balanceKobo)+total-BigInt(applied) > BigInt(Number.MAX_SAFE_INTEGER)) {problem(400,'VALIDATION_FAILED','Customer balance would exceed the supported amount.'); return;}
     for (const line of lines) {const product = products.find((item) => item.id === line.productId); product.quantity -= line.quantity; product.version++; product.updatedAt = new Date().toISOString();}
     if (customer) {customer.storeCreditKobo -= applied; if (body.paymentType === 'CREDIT') {customer.balanceKobo += totalKobo-applied; if (totalKobo-applied > 0) customer.hasDebtActivity=true;}}

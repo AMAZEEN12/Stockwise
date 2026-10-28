@@ -625,3 +625,32 @@ Decided by Victor Oyeleke (scope); Codex (implementation/verification mechanics)
     - Frontend UX designs for Assistant prompt modal and Owner code generator.
   - `decisions.md` §3: Logged draft contract proposals pending Isaac Bassey (API & access) and Nnaemeka Chukwuma (Data & rules) review.
 
+### Store Credit Tender & Issuing UI Implementation (2026-10-28)
+
+- **Author / Origin:** Interface Engineer (Victor Oyeleke; logged by Codex).
+- **Branch:** `feat/store-credit-ui`.
+- **Scope Implemented:**
+  - **Store Credit Tender (`NewSalePage.tsx`):**
+    - Removed the hard block (`unavailableCredit = credit > 0 && !simulation`) that prevented confirming sales when store credit was checked.
+    - Added `useStoreCredit: true` to the sale request payload snapshot when store credit is applied.
+    - Updated payment breakdown to show clean deduction of store credit and remaining cash/credit balance.
+    - Enhanced confirmation dialog (`ConfirmDialog`) to display subtotal and store credit applied explicitly.
+    - Updated receipt persistence to record credit deductions seamlessly.
+  - **Store Credit Issuing Drawer (`IssueStoreCreditDialog.tsx`, `CustomersPage.tsx`):**
+    - Built a right-docked drawer (`placement="right"`) allowing `OWNER` and `ADMIN` to issue store credit.
+    - Supports amount in Naira (validated integer kobo, safe bounds up to $9,007,199,254,740,991$), reason selection (`RETURN_REFUND`, `ADVANCE_DEPOSIT`, `CHANGE_SHORTAGE`, `LOYALTY_REWARD`, `MANUAL_ADJUSTMENT`), and optional reference notes.
+    - Added "+ Credit" actions to customer table rows and mobile customer balance cards.
+    - Integrated with RTK Query mutation `useIssueStoreCreditMutation` calling `POST /api/v1/customers/{id}/store-credit` with `Idempotency-Key` and tag invalidation.
+  - **Development Simulation (`development-api.mjs`):**
+    - Added mock handler for `POST /api/v1/customers/:id/store-credit` updating in-memory customer `storeCreditKobo` and setting `hasStoreCreditActivity = true`.
+    - Added support for `body.useStoreCredit` in `POST /api/v1/sales` to deduct applied credit from customer balance.
+  - **Typographic Fix (`CustomerPicker.tsx`):**
+    - Corrected double-encoded middle dot character `Â·` to clean `·` in the customer picker trigger.
+- **Verification:**
+  - ESLint: passed with 0 warnings.
+  - TypeScript: strict typecheck passed with 0 errors.
+  - Vitest: 14 test suites passed (44/44 tests green), including new suite `issue-store-credit.test.ts`.
+  - Production build: built cleanly in 23.21s with all assets bundled.
+  - Contract lint: Redocly validated `contract/openapi.yaml` in 201ms with 0 errors.
+
+

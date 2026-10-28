@@ -1,4 +1,4 @@
-﻿import {useRef,useState} from 'react';
+import {useRef,useState} from 'react';
 import {Dialog} from '../../components/ui/dialog';
 import {Button} from '../../components/ui/button';
 import {FilterBar} from '../../components/ui/filter-bar';
@@ -27,7 +27,7 @@ export function CustomerPicker({user,customer,disabled,required,onSelect}:Props)
   const choose = (person:Customer) => {onSelect(person);setMode('selected');};
   const canCreate = ['OWNER','ASSISTANT'].includes(user.role);
   return <>
-    <Button variant="ghost" ref={trigger} type="button" contentClassName="customer-picker-trigger-content" className="shop-input customer-picker-trigger" aria-label={customer ? `${customer.displayName}. ${customerBalanceSummary(customer)}` : required ? 'Choose customer (required)' : 'Customer (optional)'} aria-haspopup="dialog" aria-expanded={open} aria-invalid={required && !customer ? true : undefined} disabled={disabled} onClick={() => {setMode(customer ? 'selected' : 'list');setQuery('');setOpen(true);}}><span>{customer ? `${customer.displayName} Â· ${customerBalanceSummary(customer)}` : required ? 'Choose customer (required)' : 'Customer (optional)'}</span><svg aria-hidden="true" width="12" height="12" viewBox="0 0 12 12" fill="currentColor"><path d="m3 4 3 4 3-4z"/></svg></Button>
+    <Button variant="ghost" ref={trigger} type="button" contentClassName="customer-picker-trigger-content" className="shop-input customer-picker-trigger" aria-label={customer ? `${customer.displayName}. ${customerBalanceSummary(customer)}` : required ? 'Choose customer (required)' : 'Customer (optional)'} aria-haspopup="dialog" aria-expanded={open} aria-invalid={required && !customer ? true : undefined} disabled={disabled} onClick={() => {setMode(customer ? 'selected' : 'list');setQuery('');setOpen(true);}}><span>{customer ? `${customer.displayName} · ${customerBalanceSummary(customer)}` : required ? 'Choose customer (required)' : 'Customer (optional)'}</span><svg aria-hidden="true" width="12" height="12" viewBox="0 0 12 12" fill="currentColor"><path d="m3 4 3 4 3-4z"/></svg></Button>
     {customer && !disabled && <Button variant="ghost" className="customer-remove" onClick={() => onSelect(undefined)}>Remove customer</Button>}
     <Dialog placement="right" open={open && !disabled} dismissible={!busy} onOpenChange={(value) => {if (!value) close();}} title={mode === 'selected' ? 'Customer' : 'Choose customer'} description="Choose an existing customer or add a fictional customer for this sale." descriptionClassName="sr-only" className="customer-picker-dialog" bodyClassName="customer-picker-dialog-body" titleClassName="customer-dialog-title" closeClassName={`customer-dialog-close${busy ? ' customer-close-busy' : ''}`} overlayClassName="customer-backdrop" onCloseAutoFocus={(event) => {event.preventDefault();trigger.current?.focus();}}>
       <div className="customer-picker-body">
