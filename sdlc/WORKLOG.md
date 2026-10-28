@@ -625,3 +625,35 @@ Decided by Victor Oyeleke (scope); Codex (implementation/verification mechanics)
     - Frontend UX designs for Assistant prompt modal and Owner code generator.
   - `decisions.md` §3: Logged draft contract proposals pending Isaac Bassey (API & access) and Nnaemeka Chukwuma (Data & rules) review.
 
+### Delegated Sale Reversal OTP Dialogs Implementation (2026-10-28)
+
+- **Author / Origin:** Interface Engineer (Victor Oyeleke; logged by Codex).
+- **Branch:** `feat/reversal-otp-ui`.
+- **Scope Implemented:**
+  - **Models & Endpoints:**
+    - Request models in `web/src/models/requests/reversals.request.ts` (`ReversalAuthorizationCreate`, `SaleReversalRequest`, `ReversalReason`).
+    - Response models in `web/src/models/responses/reversals.response.ts` (`ReversalAuthorization`, `SaleReversalResponse`).
+    - Service endpoints in `web/src/service/endpoints/reversals.endpoints.ts` and RTK Query mutations in `web/src/service/api/reversals.api.ts` (`useGenerateReversalCodeMutation`, `useReverseSaleMutation`).
+  - **Supervisor Code Generator Dialog (`GenerateReversalCodeDialog.tsx`):**
+    - Modal for `OWNER` and `ADMIN` to generate single-use 6-digit reversal authorization codes.
+    - Monospace 6-digit display (`XXX XXX`), live 15-minute countdown timer (`MM:SS`), copy-to-clipboard action with visual feedback, and expired code regeneration.
+  - **Cashier Reversal Dialog (`ReverseSaleDialog.tsx`):**
+    - Modal for reversing sales. For role `ASSISTANT`, strictly requires a 6-digit supervisor code before submission.
+    - Direct reversal permitted for `OWNER` / `ADMIN` with option to generate code for cashier.
+    - Reason selection (`CUSTOMER_RETURN`, `BILLING_ERROR`, `DAMAGED_PRODUCT`, `OTHER`) and optional notes.
+    - Idempotent submission via `Idempotency-Key` header with automatic error mapping (`INVALID_AUTHORIZATION_CODE`, `AUTHORIZATION_SALE_MISMATCH`, `AUTHORIZATION_ALREADY_USED`, `SALE_ALREADY_REVERSED`).
+  - **Receipt Page Integration (`ReceiptPage.tsx`):**
+    - Added "Reverse sale" action for all staff and "Generate reversal code" action for Owner/Admin.
+    - Clear banner and status updates when a sale is reversed.
+  - **Development Simulation API (`development-api.mjs`):**
+    - Added in-memory authorization map and handlers for `POST /api/v1/reversals/authorizations` and `POST /api/v1/sales/:id/reversal`.
+    - Handles supervisor code validation, single-use redemption, stock restoration, and duplicate reversal prevention.
+  - **Verification:**
+    - ESLint: passed with 0 warnings.
+    - TypeScript: strict typecheck passed with 0 errors.
+    - Vitest: 14 test suites passed (44/44 tests green), including `reversals.test.ts`.
+    - Production build: built cleanly in 19.21s with all assets bundled.
+    - Contract lint: Redocly validated `contract/openapi.yaml` in 186ms.
+    - Playwright: 30/30 tests passed (2.6m) across desktop and mobile with zero axe accessibility violations.
+
+

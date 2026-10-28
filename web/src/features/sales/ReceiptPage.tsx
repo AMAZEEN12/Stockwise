@@ -7,13 +7,21 @@ import { Button } from "../../components/ui/button";
 import { LoadingState } from "../../components/ui/loading-state";
 import { StatusPanel } from "../../components/ui/status-panel";
 import { readReceipt, validSale } from "./sale-draft";
+import { ReverseSaleDialog } from "./ReverseSaleDialog";
+import { GenerateReversalCodeDialog } from "./GenerateReversalCodeDialog";
 import "../../styles/sales.css";
+
 export function ReceiptPage() {
   const { saleId = "" } = useParams();
   const user = useOutletContext<User>();
   const [saved] = useState(() => readReceipt(saleId, user.id));
   const query = useSaleQuery(saleId, { skip: !!saved });
   const sale = saved?.sale || query.data;
+
+  const [reverseDialogOpen, setReverseDialogOpen] = useState(false);
+  const [generateCodeDialogOpen, setGenerateCodeDialogOpen] = useState(false);
+  const [isReversed, setIsReversed] = useState(false);
+
   return (
     <div className="receipt-page">
       <h1>Receipt</h1>
@@ -34,9 +42,15 @@ export function ReceiptPage() {
       ) : (
         <>
           <section className="receipt-card">
-            <h2>
-              <span aria-hidden="true">✓</span> Sale recorded
-            </h2>
+            {isReversed ? (
+              <h2 className="text-[var(--color-danger)]">
+                <span aria-hidden="true">✕</span> Sale reversed
+              </h2>
+            ) : (
+              <h2>
+                <span aria-hidden="true">✓</span> Sale recorded
+              </h2>
+            )}
             <p className="micro">
               {sale.reference} ·{" "}
               {new Date(sale.createdAt).toLocaleTimeString("en-GB", {
@@ -46,6 +60,11 @@ export function ReceiptPage() {
               })}{" "}
               WAT
             </p>
+            {isReversed && (
+              <div className="p-3 bg-[var(--color-danger-subtle)] border border-[var(--color-danger)] rounded-md text-sm text-[var(--color-danger)] my-3">
+                This sale has been reversed. Inventory items have been returned to stock.
+              </div>
+            )}
             <div className="receipt-lines">
               {sale.lines.map((line, index) => (
                 <div key={`${line.productId}-${index}`}>
@@ -89,6 +108,24 @@ export function ReceiptPage() {
             <Link className="primary-link" to="/app/sell">
               New sale
             </Link>
+            {!isReversed && (
+              <Button
+                size="lg"
+                variant="danger"
+                onClick={() => setReverseDialogOpen(true)}
+              >
+                Reverse sale
+              </Button>
+            )}
+            {["OWNER", "ADMIN"].includes(user.role) && !isReversed && (
+              <Button
+                size="lg"
+                variant="secondary"
+                onClick={() => setGenerateCodeDialogOpen(true)}
+              >
+                Generate reversal code
+              </Button>
+            )}
             <Button
               size="lg"
               variant="secondary"
@@ -102,6 +139,27 @@ export function ReceiptPage() {
             Open Sales from the menu to view history. Receipt linking is coming
             later.
           </p>
+
+          <ReverseSaleDialog
+            open={reverseDialogOpen}
+            onOpenChange={setReverseDialogOpen}
+            saleId={sale.id}
+            saleReference={sale.reference}
+            totalKobo={sale.totalKobo}
+            userRole={user.role}
+            onSuccess={() => setIsReversed(true)}
+            onRequestCodeClick={() => {
+              setReverseDialogOpen(false);
+              setGenerateCodeDialogOpen(true);
+            }}
+          />
+
+          <GenerateReversalCodeDialog
+            open={generateCodeDialogOpen}
+            onOpenChange={setGenerateCodeDialogOpen}
+            saleId={sale.id}
+            saleReference={sale.reference}
+          />
         </>
       )}
     </div>
