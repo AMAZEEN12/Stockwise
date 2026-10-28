@@ -68,7 +68,53 @@ test('admin can read history, expired sessions explain recovery, layout fits nar
   await setup(page,'ADMIN');let expired=false;
   await page.route('**/sales?*',(route)=>expired ? route.fulfill({status:401,json:{code:'UNAUTHENTICATED'}}) : route.fulfill({json:{items:sales,page:0,size:20,totalItems:4}}));
   await page.goto('/app/sales');await expect(page.getByRole('heading',{name:'Sales',exact:true})).toBeVisible();
-  for(const width of [320,360,768,1024,1440]){await page.setViewportSize({width,height:1000});expect(await page.evaluate(()=>document.documentElement.scrollWidth)).toBeLessThanOrEqual(width);}
+  for (const width of [320, 360, 768, 1024, 1440]) {
+  await page.setViewportSize({ width, height: 1000 });
+
+  const diagnostics = await page.evaluate((expectedWidth) => {
+    const elements = Array.from(document.querySelectorAll("*"));
+
+    const overflowingElements = elements
+      .map((element) => {
+        const rect = element.getBoundingClientRect();
+        const style = getComputedStyle(element);
+
+        return {
+          tag: element.tagName.toLowerCase(),
+          id: element.id,
+          className:
+            typeof element.className === "string"
+              ? element.className
+              : "",
+          left: Math.round(rect.left),
+          right: Math.round(rect.right),
+          width: Math.round(rect.width),
+          scrollWidth: element.scrollWidth,
+          position: style.position,
+          overflowX: style.overflowX,
+        };
+      })
+      .filter(
+        (element) =>
+          element.width > 0 &&
+          element.right > expectedWidth + 1,
+      )
+      .sort((a, b) => b.right - a.right)
+      .slice(0, 15);
+
+    return {
+      viewport: window.innerWidth,
+      documentWidth: document.documentElement.scrollWidth,
+      bodyWidth: document.body.scrollWidth,
+      overflowingElements,
+    };
+  }, width);
+
+  expect(
+    diagnostics.documentWidth,
+    `Horizontal overflow at viewport ${width}px:\n${JSON.stringify(diagnostics, null, 2)}`,
+  ).toBeLessThanOrEqual(width);
+}
   expired=true;await page.getByRole('button',{name:'Refresh',exact:true}).click();await expect(page.getByText('Your session ended. Sign in again to load sales.',{exact:true})).toBeVisible();
 });
 test('refresh recomputes Lagos day after midnight and rejects duplicate page identities',async({page})=>{
@@ -78,3 +124,4 @@ test('refresh recomputes Lagos day after midnight and rejects duplicate page ide
   await page.clock.setFixedTime(new Date('2026-10-24T23:00:01Z'));await page.getByRole('button',{name:'Refresh',exact:true}).click();await expect.poll(()=>ranges.at(-1)).toBe('2026-10-25');
   duplicate=true;await page.getByRole('button',{name:'Refresh',exact:true}).click();await expect(page.getByRole('heading',{name:"Couldn't refresh sales"})).toBeVisible();await expect(page.locator('.history-table tbody tr')).toHaveCount(4);
 });
+
