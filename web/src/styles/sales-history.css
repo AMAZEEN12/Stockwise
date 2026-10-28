@@ -49,19 +49,52 @@
   border-bottom: 1px solid var(--color-border);
   overflow-wrap: anywhere;
 }
+.history-table th:first-child,
+.history-table td:first-child {
+  padding-left: 10px;
+}
+.history-table th:last-child,
+.history-table td:last-child {
+  padding-right: 10px;
+}
 .history-row-clickable {
   cursor: pointer;
-  transition: background-color 150ms ease;
+  transition: background-color 150ms ease, color 150ms ease;
 }
 .history-row-clickable:hover {
-  background-color: var(--color-surface-hover);
+  background-color: color-mix(in srgb, var(--color-primary) 8%, var(--color-surface));
+}
+.history-row-clickable:hover th[scope="row"] {
+  color: var(--color-primary);
+}
+.history-row-clickable:focus-visible {
+  outline: 2px solid var(--color-primary);
+  outline-offset: -2px;
+  background-color: color-mix(in srgb, var(--color-primary) 10%, var(--color-surface));
+}
+.history-row-clickable:focus-visible th[scope="row"] {
+  color: var(--color-primary);
+}
+.history-row-clickable:active {
+  background-color: color-mix(in srgb, var(--color-primary) 14%, var(--color-surface));
 }
 .history-card-clickable {
   cursor: pointer;
-  transition: border-color 150ms ease, background-color 150ms ease;
+  transition: border-color 150ms ease, background-color 150ms ease, transform 150ms ease;
 }
 .history-card-clickable:hover {
-  border-color: var(--color-border-hover);
+  border-color: var(--color-primary);
+  background-color: color-mix(in srgb, var(--color-primary) 6%, var(--color-surface));
+}
+.history-card-clickable:focus-visible {
+  outline: 2px solid var(--color-primary);
+  outline-offset: 2px;
+  border-color: var(--color-primary);
+  background-color: color-mix(in srgb, var(--color-primary) 6%, var(--color-surface));
+}
+.history-card-clickable:active {
+  transform: scale(0.99);
+  background-color: color-mix(in srgb, var(--color-primary) 10%, var(--color-surface));
 }
 .history-table thead th {
   padding: 12px 8px 12px 0;

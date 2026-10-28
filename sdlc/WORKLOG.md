@@ -12,7 +12,8 @@ Current frontend work, 2026-10-28 (Victor Oyeleke; logged by Antigravity):
    - Added interactive click navigation from Sales History (`/app/sales`) directly to receipt views (`/app/receipts/:id`) on both table rows and mobile cards, conforming to WCAG 2.5.3 (no anchor/button nesting, 18/18 sales-history tests passing).
    - Pre-seeded realistic demonstration sales and an active 24-hour supervisor authorization code (`839201`) in `development-api.mjs`.
    - Distinct role authorization: Owner and Admin can generate 15-minute 6-digit OTP codes or directly reverse sales; Cashiers/Assistants can enter the supervisor authorization code to execute delegated reversal.
-   - 100% test verification (vitest: 14/14 suites passing, Playwright: 12/12 sales tests passing, zero lint warnings, strict typecheck clean).
+   - Enhanced sales selection highlight and keyboard navigation: added hover/focus-visible lime primary highlights and active press feedback across desktop table rows and mobile cards, along with full ArrowUp/ArrowDown and Enter/Space keyboard navigation between sales rows/cards.
+   - 100% test verification (vitest: 14/14 suites passing, Playwright: 12/12 sales tests and 18/18 sales-history tests passing, zero lint warnings, strict typecheck clean).
 
 ### Earlier deployment handover
 
