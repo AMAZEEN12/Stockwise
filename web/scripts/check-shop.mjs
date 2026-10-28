@@ -1,7 +1,7 @@
 import assert from 'node:assert/strict';
 import {randomUUID} from 'node:crypto';
 const base='http://127.0.0.1:4710';
-const login = await fetch(`${base}/auth/sessions`,{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({email:'owner@stockwise.demo',password:'stockwise-demo'})});
+const login = await fetch(`${base}/auth/sessions`,{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({email:'owner@stockwise.test',password:'Stockwise-Demo-2026'})});
 assert.equal(login.status,201); const session=await login.json();
 const headers={Authorization:`Bearer ${session.accessToken}`,'Content-Type':'application/json','X-Request-Id':randomUUID()};
 async function get(path) {const response=await fetch(base+path,{headers}); assert.equal(response.status,200); return response.json();}

@@ -5,7 +5,7 @@ import { chromium, expect } from '@playwright/test';
 const apiBase = 'http://127.0.0.1:4710';
 const login = await fetch(`${apiBase}/auth/sessions`, {
   method: 'POST', headers: { 'Content-Type': 'application/json' },
-  body: JSON.stringify({ email: 'owner@stockwise.demo', password: 'stockwise-demo' }),
+  body: JSON.stringify({ email: 'owner@stockwise.test', password: 'Stockwise-Demo-2026' }),
 });
 assert.equal(login.status, 201);
 const session = await login.json();
@@ -19,8 +19,8 @@ try {
   const page = await browser.newPage();
   await page.goto(`${process.env.WEB_BASE_URL || 'http://127.0.0.1:5173'}/sign-in`);
   await page.getByRole('button', { name: 'Owner', exact: true }).click();
-  await expect(page.getByLabel('Email', { exact: true })).toHaveValue('owner@stockwise.demo');
-  await expect(page.getByLabel('Password', { exact: true })).toHaveValue('stockwise-demo');
+  await expect(page.getByLabel('Email', { exact: true })).toHaveValue('owner@stockwise.test');
+  await expect(page.getByLabel('Password', { exact: true })).toHaveValue('Stockwise-Demo-2026');
   const styles = await page.getByLabel('Password', { exact: true }).evaluate((element) => {
     const computed = element.ownerDocument.defaultView.getComputedStyle(element);
     return { radius: computed.borderRadius, font: computed.fontFamily, offset: computed.outlineOffset };
