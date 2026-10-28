@@ -1,7 +1,7 @@
 import { test, expect } from '@playwright/test';
 import AxeBuilder from '@axe-core/playwright';
 
-const session = { accessToken: 'test-token', tokenType: 'Bearer', expiresAt: '2099-01-01T00:00:00Z', user: { id: 'a2222222-2222-4222-8222-222222222222', email: 'owner@stockwise.demo', displayName: 'Demo Owner', role: 'OWNER' } };
+const session = { accessToken: 'test-token', tokenType: 'Bearer', expiresAt: '2099-01-01T00:00:00Z', user: { id: 'a2222222-2222-4222-8222-222222222222', email: 'owner@stockwise.test', displayName: 'Demo Owner', role: 'OWNER' } };
 async function fillLogin(page: import('@playwright/test').Page) {
   await page.getByLabel('Email', { exact: true }).fill(session.user.email);
   await page.getByLabel('Password', { exact: true }).fill('demo-password');
@@ -134,3 +134,4 @@ test('responsive layouts stay within the viewport and reduced motion stops the c
   await expect(page.getByRole('heading', { name: 'Stockwise', exact: true })).toBeVisible();
   expect(await page.locator('.coin-sway').evaluate((element) => getComputedStyle(element).animationName)).toBe('none');
 });
+

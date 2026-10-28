@@ -2,7 +2,7 @@ import {test,expect,type Page} from '@playwright/test';
 import AxeBuilder from '@axe-core/playwright';
 import {makeProducts} from '../scripts/mock-data.mjs';
 
-const user={id:'a2222222-2222-4222-8222-222222222222',displayName:'Demo Owner',email:'owner@stockwise.demo',role:'OWNER'};
+const user={id:'a2222222-2222-4222-8222-222222222222',displayName:'Demo Owner',email:'owner@stockwise.test',role:'OWNER'};
 function products(count=25){return Array.from({length:count},(_,i)=>({...makeProducts()[0],id:`33333333-3333-4333-8333-${String(i+1).padStart(12,'0')}`,name:`Item ${String(i+1).padStart(3,'0')}`,reference:`REF-${String(i+1).padStart(3,'0')}`,quantity:10}));}
 async function setup(page:Page){
   await page.addInitScript((user)=>sessionStorage.setItem('stockwise.session',JSON.stringify({accessToken:'catalogue-test',tokenType:'Bearer',expiresAt:'2099-01-01T00:00:00Z',user})),user);

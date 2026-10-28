@@ -1,7 +1,7 @@
 import {test,expect} from '@playwright/test';
 import {makeProducts} from '../scripts/mock-data.mjs';
 test('price acceptance, quantity limits and responsive cart remain usable',async ({page}) => {
-  const products=makeProducts(); const user={id:'a2222222-2222-4222-8222-222222222222',email:'owner@stockwise.demo',displayName:'Demo Owner',role:'OWNER'};
+  const products=makeProducts(); const user={id:'a2222222-2222-4222-8222-222222222222',email:'owner@stockwise.test',displayName:'Demo Owner',role:'OWNER'};
   await page.addInitScript((user)=>sessionStorage.setItem('stockwise.session',JSON.stringify({accessToken:'test-token',tokenType:'Bearer',expiresAt:'2099-01-01T00:00:00Z',user})),user);
   await page.route('**/me',(route)=>route.fulfill({json:user}));
   await page.route('**/products?*',(route)=>route.fulfill({json:{items:[products[0]],page:0,size:20,totalItems:1}}));
@@ -16,7 +16,7 @@ test('price acceptance, quantity limits and responsive cart remain usable',async
   for (const width of [320,360,768,1024,1440]) {await page.setViewportSize({width,height:1000}); const dimensions=await page.evaluate(()=>({scroll:document.documentElement.scrollWidth,width:innerWidth})); expect(dimensions.scroll).toBeLessThanOrEqual(dimensions.width);}
 });
 test('401 preserves pending write through explicit same-account reauthentication',async ({page}) => {
-  const product=makeProducts()[0]; const user={id:'a2222222-2222-4222-8222-222222222222',email:'owner@stockwise.demo',displayName:'Demo Owner',role:'OWNER'};
+  const product=makeProducts()[0]; const user={id:'a2222222-2222-4222-8222-222222222222',email:'owner@stockwise.test',displayName:'Demo Owner',role:'OWNER'};
   await page.addInitScript((user)=>{if (!sessionStorage.getItem('stockwise.test-initialized')) {sessionStorage.setItem('stockwise.test-initialized','1'); sessionStorage.setItem('stockwise.session',JSON.stringify({accessToken:'test-token',tokenType:'Bearer',expiresAt:'2099-01-01T00:00:00Z',user}));}},user);
   await page.route('**/me',(route)=>route.fulfill({json:user})); await page.route('**/products?*',(route)=>route.fulfill({json:{items:[product],page:0,size:20,totalItems:1}})); await page.route('**/products/*',(route)=>route.fulfill({json:product})); await page.route('**/customers?*',(route)=>route.fulfill({json:{items:[],page:0,size:100,totalItems:0}}));
   await page.route('**/auth/sessions',(route)=>route.fulfill({status:201,json:{accessToken:'renewed-token',tokenType:'Bearer',expiresAt:'2099-01-01T00:00:00Z',user}}));

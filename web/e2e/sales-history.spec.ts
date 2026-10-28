@@ -1,6 +1,6 @@
-import {test,expect,type Page,type TestInfo} from '@playwright/test';
+﻿import {test,expect,type Page,type TestInfo} from '@playwright/test';
 import AxeBuilder from '@axe-core/playwright';
-const user={id:'a2222222-2222-4222-8222-222222222222',email:'owner@stockwise.demo',displayName:'Ada Okafor',role:'OWNER'};
+const user={id:'a2222222-2222-4222-8222-222222222222',email:'owner@stockwise.test',displayName:'Ada Okafor',role:'OWNER'};
 const customerId='22222222-2222-4222-8222-222222222221';
 const makeSale=(index:number,paymentType='CREDIT')=>({id:`44444444-4444-4444-8444-${String(index).padStart(12,'0')}`,reference:`S-${String(index).padStart(6,'0')}`,paymentType,...(paymentType==='CREDIT' ? {customerId} : {}),totalKobo:315000,createdBy:user.id,createdAt:`2026-10-24T08:${String(index%60).padStart(2,'0')}:00Z`,lines:[{productId:'33333333-3333-4333-8333-333333333333',productName:'Demonstration item',quantity:1,unitPriceKobo:315000,lineTotalKobo:315000}]});
 const sales=[makeSale(42),makeSale(41,'PAID'),makeSale(40),makeSale(39,'PAID')];

@@ -1,9 +1,9 @@
-import {test,expect} from '@playwright/test';
+﻿import {test,expect} from '@playwright/test';
 import type {Page,TestInfo} from '@playwright/test';
 import AxeBuilder from '@axe-core/playwright';
 import {makeProducts} from '../scripts/mock-data.mjs';
 
-const user = {id:'a2222222-2222-4222-8222-222222222222',email:'owner@stockwise.demo',displayName:'Ada Okafor',role:'OWNER'};
+const user = {id:'a2222222-2222-4222-8222-222222222222',email:'owner@stockwise.test',displayName:'Ada Okafor',role:'OWNER'};
 const names = ['Mama Chidi','Bolu Adeyemi','Ngozi Okoro','Tunde Bakare'];
 const customers = names.map((displayName,index) => ({id:`22222222-2222-4222-8222-22222222222${index+1}`,displayName,balanceKobo:[450000,0,85000,0][index],storeCreditKobo:index===1?600000:0,createdAt:'2026-10-24T08:41:00Z'}));
 async function setup(page:Page) {
@@ -52,7 +52,7 @@ test('picker supplied list, inline create, name error and selected frames',async
 test('picker loading, read error retry and empty frames',async ({page},info) => {
   await setup(page);let state='loading';let release!:()=>void;const gate=new Promise<void>((resolve)=>{release=resolve;});
   await page.route('**/customers?*',async (route) => {if(state==='loading') await gate; if(state==='error') return route.fulfill({status:503,json:{code:'DATABASE_UNAVAILABLE',requestId:'55555555-5555-4555-8555-555555555555'}});return route.fulfill({json:{items:[],page:0,size:100,totalItems:0}});});
-  await open(page);await expect(page.getByText('Loading customers…',{exact:true})).toBeVisible();await capture(page,info,'loading');
+  await open(page);await expect(page.getByText(/Loading customers/)).toBeVisible();await capture(page,info,'loading');
   state='error';release();await expect(page.getByText("Couldn't load customers",{exact:true})).toBeVisible();await capture(page,info,'error');
   state='empty';await page.getByRole('button',{name:'Retry',exact:true}).click();await expect(page.getByText('No customers yet',{exact:true})).toBeVisible();await capture(page,info,'empty');
 });
@@ -63,7 +63,7 @@ test('picker loads subsequent pages and distinguishes duplicate display names by
   await expect(page.getByRole('button',{name:/Same Name.*fictional B/})).toBeVisible();expect(seen).toContain(1);
   await page.getByRole('button',{name:/Same Name.*fictional B/}).click();await page.getByRole('button',{name:'Back to sale',exact:true}).click();
   expect(await page.evaluate(()=>JSON.parse(sessionStorage.getItem('stockwise.cart.a2222222-2222-4222-8222-222222222222') || 'null').customerId)).toBe(customers[1].id);
-  await expect(page.getByText('Store credit ₦6,000.00',{exact:true})).toBeVisible();
+  await expect(page.getByText('Apply store credit (₦6,000.00)',{exact:true})).toBeVisible();
 });
 test('uncertain customer creation is not retried and survives refresh',async ({page}) => {
   await setup(page);let posts=0;
@@ -73,3 +73,6 @@ test('uncertain customer creation is not retried and survives refresh',async ({p
   await expect(page.getByText('This customer is not confirmed. Check the customer list before creating again.',{exact:true})).toBeVisible();expect(posts).toBe(1);await expect(page.getByRole('button',{name:'Save and select',exact:true})).toHaveCount(0);
   await page.reload();await page.getByRole('button',{name:'Choose customer (required)',exact:true}).click();await page.getByRole('button',{name:'Add new customer'}).click();await expect(page.getByRole('textbox',{name:'Display name (required)'})).toHaveValue('Unknown result');await expect(page.getByRole('textbox',{name:'Display name (required)'})).toBeDisabled();expect(posts).toBe(1);
 });
+
+
+

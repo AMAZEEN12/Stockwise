@@ -1,4 +1,4 @@
-import { afterEach, describe, expect, it } from "vitest";
+﻿import { afterEach, describe, expect, it } from "vitest";
 import { clearSession, readSession, saveSession } from "./session";
 import type { Session } from "../models/responses/auth.response";
 
@@ -9,7 +9,7 @@ const session: Session = {
   user: {
     id: "1",
     displayName: "Demo Owner",
-    email: "owner@stockwise.demo",
+    email: "owner@stockwise.test",
     role: "OWNER",
   },
 };

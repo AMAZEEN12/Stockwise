@@ -1,7 +1,7 @@
-import {test,expect} from '@playwright/test';
+﻿import {test,expect} from '@playwright/test';
 import {makeProducts} from '../scripts/mock-data.mjs';
 test('role changes and unavailable real settlement never send a sale',async ({page}) => {
-  const user={id:'a2222222-2222-4222-8222-222222222222',email:'owner@stockwise.demo',displayName:'Demo Owner',role:'OWNER'};
+  const user={id:'a2222222-2222-4222-8222-222222222222',email:'owner@stockwise.test',displayName:'Demo Owner',role:'OWNER'};
   await page.addInitScript((user)=>sessionStorage.setItem('stockwise.session',JSON.stringify({accessToken:'real-service-token',tokenType:'Bearer',expiresAt:'2099-01-01T00:00:00Z',user})),user);
   let role='OWNER'; let posts=0; const products=makeProducts();
   await page.route('**/me',(route)=>route.fulfill({json:{...user,role}}));

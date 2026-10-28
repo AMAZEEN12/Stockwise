@@ -1,8 +1,8 @@
-import {test, expect} from '@playwright/test';
+﻿import {test, expect} from '@playwright/test';
 import AxeBuilder from '@axe-core/playwright';
 import {makeProducts} from '../scripts/mock-data.mjs';
 const products = makeProducts();
-const user = {id:'a2222222-2222-4222-8222-222222222222',email:'owner@stockwise.demo',displayName:'Ada Okafor',role:'OWNER'};
+const user = {id:'a2222222-2222-4222-8222-222222222222',email:'owner@stockwise.test',displayName:'Ada Okafor',role:'OWNER'};
 test.beforeEach(async ({page}) => {
   await page.addInitScript((user) => sessionStorage.setItem('stockwise.session', JSON.stringify({accessToken:'test-token',tokenType:'Bearer',expiresAt:'2099-01-01T00:00:00Z',user})),user);
   await page.route('**/me', (route) => route.fulfill({json:user}));
