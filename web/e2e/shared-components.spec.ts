@@ -19,7 +19,9 @@ test('shared category select supports keyboard selection and clearing restores s
   const select=page.getByRole('combobox',{name:'Filter by category'});
   await select.focus();await page.keyboard.press('Enter');
   await expect(page.getByRole('listbox')).toBeVisible();
-  await page.keyboard.press('n');await page.keyboard.press('Enter');
+  await expect(page.getByRole('option', { name: 'Noodles' })).toBeVisible();
+  await page.keyboard.press('n');
+  await page.keyboard.press('Enter');
   await expect(page).toHaveURL(/category=Noodles/);
   await expect(select).toBeFocused();
   await page.getByRole('button',{name:'Clear all',exact:true}).click();
