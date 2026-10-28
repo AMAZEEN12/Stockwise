@@ -6,8 +6,8 @@ import {chromium,expect} from '@playwright/test';
 import {loadEnv} from 'vite';
 const api='http://127.0.0.1:4715';const site='http://127.0.0.1:5192';
 const demo=loadEnv('development',process.cwd(),'VITE_DEMO_');
-const email=demo.VITE_DEMO_OWNER_EMAIL || 'owner@stockwise.demo';
-const password=demo.VITE_DEMO_PASSWORD || 'stockwise-demo';
+const email=demo.VITE_DEMO_OWNER_EMAIL || 'owner@stockwise.test';
+const password=demo.VITE_DEMO_PASSWORD || 'Stockwise-Demo-2026';
 const children=[];let browser;
 async function start(args,env,url){
   let occupied=false;try{await fetch(url);occupied=true;}catch{/* Own free ports only. */}

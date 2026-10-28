@@ -67,11 +67,12 @@ export function AuthOverlay({ mode }: { mode: 'sign-in' | 'sign-up' }) {
   const fieldError = (field: 'email' | 'password' | 'displayName') => form.touched[field] ? form.errors[field] : undefined;
   function fillDemo(role: 'OWNER' | 'ASSISTANT' | 'ADMIN') {
     const configuredEmail = import.meta.env[`VITE_DEMO_${role}_EMAIL`] as string | undefined;
-    void form.setValues({ ...form.values, email: configuredEmail || `${role.toLowerCase()}@stockwise.demo`, password: import.meta.env.VITE_DEMO_PASSWORD || '' }, false);
+    const defaultPassword = (import.meta.env.VITE_DEMO_PASSWORD as string | undefined) || 'Stockwise-Demo-2026';
+    void form.setValues({ ...form.values, email: configuredEmail || `${role.toLowerCase()}@stockwise.test`, password: defaultPassword }, false);
     form.setErrors({});
     form.setTouched({});
     setStatus('idle');
-    setDemoNotice(import.meta.env.VITE_DEMO_PASSWORD ? 'Demo details filled in. Select Sign in to continue.' : 'Enter the demonstration password provided by your team.');
+    setDemoNotice(defaultPassword ? 'Demo details filled in. Select Sign in to continue.' : 'Enter the demonstration password provided by your team.');
     document.getElementById('auth-password')?.focus();
   }
 

@@ -18,11 +18,14 @@ export function ShopLayout() {
     .map((part) => part[0])
     .slice(0, 2)
     .join("");
+  const canSell = user.role !== "ADMIN";
   const navigation = (
     <nav aria-label="Shop navigation">
-      <NavLink to="/app/sell" onClick={() => setMenu(false)}>
-        Sell
-      </NavLink>
+      {canSell && (
+        <NavLink to="/app/sell" onClick={() => setMenu(false)}>
+          Sell
+        </NavLink>
+      )}
       <NavLink to="/app/products" onClick={() => setMenu(false)}>
         Products
       </NavLink>

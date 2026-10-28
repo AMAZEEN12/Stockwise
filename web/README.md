@@ -19,7 +19,7 @@ Open the printed local URL. Public Home/sign-in/sign-up work without a service. 
 npm run mock
 ```
 
-Copy `.env.example` to `.env.local` and restart Vite after changing environment values. Use **owner@stockwise.demo / stockwise-demo**, or select a demo account then Sign in. Owner lands on Products, Assistant on Sell, Admin on Sales History. The simulation accepts valid login shapes, not real passwords, and maps configured demo emails to separate role-bound sessions. `npm run mock -- --role=ASSISTANT` or `--role=ADMIN` explicitly forces a test role. These are simulated roles, not security evidence.
+Copy `.env.example` to `.env.local` and restart Vite after changing environment values. Use **owner@stockwise.test / Stockwise-Demo-2026**, or select a demo account then Sign in. Owner lands on Products, Assistant on Sell, Admin on Sales History. The simulation accepts valid login shapes, not real passwords, and maps configured demo emails to separate role-bound sessions. `npm run mock -- --role=ASSISTANT` or `--role=ADMIN` explicitly forces a test role. These are simulated roles, not security evidence.
 
 The simulation keeps fictional products, customers and sales in memory and returns eight-hour sessions. Restart resets its records. It implements only existing OpenAPI paths and is excluded from the browser bundle. Never use it as database/concurrency or credential-verification evidence. Original Prism mode remains `npm run mock:prism`, with ignored generated fixtures prepared by `npm run mock:prepare`; use one mode at a time. A real service uses its `/api/v1` base URL and backend-supplied credentials. VITE variables are public. Demo buttons only fill fields.
 
