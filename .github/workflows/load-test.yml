@@ -1,0 +1,56 @@
+name: Load test
+on:
+  workflow_dispatch:
+    inputs:
+      peak_vus:
+        description: Peak virtual users for k6
+        default: "50"
+      run_cold_start:
+        description: Measure cold start first (start this only after 20+ minutes idle)
+        type: boolean
+        default: false
+
+permissions:
+  contents: read
+
+jobs:
+  load:
+    name: Load and concurrency evidence (writes demo data)
+    runs-on: ubuntu-latest
+    environment: production   # approval gate: this writes sales into the demo database
+    env:
+      API_URL: ${{ vars.API_URL }}/api/v1
+      OWNER_PASSWORD: ${{ secrets.DEMO_OWNER_PASSWORD }}
+      PEAK_VUS: ${{ inputs.peak_vus }}
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with: { node-version: 22 }
+      - name: Prepare
+        run: mkdir -p results
+      - name: Cold start
+        if: ${{ inputs.run_cold_start }}
+        run: node load/concurrency/cold-start.mjs | tee results/cold-start.txt
+      - name: Wake the service
+        run: |
+          for i in $(seq 1 30); do
+            curl -fsS -m 30 "$API_URL/health" > /dev/null && exit 0
+            sleep 10
+          done
+          exit 1
+      - name: Last-unit test
+        run: node load/concurrency/last-unit.mjs | tee results/last-unit.txt
+      - name: k6 dashboard (reads)
+        continue-on-error: true
+        run: docker run --rm --user "$(id -u):$(id -g)" -v "$PWD:/work" -w /work -e API_URL -e OWNER_PASSWORD -e PEAK_VUS grafana/k6:latest run --summary-export results/dashboard.json load/k6/dashboard.js | tee results/dashboard.txt
+      - name: k6 catalogue (reads)
+        continue-on-error: true
+        run: docker run --rm --user "$(id -u):$(id -g)" -v "$PWD:/work" -w /work -e API_URL -e OWNER_PASSWORD -e PEAK_VUS grafana/k6:latest run --summary-export results/catalogue.json load/k6/catalogue.js | tee results/catalogue.txt
+      - name: k6 sales (writes; ramps until p95 breaks)
+        continue-on-error: true
+        run: docker run --rm --user "$(id -u):$(id -g)" -v "$PWD:/work" -w /work -e API_URL -e OWNER_PASSWORD -e PEAK_VUS grafana/k6:latest run --summary-export results/sales.json load/k6/sales.js | tee results/sales.txt
+      - uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: load-results
+          path: results/
