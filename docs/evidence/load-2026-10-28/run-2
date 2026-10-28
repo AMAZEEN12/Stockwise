@@ -1,0 +1,6 @@
+| Measure | Target (DM12) | Result (3 runs) |
+|----|----|----|
+| `POST /sales` p95 (warm) | ≤ 500 ms | **Not met on the free tier:** p95 1.50 to 1.69 s (median 0.91 to 0.99 s) at 6 to 7 virtual users |
+| Dashboard p95 (warm) | ≤ 800 ms | Read paths only (product and sales lists; no `GET /dashboard` yet). Runs stopped at 16 to 19 virtual users when p95 first crossed 800 ms. One run also recorded 5 failed requests out of 529 (cause not yet identified). |
+| Product catalogue p95 | 500 ms yardstick | Stopped at about 18 to 20 virtual users in two runs (p95 503 ms); one run stopped at 6 users (p95 546 ms over 74 requests) |
+| Saturation point | reported | `POST /sales`: about 6 to 7 virtual users (about 2.5 requests per second). Reads: about 16 to 20 virtual users. |

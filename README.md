@@ -119,15 +119,10 @@ From [deploy-plan.md](deploy-plan.md) §1. Each provider's own pages were read o
 ## Performance and load
 | Measure | Target (DM12) | Result |
 |----|----|----|
-| `POST /sales` p95 (warm) | ≤ 500 ms | **Not met on the free tier: p95 1.69 s** (median 994 ms, p99 2.68 s, 55 requests, no failures) |
-| Dashboard p95 (warm) | ≤ 800 ms | Read paths only (product and sales lists; no `GET /dashboard` yet): p95 802.63 ms (median 451 ms, p99 1.22 s), 3 ms over |
-| Product catalogue p95 (warm) | 500 ms yardstick | p95 503 ms (median 303 ms, p99 696 ms) |
-| Saturation point | reported | `POST /sales`: 7 virtual users (about 2.4 requests per second). Reads: 16 to 20 virtual users. |
-| Cold start (Render) | reported separately | **TBD** (needs 20 minutes idle) |
-| Last-unit test, 10 devices | one 201, nine 409, stock 0 | **Passed 3 of 3 rounds on the deployed service** (2026-10-28) |
-
-Measured on 2026-10-28 from a GitHub Actions runner against the live free-tier service (Render free, Neon free), after the service was warm. Network time from the runner is included (the fastest request took 370 ms). Each k6 run stops itself when p95 breaks its target, so these are short runs of 22 to 50 seconds; treat the figures as indicative. Raw output: [docs/evidence/load-2026-10-28/](docs/evidence/load-2026-10-28/).
-
+| `POST /sales` p95 (warm) | ≤ 500 ms | **Not met on the free tier:** p95 1.48 to 1.69 s at 6 to 7 virtual users over 6 runs (every sale on one product) |
+| Dashboard p95 (warm) | ≤ 800 ms | Read paths only (product and sales lists; no `GET /dashboard` yet). After tuning (DB pool 20, JVM flags), runs reached 38 to 50 virtual users before p95 crossed 800 ms (800 to 832 ms at stop). Two of three runs had no failed requests; one had 27 of 5,570 (0.48%), not seen again. |
+| Product catalogue p95 | 500 ms yardstick | After tuning, held to 30 to 47 virtual users (p95 504 to 543 ms at stop), no failures |
+| Saturation point | reported | `POST /sales`: about 7 virtual users (2.5 to 2.8 sales/s). Reads: about 30 to 50 virtual users (26 to 41 requests/s). |
 
 ## Known limitations
 - No sign-up, password reset or email (see "Simulated or not yet built").
@@ -135,4 +130,6 @@ Measured on 2026-10-28 from a GitHub Actions runner against the live free-tier s
 - No rate limit on login yet.
 - Render's free service sleeps; open the service address about 2 minutes before a demo.
 - Free-tier compute caps limit the load figures; they will be reported as measured, with the date.
-- `POST /sales` p95 was 1.69 s on the free tier against the 500 ms target (see Performance and load); the cause has not been isolated.
+- - **`POST /sales` does not meet the 500 ms target on the free tier.** Over 6 runs on 2026-10-28, p95 was 1.48 to 1.69 s (median about 0.9 s) and the test stopped at 6 to 7 concurrent virtual users (about 2.5 sales per second). The service runs on Render's free plan (0.1 CPU) with Neon's free database, and each sale makes about 8 database calls. The reads meet their targets at far higher load (dashboard and catalogue held to 38 to 50 virtual users). The load test sends every sale to a single product, which also makes sales queue on one stock row, so this is a worst case. We have not isolated how much of the slowdown comes from the free server's CPU and how much from that single-row queueing. The stock guard itself is not affected: the last-unit test passed in every run (one sale succeeds, nine are refused, stock stays at zero).
+- **Cold start.** Render's free service sleeps after 15 minutes idle and takes about a minute to wake. Open the service address about 2 minutes before a demo.
+- **Measured from a GitHub-hosted runner** against the live free-tier services, so network time is included.

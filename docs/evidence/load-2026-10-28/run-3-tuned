@@ -1,0 +1,4 @@
+| `POST /sales` p95 (warm) | ≤ 500 ms | **Not met on the free tier:** p95 1.48 to 1.69 s at 6 to 7 virtual users (every sale on one product) |
+| Dashboard p95 (warm) | ≤ 800 ms | Read paths only (product and sales lists; no `GET /dashboard` yet). After tuning (DB pool 20, JVM flags), runs reached 38 to 50 virtual users before p95 crossed 800 ms (820 and 832 ms at stop). One run had no failures; the other had 27 of 5,570 failed (0.48%) at peak load, cause not yet identified. |
+| Product catalogue p95 | 500 ms yardstick | After tuning, held to 30 to 47 virtual users (p95 508 and 543 ms at stop), no failures |
+| Saturation point | reported | `POST /sales`: about 7 virtual users (2.5 to 2.8 sales/s). Reads: about 30 to 50 virtual users (26 to 39 requests/s). |
