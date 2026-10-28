@@ -1,0 +1,28 @@
+# Code owners (REVIEW.md, DM30). One approval from the owner of the changed area, never the author.
+# Settings > Branches > rule for `main` > tick "Require review from Code Owners".
+# Data and rules ........ Nnaemeka Chukwuma  Chukwuma-Elvis
+# API and access ........ Isaac Bassey       I-AB
+# Delivery and evidence .. Blessing Nwafor   AMAZEEN12
+# Interface ............. Victor Oyeleke     Victor-430
+
+# High risk: area owner + Isaac
+/service/src/main/resources/db/                       @Chukwuma-Elvis @I-AB
+/service/src/main/java/ng/tesa/stockwise/sale/        @Chukwuma-Elvis @I-AB
+/service/src/main/java/ng/tesa/stockwise/reversal/    @Chukwuma-Elvis @I-AB
+/service/src/main/java/ng/tesa/stockwise/customer/    @Chukwuma-Elvis @I-AB
+/contract/openapi.yaml                                @I-AB @Chukwuma-Elvis
+
+# Area owners
+/service/src/main/java/ng/tesa/stockwise/db/          @Chukwuma-Elvis
+/service/src/main/java/ng/tesa/stockwise/product/     @Chukwuma-Elvis
+/tools/seed/                                          @Chukwuma-Elvis
+/contract/                                            @I-AB
+/service/src/main/java/ng/tesa/stockwise/config/      @I-AB
+/service/src/main/java/ng/tesa/stockwise/auth/        @I-AB
+/service/src/main/java/ng/tesa/stockwise/common/      @I-AB
+/.github/                                             @AMAZEEN12
+/service/Dockerfile                                   @AMAZEEN12
+/docker-compose.yml                                   @AMAZEEN12
+/scripts/                                             @AMAZEEN12
+/load/                                                @AMAZEEN12
+/web/                                                 @Victor-430
