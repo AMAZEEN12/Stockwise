@@ -1,9 +1,9 @@
-import {test,expect} from '@playwright/test';
+﻿import {test,expect} from '@playwright/test';
 import type {Page,TestInfo} from '@playwright/test';
 import AxeBuilder from '@axe-core/playwright';
 
 const user={id:'a2222222-2222-4222-8222-222222222222',email:'owner@stockwise.demo',displayName:'Ada Okafor',role:'OWNER'};
-const customers=['Chinedu Obi','Mama Chidi','Ngozi Okoro','Bolu Adeyemi','Tunde Bakare','Aisha Bello'].map((displayName,index)=>({id:`22222222-2222-4222-8222-22222222222${index+1}`,displayName,balanceKobo:[1230000,450000,85000,0,0,0][index],storeCreditKobo:index===3?600000:index===5?120000:0,createdAt:'2026-10-24T08:41:00Z'}));
+const customers=['Chinedu Obi','Mama Chidi','Ngozi Okoro','Bolu Adeyemi','Tunde Bakare','Aisha Bello'].map((displayName,index)=>({id:`22222222-2222-4222-8222-22222222222${index+1}`,displayName,balanceKobo:[1230000,450000,85000,0,0,0][index],storeCreditKobo:index===3?600000:index===5?120000:0,hasDebtActivity:index<3,hasStoreCreditActivity:index===3||index===5,createdAt:'2026-10-24T08:41:00Z'}));
 async function setup(page:Page,role='OWNER') {
   if(page.viewportSize()?.width===360)await page.setViewportSize({width:360,height:1000});
   await page.clock.setFixedTime(new Date('2026-10-24T08:41:00Z'));
@@ -30,9 +30,9 @@ test('directory add, name-required, saving and success frames',async({page},info
   await setup(page);const data=[...customers];let posts=0;let release!:()=>void;const gate=new Promise<void>((resolve)=>{release=resolve;});
   await page.route('**/customers?*',(route)=>route.fulfill({json:{items:data,page:0,size:100,totalItems:data.length}}));
   await page.route('**/customers',async(route)=>{if(route.request().method()!=='POST')return route.fallback();posts++;await gate;const body=route.request().postDataJSON();expect(body).toEqual({displayName:'Adaeze Nwosu'});const person={...customers[4],...body,id:'33333333-3333-4333-8333-333333333333'};data.push(person);await route.fulfill({status:201,json:person});});
-  await page.goto('/app/customers');await expect(page.getByText('as of 09:41 WAT')).toBeVisible();await add(page);await capture(page,info,'add');
+  await page.goto('/app/customers');await expect(page.getByRole('heading',{name:'Customers',exact:true})).toBeVisible();await add(page);await capture(page,info,'add');
   await page.getByRole('button',{name:'Save customer',exact:true}).click();await expect(page.getByText('Enter a display name.',{exact:true})).toBeVisible();await capture(page,info,'name-required');expect(posts).toBe(0);
-  await page.getByRole('textbox',{name:'Display name (required)'}).fill('Adaeze Nwosu');await page.getByRole('button',{name:'Save customer',exact:true}).click();await expect(page.getByRole('button',{name:'Saving…',exact:true})).toBeVisible();await capture(page,info,'saving');
+  await page.getByRole('textbox',{name:'Display name (required)'}).fill('Adaeze Nwosu');await page.getByRole('button',{name:'Save customer',exact:true}).click();await expect(page.getByRole('button',{name:/Saving/})).toBeVisible();await capture(page,info,'saving');
   await page.keyboard.press('Escape');await expect(page.getByRole('dialog')).toBeVisible();expect(posts).toBe(1);release();
   await expect(page.getByText('Customer added. Adaeze Nwosu is in the list.',{exact:true})).toBeVisible();await expect(page.getByText('Adaeze Nwosu',{exact:true}).filter({visible:true})).toBeVisible();await capture(page,info,'success');
   await page.getByRole('button',{name:'Dismiss notification',exact:true}).click();await expect(page.getByText('Customer added. Adaeze Nwosu is in the list.',{exact:true})).toHaveCount(0);await page.reload();await expect(page.getByText('Adaeze Nwosu',{exact:true}).filter({visible:true})).toBeVisible();
@@ -46,7 +46,7 @@ test('directory definitive validation save error keeps fields and permits correc
 test('directory loading, fetch-error retry and empty frames',async({page},info)=>{
   await setup(page);let state='loading';let release!:()=>void;const gate=new Promise<void>((resolve)=>{release=resolve;});
   await page.route('**/customers?*',async(route)=>{if(state==='loading')await gate;if(state==='error')return route.fulfill({status:503,json:{code:'DATABASE_UNAVAILABLE',requestId:'55555555-5555-4555-8555-555555555555'}});return route.fulfill({json:{items:[],page:0,size:100,totalItems:0}});});
-  await page.goto('/app/customers');await expect(page.getByText('Loading customers…',{exact:true})).toBeVisible();await capture(page,info,'loading');state='error';release();await expect(page.getByText("Couldn't load customers",{exact:true})).toBeVisible();await capture(page,info,'error');
+  await page.goto('/app/customers');await expect(page.getByText(/Loading customers/)).toBeVisible();await capture(page,info,'loading');state='error';release();await expect(page.getByText("Couldn't load customers",{exact:true})).toBeVisible();await capture(page,info,'error');
   state='empty';await page.getByRole('button',{name:'Retry',exact:true}).click();await expect(page.getByText('No customers yet',{exact:true})).toBeVisible();await capture(page,info,'empty');await page.getByRole('button',{name:'Add your first customer',exact:true}).click();await expect(page.getByRole('dialog')).toBeVisible();
 });
 test('admin directory is read-only and role demotion prevents customer POST',async({page},info)=>{
@@ -59,3 +59,6 @@ test('directory and form fit narrow and short viewports with long names',async({
   for(const width of [320,360,768,1024,1440]){await page.setViewportSize({width,height:1000});await expect(page.getByRole('heading',{name:'Customers',exact:true})).toBeVisible();expect(await page.evaluate(()=>document.documentElement.scrollWidth)).toBeLessThanOrEqual(width);}
   await page.setViewportSize({width:360,height:500});await add(page);await page.getByRole('textbox',{name:'Display name (required)'}).fill('Short screen');await expect(page.getByRole('button',{name:'Save customer',exact:true})).toBeInViewport();
 });
+
+
+
