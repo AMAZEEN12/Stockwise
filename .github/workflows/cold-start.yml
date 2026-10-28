@@ -1,0 +1,33 @@
+name: Cold start
+on:
+  workflow_dispatch:
+    inputs:
+      idle_minutes:
+        description: Minutes to leave the service untouched before measuring (Render free sleeps after 15)
+        default: "20"
+
+permissions:
+  contents: read
+
+jobs:
+  cold-start:
+    runs-on: ubuntu-latest
+    env:
+      API_URL: ${{ vars.API_URL }}/api/v1
+      IDLE: ${{ inputs.idle_minutes }}
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with: { node-version: 22 }
+      - name: Leave the service idle
+        run: |
+          case "$IDLE" in ''|*[!0-9]*) echo "idle_minutes must be a number"; exit 1;; esac
+          echo "Idle for $IDLE minutes. Do not open the site or run other tests."
+          sleep $((IDLE * 60))
+      - name: Measure cold start
+        run: node load/concurrency/cold-start.mjs 2>&1 | tee cold-start.txt
+      - uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: cold-start
+          path: cold-start.txt
