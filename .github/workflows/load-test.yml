@@ -54,6 +54,9 @@ jobs:
       - name: k6 sales spread across products
         continue-on-error: true
         run: docker run --rm --user "$(id -u):$(id -g)" -v "$PWD:/work" -w /work -e API_URL -e OWNER_PASSWORD -e PEAK_VUS grafana/k6:latest run --summary-export results/sales-spread.json load/k6/sales-spread.js 2>&1 | tee results/sales-spread.txt
+      - name: k6 sales spread, steady shop load
+        continue-on-error: true
+        run: docker run --rm --user "$(id -u):$(id -g)" -v "$PWD:/work" -w /work -e API_URL -e OWNER_PASSWORD grafana/k6:latest run --summary-export results/sales-spread-steady.json load/k6/sales-spread-steady.js 2>&1 | tee results/sales-spread-steady.txt
       - uses: actions/upload-artifact@v4
         if: always()
         with:
