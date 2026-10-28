@@ -6,9 +6,16 @@ Source document: `Tesa cohort 6 software engineering capstone project.pdf` (TeSA
 > Any agent opening this project: read this file first, then the "Conventions and guidelines" and "Decisions" sections, then the artifacts in this folder. Continue from "Resume here". Don't re-ask anything already answered below.
 
 ## Resume here
-Current frontend work, 2026-10-28 (Victor Oyeleke; logged by Antigravity): PR #27 merged hotfix branch `fix/dialog-drawer-placement` into main at `b060869`. Feature branch `feat/role-sidebar-and-mock-credentials` implements DM70 directly off merged main to:
-1. Filter navigation links by role in `ShopLayout.tsx`: removes `Sell` (`/app/sell`) from both desktop and mobile navigation for the `ADMIN` role since Admins have read-only access and cannot record sales. Retains `Sell`, `Products`, `Customers`, and `Sales` for `OWNER` and `ASSISTANT`; retains `Products`, `Customers`, and `Sales` for `ADMIN`. Covered by unit tests in `ShopLayout.test.tsx`.
-2. Align mock credentials with the backend demo seed (`R__seed_demo.sql` / README): updates demonstration emails to `owner@stockwise.test`, `assistant@stockwise.test`, and `admin@stockwise.test`, with password `Stockwise-Demo-2026`, across `.env.example`, `development-api.mjs`, `mock-data.mjs`, `mock-api.mjs`, `AuthOverlay.tsx`, check scripts, and browser E2E specs. Victor explicitly instructed implementing role-based sidebar link removal and mock credential alignment on a separate branch with a PR. Item 2 remains independently prepared on `feat/customer-credit-balances` (draft PR #25).
+Current frontend work, 2026-10-28 (Victor Oyeleke; logged by Antigravity):
+1. **PR #30 (`feat/store-credit-ui`)**: Customer store credit issuing and tender simulation completed and submitted for review.
+2. **PR #31 (`feat/reversal-otp-ui`)**: Sale reversal authorization code generation dialog (Owner/Admin) and OTP modal (Cashier/Assistant), plus persistent receipt inspection from Sales History and interactive row selection highlights.
+3. **PR #32 (`feat/customer-portal-ui`)**: Customer Self-Service Online Portal (`/c/:token`):
+   - Zero-authentication tokenized public route at `/c/:token` allowing customers to access their live ledger statement without login friction.
+   - Transparent balance summary: shows live debt balance owed, available store credit, and net account position in integer kobo.
+   - Mobile shopping catalogue: product search and interactive stepper quantity controls (`+`, `-`) with stock limits.
+   - Pre-order checkout and submission dialog: supports flexible payment preferences (`USE_STORE_CREDIT`, `PAY_ON_PICKUP`, `ON_ACCOUNT`), optional pickup note, and auto-generated order reference with instant WhatsApp link.
+   - Mock simulation endpoints in `development-api.mjs` for `/portal/customer/:token`, `/portal/customer/:token/products`, and `/portal/customer/:token/orders`.
+   - 100% test verification (vitest: 45/45 passing across 14 test suites, Playwright: 22/22 passing with 0 axe violations, zero lint warnings, clean strict typecheck, and successful production build).
 
 ### Earlier deployment handover
 
