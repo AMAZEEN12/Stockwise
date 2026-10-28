@@ -26,6 +26,9 @@ jobs:
       - uses: actions/checkout@v4
       - uses: actions/setup-node@v4
         with: { node-version: 22 }
+      - name: k6 sales at steady shop load (warm)
+        continue-on-error: true
+        run: docker run --rm --user "$(id -u):$(id -g)" -v "$PWD:/work" -w /work -e API_URL -e OWNER_PASSWORD grafana/k6:latest run --summary-export results/sales-steady.json load/k6/sales-steady.js | tee results/sales-steady.txt
       - name: Prepare
         run: mkdir -p results
       - name: Cold start

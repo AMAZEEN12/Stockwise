@@ -30,4 +30,4 @@ k6 run -e API_URL=$API_URL -e OWNER_PASSWORD=$OWNER_PASSWORD load/k6/dashboard.j
 - Free-tier limits (Render 0.1 CPU, Neon compute hours) will cap the figures. Report them as measured on the free tier, with the date.
 
 ## Honest status
-`last-unit.mjs` and `scripts/smoke.sh` were exercised against a stand-in server (a guarded one passes, an overselling one fails). The k6 scripts were **not run** (k6 was not available on the build machine). All of them still need a first run against the real deployed service once login and `/sales` exist.
+`last-unit.mjs` passed 3 of 3 rounds against the deployed service on 2026-10-28. The k6 scripts (`sales.js`, `dashboard.js`, `catalogue.js`) ran once, from the `Load test` workflow on GitHub Actions; the output is in `docs/evidence/load-2026-10-28/`. `cold-start.mjs` has not been run. `dashboard.js` tests the product and sales lists because `GET /dashboard` is not in the contract yet.
