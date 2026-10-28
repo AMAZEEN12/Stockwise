@@ -5,10 +5,6 @@ on:
       peak_vus:
         description: Peak virtual users for k6
         default: "50"
-      run_cold_start:
-        description: Measure cold start first (start this only after 20+ minutes idle)
-        type: boolean
-        default: false
 
 permissions:
   contents: read
@@ -26,17 +22,17 @@ jobs:
       - uses: actions/checkout@v4
       - uses: actions/setup-node@v4
         with: { node-version: 22 }
-      - name: k6 sales at steady shop load (warm)
-        continue-on-error: true
-        run: docker run --rm --user "$(id -u):$(id -g)" -v "$PWD:/work" -w /work -e API_URL -e OWNER_PASSWORD grafana/k6:latest run --summary-export results/sales-steady.json load/k6/sales-steady.js | tee results/sales-steady.txt
-      - name: k6 sales spread across products
-        continue-on-error: true
-        run: docker run --rm --user "$(id -u):$(id -g)" -v "$PWD:/work" -w /work -e API_URL -e OWNER_PASSWORD -e PEAK_VUS grafana/k6:latest run --summary-export results/sales-spread.json load/k6/sales-spread.js | tee results/sales-spread.txt
       - name: Prepare
         run: mkdir -p results
-      - name: Cold start
-        if: ${{ inputs.run_cold_start }}
-        run: node load/concurrency/cold-start.mjs | tee results/cold-start.txt
+      - name: Check login
+        run: |
+          EMAIL="${OWNER_EMAIL:-owner@stockwise.test}"
+          echo "email used: $EMAIL"
+          echo "password secret length: ${#OWNER_PASSWORD}"
+          body=$(jq -n --arg e "$EMAIL" --arg p "$OWNER_PASSWORD" '{email:$e,password:$p}')
+          code=$(curl -s -o login.json -w "%{http_code}" -X POST "$API_URL/auth/sessions" -H 'Content-Type: application/json' -d "$body")
+          echo "login HTTP $code"
+          if [ "$code" != "201" ]; then head -c 300 login.json; echo; exit 1; fi
       - name: Wake the service
         run: |
           for i in $(seq 1 30); do
@@ -45,16 +41,19 @@ jobs:
           done
           exit 1
       - name: Last-unit test
-        run: node load/concurrency/last-unit.mjs | tee results/last-unit.txt
+        run: node load/concurrency/last-unit.mjs 2>&1 | tee results/last-unit.txt
       - name: k6 dashboard (reads)
         continue-on-error: true
-        run: docker run --rm --user "$(id -u):$(id -g)" -v "$PWD:/work" -w /work -e API_URL -e OWNER_PASSWORD -e PEAK_VUS grafana/k6:latest run --summary-export results/dashboard.json load/k6/dashboard.js | tee results/dashboard.txt
+        run: docker run --rm --user "$(id -u):$(id -g)" -v "$PWD:/work" -w /work -e API_URL -e OWNER_PASSWORD -e PEAK_VUS grafana/k6:latest run --summary-export results/dashboard.json load/k6/dashboard.js 2>&1 | tee results/dashboard.txt
       - name: k6 catalogue (reads)
         continue-on-error: true
-        run: docker run --rm --user "$(id -u):$(id -g)" -v "$PWD:/work" -w /work -e API_URL -e OWNER_PASSWORD -e PEAK_VUS grafana/k6:latest run --summary-export results/catalogue.json load/k6/catalogue.js | tee results/catalogue.txt
-      - name: k6 sales (writes; ramps until p95 breaks)
+        run: docker run --rm --user "$(id -u):$(id -g)" -v "$PWD:/work" -w /work -e API_URL -e OWNER_PASSWORD -e PEAK_VUS grafana/k6:latest run --summary-export results/catalogue.json load/k6/catalogue.js 2>&1 | tee results/catalogue.txt
+      - name: k6 sales (one product; worst case)
         continue-on-error: true
-        run: docker run --rm --user "$(id -u):$(id -g)" -v "$PWD:/work" -w /work -e API_URL -e OWNER_PASSWORD -e PEAK_VUS grafana/k6:latest run --summary-export results/sales.json load/k6/sales.js | tee results/sales.txt
+        run: docker run --rm --user "$(id -u):$(id -g)" -v "$PWD:/work" -w /work -e API_URL -e OWNER_PASSWORD -e PEAK_VUS grafana/k6:latest run --summary-export results/sales.json load/k6/sales.js 2>&1 | tee results/sales.txt
+      - name: k6 sales spread across products
+        continue-on-error: true
+        run: docker run --rm --user "$(id -u):$(id -g)" -v "$PWD:/work" -w /work -e API_URL -e OWNER_PASSWORD -e PEAK_VUS grafana/k6:latest run --summary-export results/sales-spread.json load/k6/sales-spread.js 2>&1 | tee results/sales-spread.txt
       - uses: actions/upload-artifact@v4
         if: always()
         with:
