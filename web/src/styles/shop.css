@@ -618,3 +618,15 @@
     overscroll-behavior: contain;
   }
 }
+
+/* Keep the shop content aligned to the viewport on narrow screens. */
+@media (max-width: 768px) {
+  .shop-shell > .shop-main {
+    margin-left: 0;
+    min-width: 0;
+    padding: 20px;
+    padding-left: max(20px, env(safe-area-inset-left, 0px));
+    padding-right: max(20px, env(safe-area-inset-right, 0px));
+    padding-bottom: max(100px, calc(100px + env(safe-area-inset-bottom, 0px)));
+  }
+}

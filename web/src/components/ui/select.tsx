@@ -137,6 +137,7 @@ function SelectItem({ value, label, disabled }: SelectOption) {
     <RadixSelect.Item
       value={value}
       disabled={disabled}
+      textValue={label}
       className={cn(
         // min-h-10 keeps every option above the 24×24 px target size, with room for touch.
         "relative flex min-h-10 cursor-default select-none items-center rounded-[var(--radius-sm)] py-2 pl-8 pr-3 outline-none text-sm",
