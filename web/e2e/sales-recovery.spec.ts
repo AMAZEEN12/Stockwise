@@ -1,5 +1,6 @@
 import {test,expect} from '@playwright/test';
 import {makeProducts} from '../scripts/mock-data.mjs';
+import { resizeAndSettle } from './helpers/viewport';
 test('price acceptance, quantity limits and responsive cart remain usable',async ({page}) => {
   const products=makeProducts(); const user={id:'a2222222-2222-4222-8222-222222222222',email:'owner@stockwise.test',displayName:'Demo Owner',role:'OWNER'};
   await page.addInitScript((user)=>sessionStorage.setItem('stockwise.session',JSON.stringify({accessToken:'test-token',tokenType:'Bearer',expiresAt:'2099-01-01T00:00:00Z',user})),user);
@@ -13,7 +14,7 @@ test('price acceptance, quantity limits and responsive cart remain usable',async
   await expect(page.getByText('Indomie Chicken 70g: Price changed ₦450.00 → ₦480.00')).toBeVisible(); await expect(page.getByRole('button',{name:'Confirm',exact:true})).toBeDisabled();
   await page.getByRole('checkbox',{name:'I accept these changes'}).check(); await expect(page.getByRole('button',{name:'Confirm',exact:true})).toBeEnabled();
   await page.getByRole('button',{name:'Back to cart',exact:true}).click();
-  for (const width of [320,360,768,1024,1440]) {await page.setViewportSize({width,height:1000}); const dimensions=await page.evaluate(()=>({scroll:document.documentElement.scrollWidth,width:innerWidth})); expect(dimensions.scroll).toBeLessThanOrEqual(dimensions.width);}
+  for (const width of [320,360,768,1024,1440]) {await resizeAndSettle(page,width); const dimensions=await page.evaluate(()=>({scroll:document.documentElement.scrollWidth,width:innerWidth})); expect(dimensions.scroll).toBeLessThanOrEqual(dimensions.width);}
 });
 test('401 preserves pending write through explicit same-account reauthentication',async ({page}) => {
   const product=makeProducts()[0]; const user={id:'a2222222-2222-4222-8222-222222222222',email:'owner@stockwise.test',displayName:'Demo Owner',role:'OWNER'};

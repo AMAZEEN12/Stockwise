@@ -21,6 +21,7 @@ test('shared category select supports keyboard selection and clearing restores s
   await expect(page.getByRole('listbox')).toBeVisible();
   await expect(page.getByRole('option', { name: 'Noodles' })).toBeVisible();
   await page.keyboard.press('n');
+  await expect(page.getByRole('option',{name:'Noodles'})).toBeFocused();
   await page.keyboard.press('Enter');
   await expect(page).toHaveURL(/category=Noodles/);
   await expect(select).toBeFocused();
