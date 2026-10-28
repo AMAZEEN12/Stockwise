@@ -45,3 +45,11 @@ Create project `stockwise-web` with root directory `web`. You don't need to set 
 
 ## 6. Qocent spike (optional second stack)
 Follow `deploy-plan.md` §3 and record the answers in `decisions.md`. If questions 1 to 4 fail, stay on Stack V.
+
+### Render performance settings (used for the 2026-10-28 load tests)
+| Variable | Value | Why |
+|----|----|----|
+| `DB_POOL_SIZE` | `20` | The default of 10 ran out under load (requests waited for a connection) |
+| `JAVA_TOOL_OPTIONS` | `-XX:MaxRAMPercentage=75 -XX:+ExitOnOutOfMemoryError -XX:+UseSerialGC -XX:TieredStopAtLevel=1` | Less CPU spent on garbage collection and compilation on the free 0.1 CPU |
+
+Do not leave `LOGGING_LEVEL_COM_ZAXXER_HIKARI=DEBUG` set: it floods the logs and slows the service.

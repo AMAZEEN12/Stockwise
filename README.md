@@ -117,12 +117,25 @@ From [deploy-plan.md](deploy-plan.md) §1. Each provider's own pages were read o
 | Qocent | Not free: prepaid credits only. Used only if the programme supplies them (PD5a). |
 
 ## Performance and load
+Measured on 2026-10-28 from a GitHub Actions runner against the live free-tier services (Render free, 0.1 CPU; Neon free), so network time is included. Nine valid runs; raw output and a run-by-run table are in [docs/evidence/load-2026-10-28/](docs/evidence/load-2026-10-28/). Tuning applied after run 3: database pool 20, JVM flags `-XX:+UseSerialGC -XX:TieredStopAtLevel=1`, debug logging off.
+
 | Measure | Target (DM12) | Result |
 |----|----|----|
-| `POST /sales` p95 (warm) | ≤ 500 ms | **Not met on the free tier:** p95 1.48 to 1.69 s at 6 to 7 virtual users over 6 runs (every sale on one product) |
-| Dashboard p95 (warm) | ≤ 800 ms | Read paths only (product and sales lists; no `GET /dashboard` yet). After tuning (DB pool 20, JVM flags), runs reached 38 to 50 virtual users before p95 crossed 800 ms (800 to 832 ms at stop). Two of three runs had no failed requests; one had 27 of 5,570 (0.48%), not seen again. |
-| Product catalogue p95 | 500 ms yardstick | After tuning, held to 30 to 47 virtual users (p95 504 to 543 ms at stop), no failures |
-| Saturation point | reported | `POST /sales`: about 7 virtual users (2.5 to 2.8 sales/s). Reads: about 30 to 50 virtual users (26 to 41 requests/s). |
+| `POST /sales` p95, 3 tills, steady, sales spread across 20 products (warm) | ≤ 500 ms | **Not met: p95 656 ms** (median 605 ms, slowest 717 ms, 136 requests, no failures) |
+| `POST /sales` p95, ramp, every sale on one product | ≤ 500 ms | **Not met:** p95 1.45 to 1.69 s at 6 to 7 virtual users (9 runs) |
+| `POST /sales` p95, ramp, sales spread across 20 products | ≤ 500 ms | **Not met:** p95 660 to 667 ms at 4 virtual users (2 runs, about 55 requests each) |
+| Dashboard p95 (warm) | ≤ 800 ms | Read paths only (product and sales lists; no `GET /dashboard` yet). After tuning, held to 38 to 50 virtual users (29 to 41 requests/s); p95 800 to 832 ms where each run stopped |
+| Product catalogue p95 (warm) | 500 ms yardstick | After tuning, held to 30 to 47 virtual users (26 to 41 requests/s); p95 505 to 543 ms where each run stopped |
+| Saturation point | reported | Sales: 4 to 7 virtual users (about 2.5 sales/s). Reads: about 30 to 50 virtual users |
+| Cold start (Render) | reported separately | **Not measured yet** (the one attempt on 2026-10-28 answered in 0.3 s because the service had not gone to sleep) |
+| Last-unit test, 10 devices, 3 rounds | one 201, nine 409, stock 0 | **Passed in all 9 runs, on the deployed service** |
+| LCP / INP | ≤ 2.5 s / ≤ 200 ms | TBD |
+
+How to read this:
+- Each k6 ramp test stops itself the moment p95 passes its target, so the p95 shown "at stop" is always just over the target. The user count at that moment is the saturation point.
+- The steady test is the fairest sales figure: 3 tills, each selling about every 2 seconds, after a 20 second warm-up. Its times are tight (median 605 ms, p99 675 ms), which points to a fixed cost per sale on this hardware rather than queueing.
+- Spreading sales across products cut p95 by more than half (about 1.5 s to about 0.66 s) but did not reach 500 ms.
+
 
 ## Known limitations
 - No sign-up, password reset or email (see "Simulated or not yet built").
