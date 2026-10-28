@@ -604,3 +604,21 @@ Decided by Victor Oyeleke (scope); Codex (implementation/verification mechanics)
   - `stockwise/decisions.md` §3: updated with Nnaemeka Chukwuma's sign-off for proposals B, C, D (pending Isaac Bassey) and confirmation of prior documentation line.
   - Formally accepted `intent.md`, `plan.md`, `test-plan.md`, and generated `EXECUTION.md` in `stockwise/sdlc/contract-v0-2/`.
   - Updated `stockwise/sdlc/contract-v0-2/WORKLOG.md` (Q4 answered, activity logged).
+
+### Customer Portal, Store Credit & Supervisor Reversal Authorization Proposals (2026-10-28)
+
+- **Author / Origin:** Proposed by Interface Engineer (Victor Oyeleke; logged by Codex).
+- **Branch:** `feat/proposal-store-credit-and-customer-portal`.
+- **Documents Added / Updated:**
+  - `docs/customer-portal-store-credit-proposal.md`:
+    - Detailed store adoption incentives for Nigerian neighborhood retailers (debt transparency, debt recovery without social friction, zero cash drain on product returns, customer lock-in via store credit, and click-and-collect orders without password friction).
+    - Store credit endpoints: `POST /customers/{id}/store-credit` (idempotent grant with reason/note), `POST /sales` extension with atomic store credit split settlement ($\min(\text{credit}, \text{subtotal})$) and remaining CASH/CREDIT tender.
+    - Customer portal tokenized endpoints: `GET /portal/customer/{token}` (live balance & store credit statement), `GET /portal/customer/{token}/products` (in-stock catalogue), `POST /portal/customer/{token}/orders` (pre-orders).
+    - UI architectural layout for both cashier drawer and mobile customer portal (`/c/:token`).
+  - `docs/sales-reversal-authorization-proposal.md`:
+    - Prevents cashier shrinkage and fraudulent post-sale voiding while avoiding counter bottlenecks and shared supervisor master passwords.
+    - `POST /reversals/authorizations` for `OWNER`/`ADMIN` generating single-use 6-digit codes with 15-minute TTL.
+    - `POST /sales/{saleId}/reversal` requiring `authorizationCode` for `ASSISTANT`, executed with atomic conditional SQL update to prevent reuse.
+    - Frontend UX designs for Assistant prompt modal and Owner code generator.
+  - `decisions.md` §3: Logged draft contract proposals pending Isaac Bassey (API & access) and Nnaemeka Chukwuma (Data & rules) review.
+
