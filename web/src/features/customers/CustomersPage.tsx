@@ -5,15 +5,14 @@ import {Dialog} from '../../components/ui/dialog';
 import {FilterBar} from '../../components/ui/filter-bar';
 import {EmptyState} from '../../components/ui/empty-state';
 import {Card,CardBody} from '../../components/ui/card';
-import {StatusBadge} from '../../components/ui/status-badge';
 import {useToast} from '../../components/ui/toast';
 import {useCustomersQuery} from '../../service/api/customers.api';
 import type {User} from '../../models/responses/auth.response';
 import type {HttpError} from '../../service/http-client';
-import {formatMoney} from '../../lib/money';
 import {CustomerForm} from './CustomerForm';
 import type {CustomerFormHandle} from './CustomerForm';
 import {CustomerIcon,CustomerLoading,CustomerLoadError} from './CustomerStates';
+import {debtDisplay,storeCreditDisplay} from './customer-balance';
 import '../../styles/customers.css';
 
 export function CustomersPage() {
@@ -46,8 +45,8 @@ export function CustomersPage() {
         description={query.trim() ? 'Try a different name.' : canCreate ? 'Add your first customer to start selling on credit.' : 'Customers added by the shop will appear here.'}
         action={query.trim() ? {label:'Clear search',onClick:()=>setQuery('')} : canCreate ? {label:'Add your first customer',onClick:()=>setOpen(true)} : undefined}
         actionProps={{size:"lg",variant:query.trim() ? "secondary" : "primary"}}/> : customers.data && <>
-        <table className="customers-table"><caption className="sr-only">Customer balances owed and store credit{customers.isError ? ' (previously loaded; may be out of date)' : ''}</caption><thead><tr><th scope="col">Name</th><th scope="col">Balance owed</th><th scope="col">Store credit</th></tr></thead><tbody>{list.map((person)=><tr key={person.id}><th scope="row">{person.displayName}{customers.data?.some((other)=>other.id!==person.id && other.displayName===person.displayName) && <small className="customer-micro">{person.contactPlaceholder || `ID ${person.id.slice(-8)}`}</small>}</th><td className={!person.balanceKobo?'customer-settled':undefined}>{person.balanceKobo ? formatMoney(person.balanceKobo) : 'Settled'}</td><td>{person.storeCreditKobo ? formatMoney(person.storeCreditKobo) : <span aria-label="No store credit">—</span>}</td></tr>)}</tbody></table>
-        <ul className="customers-cards" aria-label="Customer balances">{list.map((person)=><li key={person.id}><Card className="customer-balance-card" bodyClassName="customer-balance-card-body"><CardBody><div className="customer-card-heading"><strong>{person.displayName}</strong><span className={!person.balanceKobo?'customer-settled':undefined}>{person.balanceKobo ? formatMoney(person.balanceKobo) : 'Settled'}</span></div>{customers.data?.some((other)=>other.id!==person.id && other.displayName===person.displayName) && <small className="customer-micro">{person.contactPlaceholder || `ID ${person.id.slice(-8)}`}</small>}{person.storeCreditKobo>0 && <StatusBadge appearance="outline" tone="info" className="customer-credit customer-micro">Store credit {formatMoney(person.storeCreditKobo)}</StatusBadge>}</CardBody></Card></li>)}</ul>
+        <table className="customers-table"><caption className="sr-only">Customer balances owed and store credit{customers.isError ? ' (previously loaded; may be out of date)' : ''}</caption><thead><tr><th scope="col">Name</th><th scope="col">Balance owed</th><th scope="col">Store credit</th></tr></thead><tbody>{list.map((person)=><tr key={person.id}><th scope="row">{person.displayName}{customers.data?.some((other)=>other.id!==person.id && other.displayName===person.displayName) && <small className="customer-micro">{person.contactPlaceholder || `ID ${person.id.slice(-8)}`}</small>}</th><td className={!person.hasDebtActivity?'customer-unused-balance':undefined}>{debtDisplay(person)}</td><td className={!person.hasStoreCreditActivity?'customer-unused-balance':undefined}>{storeCreditDisplay(person)}</td></tr>)}</tbody></table>
+        <ul className="customers-cards" aria-label="Customer balances">{list.map((person)=><li key={person.id}><Card className="customer-balance-card" bodyClassName="customer-balance-card-body"><CardBody><strong>{person.displayName}</strong>{customers.data?.some((other)=>other.id!==person.id && other.displayName===person.displayName) && <small className="customer-micro">{person.contactPlaceholder || `ID ${person.id.slice(-8)}`}</small>}<dl className="customer-balance-summary"><div><dt>Balance owed</dt><dd className={!person.hasDebtActivity?'customer-unused-balance':undefined}>{debtDisplay(person)}</dd></div><div><dt>Store credit</dt><dd className={!person.hasStoreCreditActivity?'customer-unused-balance':undefined}>{storeCreditDisplay(person)}</dd></div></dl></CardBody></Card></li>)}</ul>
       </>}
     </>}
     <Dialog open={open && canCreate} dismissible={!busy} onOpenChange={(value)=>{if(!value)close();}} title="Add customer" description="Add a display name and an optional fictional contact for this demonstration shop." descriptionClassName="sr-only" titleClassName="customer-dialog-title" className="customers-create-dialog" overlayClassName="customer-backdrop" closeClassName={`customer-dialog-close${busy?' customer-close-busy':''}`} onCloseAutoFocus={(event)=>{event.preventDefault();trigger.current?.focus();}}>

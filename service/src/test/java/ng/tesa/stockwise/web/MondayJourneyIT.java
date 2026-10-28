@@ -93,6 +93,8 @@ class MondayJourneyIT extends ApiTestSupport {
         assertThat(customer.status()).isEqualTo(201);
         String ada = customer.body().get("id").asString();
         assertThat(customer.body().get("balanceKobo").asLong()).isZero();
+        assertThat(customer.body().get("hasDebtActivity").asBoolean()).isFalse();
+        assertThat(customer.body().get("hasStoreCreditActivity").asBoolean()).isFalse();
 
         var paid = sell(till, "{\"paymentType\":\"PAID\",\"lines\":[{\"productId\":\"" + milk + "\",\"quantity\":2}]}");
         assertThat(paid.status()).isEqualTo(201);
@@ -112,6 +114,8 @@ class MondayJourneyIT extends ApiTestSupport {
 
         var customers = get("/api/v1/customers?q=ada", till);
         assertThat(customers.body().get("items").get(0).get("balanceKobo").asLong()).isEqualTo(420_000);
+        assertThat(customers.body().get("items").get(0).get("hasDebtActivity").asBoolean()).isTrue();
+        assertThat(customers.body().get("items").get(0).get("hasStoreCreditActivity").asBoolean()).isFalse();
         assertThat(get("/api/v1/products/" + milk, till).body().get("quantity").asInt()).isEqualTo(7);
     }
 

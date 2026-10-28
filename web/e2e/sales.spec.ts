@@ -3,7 +3,7 @@ import type {Page} from '@playwright/test';
 import AxeBuilder from '@axe-core/playwright';
 import {makeProducts} from '../scripts/mock-data.mjs';
 import type {Product} from '../src/models/responses/products.response';
-const user = {id:'a2222222-2222-4222-8222-222222222222',email:'owner@stockwise.test',displayName:'Ada Okafor',role:'OWNER'};
+const user = {id:'a2222222-2222-4222-8222-222222222222',email:'owner@stockwise.demo',displayName:'Ada Okafor',role:'OWNER'};
 const customers = [{id:'22222222-2222-4222-8222-222222222221',displayName:'Mama Chidi',balanceKobo:450000,storeCreditKobo:0,createdAt:'2026-10-24T08:41:00Z'}, {id:'22222222-2222-4222-8222-222222222222',displayName:'Bolu Adeyemi',balanceKobo:0,storeCreditKobo:600000,createdAt:'2026-10-24T08:41:00Z'}];
 async function setup(page:Page, products:Product[] = makeProducts()) {
   const viewport = page.viewportSize(); if (viewport?.width === 360) await page.setViewportSize({width:360,height:1000});

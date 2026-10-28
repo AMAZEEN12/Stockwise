@@ -2,7 +2,7 @@ import {test,expect} from '@playwright/test';
 import type {Page,TestInfo} from '@playwright/test';
 import AxeBuilder from '@axe-core/playwright';
 
-const user={id:'a2222222-2222-4222-8222-222222222222',email:'owner@stockwise.test',displayName:'Ada Okafor',role:'OWNER'};
+const user={id:'a2222222-2222-4222-8222-222222222222',email:'owner@stockwise.demo',displayName:'Ada Okafor',role:'OWNER'};
 const customers=['Chinedu Obi','Mama Chidi','Ngozi Okoro','Bolu Adeyemi','Tunde Bakare','Aisha Bello'].map((displayName,index)=>({id:`22222222-2222-4222-8222-22222222222${index+1}`,displayName,balanceKobo:[1230000,450000,85000,0,0,0][index],storeCreditKobo:index===3?600000:index===5?120000:0,createdAt:'2026-10-24T08:41:00Z'}));
 async function setup(page:Page,role='OWNER') {
   if(page.viewportSize()?.width===360)await page.setViewportSize({width:360,height:1000});

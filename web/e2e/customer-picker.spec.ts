@@ -63,7 +63,7 @@ test('picker loads subsequent pages and distinguishes duplicate display names by
   await expect(page.getByRole('button',{name:/Same Name.*fictional B/})).toBeVisible();expect(seen).toContain(1);
   await page.getByRole('button',{name:/Same Name.*fictional B/}).click();await page.getByRole('button',{name:'Back to sale',exact:true}).click();
   expect(await page.evaluate(()=>JSON.parse(sessionStorage.getItem('stockwise.cart.a2222222-2222-4222-8222-222222222222') || 'null').customerId)).toBe(customers[1].id);
-  await expect(page.getByText('Apply store credit (₦6,000.00)',{exact:true})).toBeVisible();
+  await expect(page.getByText('Store credit ₦6,000.00',{exact:true})).toBeVisible();
 });
 test('uncertain customer creation is not retried and survives refresh',async ({page}) => {
   await setup(page);let posts=0;

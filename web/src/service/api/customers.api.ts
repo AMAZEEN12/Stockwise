@@ -9,6 +9,7 @@ export function validCustomer(value:unknown):value is Customer {
   return typeof item.id === 'string' && /^[0-9a-f]{8}-[0-9a-f]{4}-[1-5][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i.test(item.id)
     && typeof item.displayName === 'string' && !!item.displayName.trim() && typeof item.createdAt === 'string' && Number.isFinite(Date.parse(item.createdAt))
     && Number.isSafeInteger(item.balanceKobo) && item.balanceKobo! >= 0 && Number.isSafeInteger(item.storeCreditKobo) && item.storeCreditKobo! >= 0
+    && typeof item.hasDebtActivity === 'boolean' && typeof item.hasStoreCreditActivity === 'boolean'
     && (item.contactPlaceholder === undefined || typeof item.contactPlaceholder === 'string');
 }
 export const customersApi = authApi.injectEndpoints({endpoints:(builder) => ({

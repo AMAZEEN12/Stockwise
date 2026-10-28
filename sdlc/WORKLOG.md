@@ -1,6 +1,6 @@
 # Work log: Stockwise (Team 3 main product)
 
-Change slug: `stockwise` · Started: 2026-10-23 · Last updated: 2026-10-26 by Codex (logging assistant for Victor Oyeleke); earlier handover by the agent for Nnaemeka Chukwuma
+Change slug: `stockwise` · Started: 2026-10-23 · Last updated: 2026-10-27 by Codex (logging assistant for Victor Oyeleke); earlier handover by the agent for Nnaemeka Chukwuma
 Source document: `Tesa cohort 6 software engineering capstone project.pdf` (TeSA Africa, "Four Real-World Products", 26 pages; Stockwise is product 3, pages 10-11; shared requirements pages 23-26)
 
 > Any agent opening this project: read this file first, then the "Conventions and guidelines" and "Decisions" sections, then the artifacts in this folder. Continue from "Resume here". Don't re-ask anything already answered below.
