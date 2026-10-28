@@ -646,11 +646,17 @@ Decided by Victor Oyeleke (scope); Codex (implementation/verification mechanics)
     - Added support for `body.useStoreCredit` in `POST /api/v1/sales` to deduct applied credit from customer balance.
   - **Typographic Fix (`CustomerPicker.tsx`):**
     - Corrected double-encoded middle dot character `Â·` to clean `·` in the customer picker trigger.
+    - Replaced non-ASCII fullwidth plus character `＋` with standard ASCII `+` for inline customer creation button.
+  - **Real Service vs. Simulation Guard:**
+    - Per `e2e/sales-safety.spec.ts`, retained the safety guard `unavailableCredit = credit > 0 && !simulation` when running against live/staged backend tokens where the Java service engine has not yet deployed `useStoreCredit`. Full checkout and credit deduction remain enabled under local development simulation.
 - **Verification:**
   - ESLint: passed with 0 warnings.
   - TypeScript: strict typecheck passed with 0 errors.
   - Vitest: 14 test suites passed (44/44 tests green), including new suite `issue-store-credit.test.ts`.
+  - Playwright e2e: 2/2 passed in `e2e/sales-safety.spec.ts` (38.7s); 20/20 passed in `e2e/customer-picker.spec.ts` and `e2e/customers.spec.ts` (2.3m).
   - Production build: built cleanly in 23.21s with all assets bundled.
   - Contract lint: Redocly validated `contract/openapi.yaml` in 201ms with 0 errors.
+  - GitHub Actions CI on PR #30: All checks passed (Web, Service, Guards, Secret scan, Contract lint).
+- **PR:** Opened [PR #30](https://github.com/AMAZEEN12/Stockwise/pull/30) on `feat/store-credit-ui` targeting `main`.
 
 
