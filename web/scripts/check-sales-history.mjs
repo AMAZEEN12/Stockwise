@@ -16,7 +16,7 @@ async function start(args,env,url) {
 try {
   await start(['scripts/development-api.mjs'],{DEVELOPMENT_API_PORT:'4712'},`${apiBase}/health`);
   await start(['node_modules/vite/bin/vite.js','--host','127.0.0.1','--port','5187','--strictPort'],{VITE_API_BASE_URL:apiBase},siteBase);
-  const session=await(await fetch(`${apiBase}/auth/sessions`,{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({email:'owner@stockwise.demo',password:'stockwise-demo'})})).json();
+  const session=await(await fetch(`${apiBase}/auth/sessions`,{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({email:'owner@stockwise.test',password:'Stockwise-Demo-2026'})})).json();
   const headers={Authorization:`Bearer ${session.accessToken}`,'Content-Type':'application/json'};
   const products=await(await fetch(`${apiBase}/products?size=100`,{headers})).json();
   const customers=await(await fetch(`${apiBase}/customers?size=100`,{headers})).json();

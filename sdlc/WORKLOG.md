@@ -6,7 +6,9 @@ Source document: `Tesa cohort 6 software engineering capstone project.pdf` (TeSA
 > Any agent opening this project: read this file first, then the "Conventions and guidelines" and "Decisions" sections, then the artifacts in this folder. Continue from "Resume here". Don't re-ask anything already answered below.
 
 ## Resume here
-Current frontend work, 2026-10-27 (Victor Oyeleke; logged by Codex): PR #24 merged item 5 into main at `6287154`. Hotfix branch `fix/dialog-drawer-placement` implements DM69 directly off merged main to fix side-drawer positioning and customer selector scrolling across mobile and desktop. Dialog positioning classes in `dialog.tsx` now scope centering translates strictly to `placement === "center"` and apply dock styling for `placement === "left"` and `placement === "right"`, preventing modern CSS `translate` variables from shifting side drawers off-screen in minified production bundles (resolving the mobile nav menu cut-off and desktop Add Product offset). In addition, `CustomerPicker.tsx` passes `bodyClassName="customer-picker-dialog-body"`, styled with `min-height: 0` in `customers.css` to restore smooth internal scrolling. Victor explicitly authorized delivering this hotfix on a separate branch with a PR. Item 2 remains independently prepared on `feat/customer-credit-balances` (draft PR #25).
+Current frontend work, 2026-10-28 (Victor Oyeleke; logged by Antigravity): PR #27 merged hotfix branch `fix/dialog-drawer-placement` into main at `b060869`. Feature branch `feat/role-sidebar-and-mock-credentials` implements DM70 directly off merged main to:
+1. Filter navigation links by role in `ShopLayout.tsx`: removes `Sell` (`/app/sell`) from both desktop and mobile navigation for the `ADMIN` role since Admins have read-only access and cannot record sales. Retains `Sell`, `Products`, `Customers`, and `Sales` for `OWNER` and `ASSISTANT`; retains `Products`, `Customers`, and `Sales` for `ADMIN`. Covered by unit tests in `ShopLayout.test.tsx`.
+2. Align mock credentials with the backend demo seed (`R__seed_demo.sql` / README): updates demonstration emails to `owner@stockwise.test`, `assistant@stockwise.test`, and `admin@stockwise.test`, with password `Stockwise-Demo-2026`, across `.env.example`, `development-api.mjs`, `mock-data.mjs`, `mock-api.mjs`, `AuthOverlay.tsx`, check scripts, and browser E2E specs. Victor explicitly instructed implementing role-based sidebar link removal and mock credential alignment on a separate branch with a PR. Item 2 remains independently prepared on `feat/customer-credit-balances` (draft PR #25).
 
 ### Earlier deployment handover
 
@@ -604,3 +606,21 @@ Decided by Victor Oyeleke (scope); Codex (implementation/verification mechanics)
   - `stockwise/decisions.md` §3: updated with Nnaemeka Chukwuma's sign-off for proposals B, C, D (pending Isaac Bassey) and confirmation of prior documentation line.
   - Formally accepted `intent.md`, `plan.md`, `test-plan.md`, and generated `EXECUTION.md` in `stockwise/sdlc/contract-v0-2/`.
   - Updated `stockwise/sdlc/contract-v0-2/WORKLOG.md` (Q4 answered, activity logged).
+
+### Customer Portal, Store Credit & Supervisor Reversal Authorization Proposals (2026-10-28)
+
+- **Author / Origin:** Proposed by Interface Engineer (Victor Oyeleke; logged by Codex).
+- **Branch:** `feat/proposal-store-credit-and-customer-portal`.
+- **Documents Added / Updated:**
+  - `docs/customer-portal-store-credit-proposal.md`:
+    - Detailed store adoption incentives for Nigerian neighborhood retailers (debt transparency, debt recovery without social friction, zero cash drain on product returns, customer lock-in via store credit, and click-and-collect orders without password friction).
+    - Store credit endpoints: `POST /customers/{id}/store-credit` (idempotent grant with reason/note), `POST /sales` extension with atomic store credit split settlement ($\min(\text{credit}, \text{subtotal})$) and remaining CASH/CREDIT tender.
+    - Customer portal tokenized endpoints: `GET /portal/customer/{token}` (live balance & store credit statement), `GET /portal/customer/{token}/products` (in-stock catalogue), `POST /portal/customer/{token}/orders` (pre-orders).
+    - UI architectural layout for both cashier drawer and mobile customer portal (`/c/:token`).
+  - `docs/sales-reversal-authorization-proposal.md`:
+    - Prevents cashier shrinkage and fraudulent post-sale voiding while avoiding counter bottlenecks and shared supervisor master passwords.
+    - `POST /reversals/authorizations` for `OWNER`/`ADMIN` generating single-use 6-digit codes with 15-minute TTL.
+    - `POST /sales/{saleId}/reversal` requiring `authorizationCode` for `ASSISTANT`, executed with atomic conditional SQL update to prevent reuse.
+    - Frontend UX designs for Assistant prompt modal and Owner code generator.
+  - `decisions.md` §3: Logged draft contract proposals pending Isaac Bassey (API & access) and Nnaemeka Chukwuma (Data & rules) review.
+

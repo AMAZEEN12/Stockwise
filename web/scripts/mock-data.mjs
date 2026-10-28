@@ -1,4 +1,4 @@
-export const mockUser = {id:'a2222222-2222-4222-8222-222222222222', email:'owner@stockwise.demo', displayName:'Demo Owner', role:'OWNER'};
+export const mockUser = {id:'a2222222-2222-4222-8222-222222222222', email:'owner@stockwise.test', displayName:'Demo Owner', role:'OWNER'};
 export function stockState(product) {return !product.active ? 'ARCHIVED' : product.quantity === 0 ? 'OUT' : product.quantity <= product.lowStockThreshold ? 'LOW' : 'IN_STOCK';}
 export function makeProducts() {
   return [

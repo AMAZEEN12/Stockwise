@@ -16,8 +16,8 @@ async function start(args,env,url) {
   for(let i=0;i<150;i++){if(child.exitCode!==null)throw new Error(`Owned preview exited: ${failure}`);try{if((await fetch(url)).ok)return;}catch{/* Await owned server. */}await new Promise((resolve)=>setTimeout(resolve,200));}
   throw new Error('Owned preview did not become ready.');
 }
-const email=(role)=>demo[`VITE_DEMO_${role}_EMAIL`] || `${role.toLowerCase()}@stockwise.demo`;
-const password=demo.VITE_DEMO_PASSWORD || 'stockwise-demo';
+const email=(role)=>demo[`VITE_DEMO_${role}_EMAIL`] || `${role.toLowerCase()}@stockwise.test`;
+const password=demo.VITE_DEMO_PASSWORD || 'Stockwise-Demo-2026';
 async function login(base,role){const response=await fetch(`${base}/auth/sessions`,{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({email:email(role),password})});assert.equal(response.status,201);return response.json();}
 const headers=(session)=>({Authorization:`Bearer ${session.accessToken}`,'Content-Type':'application/json'});
 try {
