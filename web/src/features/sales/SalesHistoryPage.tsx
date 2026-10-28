@@ -1,4 +1,5 @@
 import { useEffect, useRef, useState, type ReactNode } from "react";
+import { useNavigate } from "react-router";
 import { Button } from "../../components/ui/button";
 import { Card } from "../../components/ui/card";
 import { FormField } from "../../components/ui/form-field";
@@ -60,6 +61,7 @@ function SalesResults({
   children: ReactNode;
   onRangeRefresh: () => boolean;
 }) {
+  const navigate = useNavigate();
   const [throughPage, setThroughPage] = useState(0);
   const query = useSalesHistoryQuery(
     { filters, throughPage },
@@ -195,7 +197,12 @@ function SalesResults({
                 </thead>
                 <tbody>
                   {rows.map((sale) => (
-                    <tr key={sale.id} data-highlight={sale.id === highlight}>
+                    <tr
+                      key={sale.id}
+                      data-highlight={sale.id === highlight}
+                      className="history-row-clickable"
+                      onClick={() => void navigate(`/app/receipts/${sale.id}`)}
+                    >
                       <th scope="row">{sale.reference}</th>
                       <td>
                         <time dateTime={sale.createdAt}>
@@ -226,9 +233,10 @@ function SalesResults({
                 {rows.map((sale) => (
                   <li key={sale.id}>
                     <Card
-                      className="history-card"
+                      className="history-card history-card-clickable"
                       bodyClassName="history-card-body"
                       data-highlight={sale.id === highlight}
+                      onClick={() => void navigate(`/app/receipts/${sale.id}`)}
                     >
                       <div className="history-card-top">
                         <span>{sale.reference}</span>

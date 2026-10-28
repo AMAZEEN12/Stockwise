@@ -20,9 +20,83 @@ const customers = [
   {id:'22222222-2222-4222-8222-222222222223',displayName:'Ngozi Okoro',balanceKobo:85000,storeCreditKobo:0,hasDebtActivity:true,hasStoreCreditActivity:false,createdAt:'2026-10-24T08:41:00Z'},
   {id:'22222222-2222-4222-8222-222222222224',displayName:'Tunde Bakare',balanceKobo:0,storeCreditKobo:0,hasDebtActivity:false,hasStoreCreditActivity:false,createdAt:'2026-10-24T08:41:00Z'},
 ];
-const sales = [];
+const sales = [
+  {
+    id: '33333333-3333-4333-8333-000000000003',
+    reference: 'S-000003',
+    paymentType: 'PAID',
+    totalKobo: 196000,
+    lines: [
+      {
+        productId: '11111111-1111-4111-8111-000000000004',
+        productName: 'Golden Penny Spaghetti 500g',
+        quantity: 2,
+        unitPriceKobo: 98000,
+        lineTotalKobo: 196000,
+      },
+    ],
+    createdBy: 'a2222222-2222-4222-8222-222222222223',
+    createdAt: new Date(Date.now() - 3600 * 1000).toISOString(),
+  },
+  {
+    id: '33333333-3333-4333-8333-000000000002',
+    reference: 'S-000002',
+    paymentType: 'CREDIT',
+    customerId: '22222222-2222-4222-8222-222222222221',
+    dueDate: new Date(Date.now() + 7 * 86400000).toISOString().slice(0, 10),
+    totalKobo: 395000,
+    lines: [
+      {
+        productId: '11111111-1111-4111-8111-000000000005',
+        productName: 'Cadbury Bournvita Chocolate Malt Drink Refill Pouch 900g',
+        quantity: 1,
+        unitPriceKobo: 395000,
+        lineTotalKobo: 395000,
+      },
+    ],
+    createdBy: 'a2222222-2222-4222-8222-222222222223',
+    createdAt: new Date(Date.now() - 2 * 3600 * 1000).toISOString(),
+  },
+  {
+    id: '33333333-3333-4333-8333-000000000001',
+    reference: 'S-000001',
+    paymentType: 'PAID',
+    totalKobo: 225000,
+    lines: [
+      {
+        productId: '11111111-1111-4111-8111-000000000001',
+        productName: 'Indomie Chicken 70g',
+        quantity: 1,
+        unitPriceKobo: 45000,
+        lineTotalKobo: 45000,
+      },
+      {
+        productId: '11111111-1111-4111-8111-000000000003',
+        productName: 'Dettol 250ml',
+        quantity: 1,
+        unitPriceKobo: 180000,
+        lineTotalKobo: 180000,
+      },
+    ],
+    createdBy: 'a2222222-2222-4222-8222-222222222222',
+    createdAt: new Date(Date.now() - 3 * 3600 * 1000).toISOString(),
+  },
+];
 const submissions = new Map();
-const reversalAuthorizations = new Map();
+const reversalAuthorizations = new Map([
+  [
+    '839201',
+    {
+      code: '839201',
+      saleId: '33333333-3333-4333-8333-000000000002',
+      expiresAt: new Date(Date.now() + 24 * 3600 * 1000).toISOString(),
+      generatedBy: 'Demo Owner',
+      generatedByRole: 'OWNER',
+      redeemedAt: null,
+      createdAt: new Date().toISOString(),
+    },
+  ],
+]);
 const isUuid = (text) => typeof text === 'string' && /^[0-9a-f]{8}-[0-9a-f]{4}-[1-5][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i.test(text);
 const server = createServer(async (request,response) => {
   const origin = request.headers.origin;

@@ -65,3 +65,4 @@ describe('reversal endpoint paths and models', () => {
     expect(authCreate.validMinutes).toBe(15);
   });
 });
+

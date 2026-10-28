@@ -49,6 +49,20 @@
   border-bottom: 1px solid var(--color-border);
   overflow-wrap: anywhere;
 }
+.history-row-clickable {
+  cursor: pointer;
+  transition: background-color 150ms ease;
+}
+.history-row-clickable:hover {
+  background-color: var(--color-surface-hover);
+}
+.history-card-clickable {
+  cursor: pointer;
+  transition: border-color 150ms ease, background-color 150ms ease;
+}
+.history-card-clickable:hover {
+  border-color: var(--color-border-hover);
+}
 .history-table thead th {
   padding: 12px 8px 12px 0;
   border-top: 1px solid var(--color-border);

@@ -17,3 +17,4 @@ export interface SaleReversalResponse {
   note?: string;
   stockRestored: boolean;
 }
+

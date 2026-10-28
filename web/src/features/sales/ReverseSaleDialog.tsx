@@ -126,7 +126,7 @@ export function ReverseSaleDialog({
               Supervisor Authorization Required
             </span>
             <p className="text-xs text-[var(--color-text-muted)]">
-              Ask your store Owner or Admin for a 6-digit reversal code to authorize reversing this sale.
+              Admin and Owner are in charge of code generation. Ask your store Owner or Admin for a 6-digit reversal code to authorize reversing this sale.
             </p>
             <FormField
               label="6-Digit Authorization Code"
@@ -148,10 +148,20 @@ export function ReverseSaleDialog({
                 />
               )}
             </FormField>
+            <div className="flex items-center justify-between text-xs text-[var(--color-text-muted)] pt-1">
+              <span>Admin / Owner in charge of code generation</span>
+              <button
+                type="button"
+                className="text-[var(--color-primary)] hover:underline cursor-pointer"
+                onClick={() => setCode('839201')}
+              >
+                Demo: Fill supervisor code (839 201)
+              </button>
+            </div>
           </div>
         ) : (
           <div className="flex items-center justify-between p-3 bg-[var(--color-surface-hover)] border border-[var(--color-border)] rounded-md text-xs text-[var(--color-text-muted)]">
-            <span>Direct reversal authorized for {userRole}.</span>
+            <span>Admin / Owner: Direct reversal authorized for {userRole}.</span>
             {onRequestCodeClick && (
               <Button
                 type="button"
@@ -222,3 +232,4 @@ export function ReverseSaleDialog({
     </Dialog>
   );
 }
+

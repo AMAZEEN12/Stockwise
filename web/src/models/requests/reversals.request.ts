@@ -14,3 +14,4 @@ export interface SaleReversalRequest {
   note?: string;
   authorizationCode?: string;
 }
+

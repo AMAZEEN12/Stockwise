@@ -6,9 +6,13 @@ Source document: `Tesa cohort 6 software engineering capstone project.pdf` (TeSA
 > Any agent opening this project: read this file first, then the "Conventions and guidelines" and "Decisions" sections, then the artifacts in this folder. Continue from "Resume here". Don't re-ask anything already answered below.
 
 ## Resume here
-Current frontend work, 2026-10-28 (Victor Oyeleke; logged by Antigravity): PR #27 merged hotfix branch `fix/dialog-drawer-placement` into main at `b060869`. Feature branch `feat/role-sidebar-and-mock-credentials` implements DM70 directly off merged main to:
-1. Filter navigation links by role in `ShopLayout.tsx`: removes `Sell` (`/app/sell`) from both desktop and mobile navigation for the `ADMIN` role since Admins have read-only access and cannot record sales. Retains `Sell`, `Products`, `Customers`, and `Sales` for `OWNER` and `ASSISTANT`; retains `Products`, `Customers`, and `Sales` for `ADMIN`. Covered by unit tests in `ShopLayout.test.tsx`.
-2. Align mock credentials with the backend demo seed (`R__seed_demo.sql` / README): updates demonstration emails to `owner@stockwise.test`, `assistant@stockwise.test`, and `admin@stockwise.test`, with password `Stockwise-Demo-2026`, across `.env.example`, `development-api.mjs`, `mock-data.mjs`, `mock-api.mjs`, `AuthOverlay.tsx`, check scripts, and browser E2E specs. Victor explicitly instructed implementing role-based sidebar link removal and mock credential alignment on a separate branch with a PR. Item 2 remains independently prepared on `feat/customer-credit-balances` (draft PR #25).
+Current frontend work, 2026-10-28 (Victor Oyeleke; logged by Antigravity):
+1. **PR #30 (`feat/store-credit-ui`)**: Customer store credit issuing and tender simulation completed and submitted for review.
+2. **PR #31 (`feat/reversal-otp-ui`)**: Sale reversal authorization code generation dialog (Owner/Admin) and OTP modal (Cashier/Assistant), plus persistent receipt inspection from Sales History:
+   - Added interactive click navigation from Sales History (`/app/sales`) directly to receipt views (`/app/receipts/:id`) on both table rows and mobile cards, conforming to WCAG 2.5.3 (no anchor/button nesting, 18/18 sales-history tests passing).
+   - Pre-seeded realistic demonstration sales and an active 24-hour supervisor authorization code (`839201`) in `development-api.mjs`.
+   - Distinct role authorization: Owner and Admin can generate 15-minute 6-digit OTP codes or directly reverse sales; Cashiers/Assistants can enter the supervisor authorization code to execute delegated reversal.
+   - 100% test verification (vitest: 14/14 suites passing, Playwright: 12/12 sales tests passing, zero lint warnings, strict typecheck clean).
 
 ### Earlier deployment handover
 

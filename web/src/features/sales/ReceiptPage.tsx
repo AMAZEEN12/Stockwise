@@ -1,6 +1,7 @@
 import { Link, useOutletContext, useParams } from "react-router";
 import { useState } from "react";
 import { useSaleQuery } from "../../service/api/sales.api";
+import { useCustomersQuery } from "../../service/api/customers.api";
 import type { User } from "../../models/responses/auth.response";
 import { formatMoney } from "../../lib/money";
 import { Button } from "../../components/ui/button";
@@ -18,9 +19,16 @@ export function ReceiptPage() {
   const query = useSaleQuery(saleId, { skip: !!saved });
   const sale = saved?.sale || query.data;
 
+  const customers = useCustomersQuery(undefined, { skip: !sale?.customerId });
+  const customerName =
+    saved?.customerName ||
+    customers.data?.find((c) => c.id === sale?.customerId)?.displayName;
+
   const [reverseDialogOpen, setReverseDialogOpen] = useState(false);
   const [generateCodeDialogOpen, setGenerateCodeDialogOpen] = useState(false);
   const [isReversed, setIsReversed] = useState(false);
+  const reversed =
+    isReversed || Boolean((sale as { reversed?: boolean } | undefined)?.reversed);
 
   return (
     <div className="receipt-page">
@@ -42,7 +50,7 @@ export function ReceiptPage() {
       ) : (
         <>
           <section className="receipt-card">
-            {isReversed ? (
+            {reversed ? (
               <h2 className="text-[var(--color-danger)]">
                 <span aria-hidden="true">✕</span> Sale reversed
               </h2>
@@ -60,7 +68,7 @@ export function ReceiptPage() {
               })}{" "}
               WAT
             </p>
-            {isReversed && (
+            {reversed && (
               <div className="p-3 bg-[var(--color-danger-subtle)] border border-[var(--color-danger)] rounded-md text-sm text-[var(--color-danger)] my-3">
                 This sale has been reversed. Inventory items have been returned to stock.
               </div>
@@ -96,7 +104,7 @@ export function ReceiptPage() {
             </div>
             <p className="micro">
               {sale.paymentType === "CREDIT" ? "On credit" : "Paid"}
-              {saved?.customerName ? ` · ${saved.customerName}` : ""}
+              {customerName ? ` · ${customerName}` : ""}
             </p>
             {saved?.simulated && (
               <small className="settlement-note">
@@ -108,7 +116,7 @@ export function ReceiptPage() {
             <Link className="primary-link" to="/app/sell">
               New sale
             </Link>
-            {!isReversed && (
+            {!reversed && (
               <Button
                 size="lg"
                 variant="danger"
@@ -117,7 +125,7 @@ export function ReceiptPage() {
                 Reverse sale
               </Button>
             )}
-            {["OWNER", "ADMIN"].includes(user.role) && !isReversed && (
+            {["OWNER", "ADMIN"].includes(user.role) && !reversed && (
               <Button
                 size="lg"
                 variant="secondary"
