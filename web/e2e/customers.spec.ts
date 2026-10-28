@@ -3,7 +3,7 @@ import type {Page,TestInfo} from '@playwright/test';
 import AxeBuilder from '@axe-core/playwright';
 
 const user={id:'a2222222-2222-4222-8222-222222222222',email:'owner@stockwise.demo',displayName:'Ada Okafor',role:'OWNER'};
-const customers=['Chinedu Obi','Mama Chidi','Ngozi Okoro','Bolu Adeyemi','Tunde Bakare','Aisha Bello'].map((displayName,index)=>({id:`22222222-2222-4222-8222-22222222222${index+1}`,displayName,balanceKobo:[1230000,450000,85000,0,0,0][index],storeCreditKobo:index===3?600000:index===5?120000:0,createdAt:'2026-10-24T08:41:00Z'}));
+const customers=['Chinedu Obi','Mama Chidi','Ngozi Okoro','Bolu Adeyemi','Tunde Bakare','Aisha Bello'].map((displayName,index)=>({id:`22222222-2222-4222-8222-22222222222${index+1}`,displayName,balanceKobo:[1230000,450000,85000,0,0,0][index],storeCreditKobo:index===3?600000:index===5?120000:0,hasDebtActivity:index<3||index===4,hasStoreCreditActivity:index===3||index===5,createdAt:'2026-10-24T08:41:00Z'}));
 async function setup(page:Page,role='OWNER') {
   if(page.viewportSize()?.width===360)await page.setViewportSize({width:360,height:1000});
   await page.clock.setFixedTime(new Date('2026-10-24T08:41:00Z'));
@@ -21,7 +21,7 @@ async function add(page:Page) {
 }
 test('directory supplied list, search match and no-match states',async({page},info)=>{
   await setup(page);await page.route('**/customers?*',(route)=>route.fulfill({json:{items:customers,page:0,size:100,totalItems:customers.length}}));
-  await page.goto('/app/customers');await expect(page.getByText('as of 09:41 WAT',{exact:true})).toBeVisible();await expect(page.getByText('Chinedu Obi',{exact:true}).filter({visible:true})).toBeVisible();await capture(page,info,'list');
+  await page.goto('/app/customers');await expect(page.getByText('as of 09:41 WAT',{exact:true})).toBeVisible();await expect(page.getByText('Chinedu Obi',{exact:true}).filter({visible:true})).toBeVisible();await expect(page.getByText('₦0.00',{exact:true}).filter({visible:true})).toBeVisible();await capture(page,info,'list');
   await page.getByRole('textbox',{name:'Search customers by name'}).fill('zzz');await expect(page.getByText('No customers match',{exact:true})).toBeVisible();await capture(page,info,'no-match');
   await page.getByRole('button',{name:'Clear search',exact:true}).click();await page.getByRole('textbox',{name:'Search customers by name'}).fill(' bOLu ');await expect(page.getByText('Bolu Adeyemi',{exact:true}).filter({visible:true})).toBeVisible();
   const axe=await new AxeBuilder({page}).analyze();expect(axe.violations.filter((v)=>['serious','critical'].includes(v.impact||''))).toEqual([]);
@@ -29,7 +29,7 @@ test('directory supplied list, search match and no-match states',async({page},in
 test('directory add, name-required, saving and success frames',async({page},info)=>{
   await setup(page);const data=[...customers];let posts=0;let release!:()=>void;const gate=new Promise<void>((resolve)=>{release=resolve;});
   await page.route('**/customers?*',(route)=>route.fulfill({json:{items:data,page:0,size:100,totalItems:data.length}}));
-  await page.route('**/customers',async(route)=>{if(route.request().method()!=='POST')return route.fallback();posts++;await gate;const body=route.request().postDataJSON();expect(body).toEqual({displayName:'Adaeze Nwosu'});const person={...customers[4],...body,id:'33333333-3333-4333-8333-333333333333'};data.push(person);await route.fulfill({status:201,json:person});});
+  await page.route('**/customers',async(route)=>{if(route.request().method()!=='POST')return route.fallback();posts++;await gate;const body=route.request().postDataJSON();expect(body).toEqual({displayName:'Adaeze Nwosu'});const person={...customers[4],...body,id:'33333333-3333-4333-8333-333333333333',hasDebtActivity:false,hasStoreCreditActivity:false};data.push(person);await route.fulfill({status:201,json:person});});
   await page.goto('/app/customers');await expect(page.getByText('as of 09:41 WAT')).toBeVisible();await add(page);await capture(page,info,'add');
   await page.getByRole('button',{name:'Save customer',exact:true}).click();await expect(page.getByText('Enter a display name.',{exact:true})).toBeVisible();await capture(page,info,'name-required');expect(posts).toBe(0);
   await page.getByRole('textbox',{name:'Display name (required)'}).fill('Adaeze Nwosu');await page.getByRole('button',{name:'Save customer',exact:true}).click();await expect(page.getByRole('button',{name:'Saving…',exact:true})).toBeVisible();await capture(page,info,'saving');

@@ -344,6 +344,10 @@ export interface components {
             contactPlaceholder?: string;
             balanceKobo: components["schemas"]["Kobo"];
             storeCreditKobo: components["schemas"]["Kobo"];
+            /** @description Whether this customer has any debt-ledger history, independently of the current balance. */
+            hasDebtActivity: boolean;
+            /** @description Whether this customer has any store-credit-ledger history, independently of the current balance. */
+            hasStoreCreditActivity: boolean;
             /** Format: date-time */
             createdAt: string;
         };

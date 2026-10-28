@@ -857,7 +857,7 @@ components:
 
     Customer:
       type: object
-      required: [id, displayName, balanceKobo, storeCreditKobo, createdAt]
+      required: [id, displayName, balanceKobo, storeCreditKobo, hasDebtActivity, hasStoreCreditActivity, createdAt]
       properties:
         id:
           type: string
@@ -870,6 +870,12 @@ components:
           $ref: '#/components/schemas/Kobo'
         storeCreditKobo:
           $ref: '#/components/schemas/Kobo'
+        hasDebtActivity:
+          type: boolean
+          description: Whether this customer has any debt-ledger history, independently of the current balance.
+        hasStoreCreditActivity:
+          type: boolean
+          description: Whether this customer has any store-credit-ledger history, independently of the current balance.
         createdAt:
           type: string
           format: date-time

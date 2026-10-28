@@ -21,7 +21,18 @@ import ng.tesa.stockwise.common.Page;
 @Repository
 public class CustomerRepository {
 
-    private static final String COLUMNS = "id, display_name, contact_placeholder, balance_kobo, store_credit_kobo, created_at";
+    private static final String COLUMNS = """
+            c.id, c.display_name, c.contact_placeholder, c.balance_kobo, c.store_credit_kobo,
+            EXISTS (
+                SELECT 1 FROM ledger_entry debt
+                WHERE debt.customer_id = c.id AND debt.source_type <> 'STORE_CREDIT'
+            ) AS has_debt_activity,
+            EXISTS (
+                SELECT 1 FROM ledger_entry credit
+                WHERE credit.customer_id = c.id AND credit.source_type = 'STORE_CREDIT'
+            ) AS has_store_credit_activity,
+            c.created_at
+            """;
 
     private final JdbcClient jdbc;
 
@@ -89,7 +100,7 @@ public class CustomerRepository {
     }
 
     public Optional<Customer> findById(UUID id) {
-        return jdbc.sql("SELECT " + COLUMNS + " FROM customer WHERE id = :id")
+        return jdbc.sql("SELECT " + COLUMNS + " FROM customer c WHERE c.id = :id")
                 .param("id", id)
                 .query((rs, row) -> map(rs))
                 .optional();
@@ -98,15 +109,16 @@ public class CustomerRepository {
     /** {@code q} matches the display name, case-insensitively, as plain text. Ordered by name, then ID. */
     public Page<Customer> list(String q, Page.Request page) {
         boolean filtered = q != null && !q.isBlank();
-        String where = filtered ? " WHERE display_name ILIKE :q ESCAPE '\\'" : "";
+        String countWhere = filtered ? " WHERE display_name ILIKE :q ESCAPE '\\'" : "";
+        String listWhere = filtered ? " WHERE c.display_name ILIKE :q ESCAPE '\\'" : "";
         Map<String, Object> params = filtered ? Map.of("q", "%" + escapeLike(q.trim()) + "%") : Map.of();
 
-        long total = jdbc.sql("SELECT count(*) FROM customer" + where)
+        long total = jdbc.sql("SELECT count(*) FROM customer" + countWhere)
                 .params(params)
                 .query(Long.class)
                 .single();
-        List<Customer> items = jdbc.sql("SELECT " + COLUMNS + " FROM customer" + where
-                        + " ORDER BY lower(display_name), id LIMIT :limit OFFSET :offset")
+        List<Customer> items = jdbc.sql("SELECT " + COLUMNS + " FROM customer c" + listWhere
+                        + " ORDER BY lower(c.display_name), c.id LIMIT :limit OFFSET :offset")
                 .params(params)
                 .param("limit", page.size())
                 .param("offset", page.offset())
@@ -126,6 +138,8 @@ public class CustomerRepository {
                 rs.getString("contact_placeholder"),
                 rs.getLong("balance_kobo"),
                 rs.getLong("store_credit_kobo"),
+                rs.getBoolean("has_debt_activity"),
+                rs.getBoolean("has_store_credit_activity"),
                 rs.getObject("created_at", OffsetDateTime.class).toInstant());
     }
 }

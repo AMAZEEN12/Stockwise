@@ -4,7 +4,7 @@ import AxeBuilder from '@axe-core/playwright';
 import {makeProducts} from '../scripts/mock-data.mjs';
 import type {Product} from '../src/models/responses/products.response';
 const user = {id:'a2222222-2222-4222-8222-222222222222',email:'owner@stockwise.demo',displayName:'Ada Okafor',role:'OWNER'};
-const customers = [{id:'22222222-2222-4222-8222-222222222221',displayName:'Mama Chidi',balanceKobo:450000,storeCreditKobo:0,createdAt:'2026-10-24T08:41:00Z'}, {id:'22222222-2222-4222-8222-222222222222',displayName:'Bolu Adeyemi',balanceKobo:0,storeCreditKobo:600000,createdAt:'2026-10-24T08:41:00Z'}];
+const customers = [{id:'22222222-2222-4222-8222-222222222221',displayName:'Mama Chidi',balanceKobo:450000,storeCreditKobo:0,hasDebtActivity:true,hasStoreCreditActivity:false,createdAt:'2026-10-24T08:41:00Z'}, {id:'22222222-2222-4222-8222-222222222222',displayName:'Bolu Adeyemi',balanceKobo:0,storeCreditKobo:600000,hasDebtActivity:false,hasStoreCreditActivity:true,createdAt:'2026-10-24T08:41:00Z'}];
 async function setup(page:Page, products:Product[] = makeProducts()) {
   const viewport = page.viewportSize(); if (viewport?.width === 360) await page.setViewportSize({width:360,height:1000});
   await page.addInitScript((user) => sessionStorage.setItem('stockwise.session',JSON.stringify({accessToken:'stockwise-contract-mock-token',tokenType:'Bearer',expiresAt:'2099-01-01T00:00:00Z',user})),user);
@@ -50,7 +50,7 @@ test('updated stock conflict retains zero row and blocks confirm until removal',
 test('corrected store credit shows 6000 applied and 150 remaining in simulation',async ({page},info) => {
   await setup(page); await page.route('**/sales',(route) => route.fulfill({status:201,json:receipt(route.request().postDataJSON())}));
   await page.goto('/app/sell'); await add(page,'Dettol 250ml',3); await add(page,'Milo Sachet 20g',5);
-  await page.getByRole('button',{name:'On credit',exact:true}).click(); await page.getByRole('button',{name:'Choose customer (required)',exact:true}).click(); await page.getByRole('button',{name:/Bolu Adeyemi Settled Store credit/}).click(); await page.getByRole('button',{name:'Back to sale',exact:true}).click();
+  await page.getByRole('button',{name:'On credit',exact:true}).click(); await page.getByRole('button',{name:'Choose customer (required)',exact:true}).click(); await page.getByRole('button',{name:/Bolu Adeyemi Balance owed — Store credit/}).click(); await page.getByRole('button',{name:'Back to sale',exact:true}).click();
   await expect(page.locator('.credit-breakdown')).toContainText('−₦6,000.00'); await expect(page.locator('.sale-total-heading')).toContainText('₦150.00');
   await page.getByRole('heading',{name:'New sale',exact:true}).scrollIntoViewIfNeeded();
   await page.evaluate(async () => {await document.fonts.ready; if (document.activeElement instanceof HTMLElement) document.activeElement.blur(); window.scrollTo({top:0,behavior:'instant'}); await new Promise<void>((resolve) => requestAnimationFrame(() => requestAnimationFrame(() => resolve())));}); await page.screenshot({path:info.outputPath('store-credit-updated.png')});

@@ -5,7 +5,7 @@ import {makeProducts} from '../scripts/mock-data.mjs';
 
 const user = {id:'a2222222-2222-4222-8222-222222222222',email:'owner@stockwise.demo',displayName:'Ada Okafor',role:'OWNER'};
 const names = ['Mama Chidi','Bolu Adeyemi','Ngozi Okoro','Tunde Bakare'];
-const customers = names.map((displayName,index) => ({id:`22222222-2222-4222-8222-22222222222${index+1}`,displayName,balanceKobo:[450000,0,85000,0][index],storeCreditKobo:index===1?600000:0,createdAt:'2026-10-24T08:41:00Z'}));
+const customers = names.map((displayName,index) => ({id:`22222222-2222-4222-8222-22222222222${index+1}`,displayName,balanceKobo:[450000,0,85000,0][index],storeCreditKobo:index===1?600000:0,hasDebtActivity:index===0||index===2,hasStoreCreditActivity:index===1,createdAt:'2026-10-24T08:41:00Z'}));
 async function setup(page:Page) {
   if (page.viewportSize()?.width===360) await page.setViewportSize({width:360,height:1000});
   await page.addInitScript((user) => {if (!sessionStorage.getItem('stockwise.session')) sessionStorage.setItem('stockwise.session',JSON.stringify({accessToken:'stockwise-contract-mock-token',tokenType:'Bearer',expiresAt:'2099-01-01T00:00:00Z',user}));},user);
@@ -38,16 +38,16 @@ test('picker supplied list, inline create, name error and selected frames',async
   await setup(page);const data=[...customers];let posts=0;
   await page.route('**/customers?*',(route) => route.fulfill({json:{items:data,page:0,size:100,totalItems:data.length}}));
   await page.route('**/customers',async (route) => {posts++;const body=route.request().postDataJSON();expect(body).toEqual({displayName:'Adaeze Nwosu'});await route.fulfill({status:201,json:{...customers[3],...body,id:'33333333-3333-4333-8333-333333333333'}});data.push({...customers[3],...body,id:'33333333-3333-4333-8333-333333333333'});});
-  await open(page);await expect(page.getByRole('button',{name:/Mama Chidi Owes/})).toBeVisible();await capture(page,info,'list');
+  await open(page);await expect(page.getByRole('button',{name:/Mama Chidi Balance owed/})).toBeVisible();await capture(page,info,'list');
   const axe=await new AxeBuilder({page}).analyze();expect(axe.violations.filter((v)=>['serious','critical'].includes(v.impact||''))).toEqual([]);
   await page.getByRole('button',{name:'Add new customer'}).click();await capture(page,info,'add');
   await page.getByRole('button',{name:'Save and select',exact:true}).click();await expect(page.getByText('Enter a display name.',{exact:true})).toBeVisible();expect(posts).toBe(0);await capture(page,info,'name-required');
   await page.getByRole('textbox',{name:'Display name (required)'}).fill('  Adaeze Nwosu  ');await page.getByRole('button',{name:'Save and select',exact:true}).click();
   await expect(page.getByText('Customer selected. Confirm stays disabled until one is chosen.',{exact:true})).toBeVisible();expect(posts).toBe(1);
-  await page.getByRole('button',{name:'Change',exact:true}).click();await page.getByRole('button',{name:/Mama Chidi Owes/}).click();await capture(page,info,'selected');
+  await page.getByRole('button',{name:'Change',exact:true}).click();await page.getByRole('button',{name:/Mama Chidi Balance owed/}).click();await capture(page,info,'selected');
   await page.getByRole('button',{name:'Back to sale',exact:true}).click();await expect(page.getByRole('button',{name:'Confirm sale',exact:true})).toBeEnabled();
-  await page.getByRole('button',{name:'Choose customer (required)',exact:true}).click();await page.getByRole('button',{name:'Change',exact:true}).click();await page.getByRole('textbox',{name:'Search customers by name'}).fill('zzzzz');await expect(page.getByText('No customers match',{exact:true})).toBeVisible();await page.getByRole('button',{name:'Clear search',exact:true}).click();await expect(page.getByRole('button',{name:/Adaeze Nwosu Settled/})).toBeVisible();
-  await page.keyboard.press('Escape');await expect(page.getByRole('button',{name:'Choose customer (required)',exact:true})).toBeFocused();
+  const selectedTrigger=page.getByRole('button',{name:/Mama Chidi\. Balance owed/});await selectedTrigger.click();await page.getByRole('button',{name:'Change',exact:true}).click();await page.getByRole('textbox',{name:'Search customers by name'}).fill('zzzzz');await expect(page.getByText('No customers match',{exact:true})).toBeVisible();await page.getByRole('button',{name:'Clear search',exact:true}).click();await expect(page.getByRole('button',{name:/Adaeze Nwosu Balance owed — Store credit/})).toBeVisible();
+  await page.keyboard.press('Escape');await expect(selectedTrigger).toBeFocused();
 });
 test('picker loading, read error retry and empty frames',async ({page},info) => {
   await setup(page);let state='loading';let release!:()=>void;const gate=new Promise<void>((resolve)=>{release=resolve;});
@@ -63,7 +63,7 @@ test('picker loads subsequent pages and distinguishes duplicate display names by
   await expect(page.getByRole('button',{name:/Same Name.*fictional B/})).toBeVisible();expect(seen).toContain(1);
   await page.getByRole('button',{name:/Same Name.*fictional B/}).click();await page.getByRole('button',{name:'Back to sale',exact:true}).click();
   expect(await page.evaluate(()=>JSON.parse(sessionStorage.getItem('stockwise.cart.a2222222-2222-4222-8222-222222222222') || 'null').customerId)).toBe(customers[1].id);
-  await expect(page.getByText('Store credit ₦6,000.00',{exact:true})).toBeVisible();
+  await expect(page.getByRole('button',{name:/Same Name\. Balance owed — · Store credit ₦6,000\.00/})).toBeVisible();
 });
 test('uncertain customer creation is not retried and survives refresh',async ({page}) => {
   await setup(page);let posts=0;

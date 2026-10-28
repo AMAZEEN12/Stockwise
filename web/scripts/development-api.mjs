@@ -15,10 +15,10 @@ const accounts=['OWNER','ASSISTANT','ADMIN'].map((role,index)=>({...mockUser,
 }));
 const sessions=new Map();
 const customers = [
-  {id:'22222222-2222-4222-8222-222222222221',displayName:'Mama Chidi',balanceKobo:450000,storeCreditKobo:0,createdAt:'2026-10-24T08:41:00Z'},
-  {id:'22222222-2222-4222-8222-222222222222',displayName:'Bolu Adeyemi',balanceKobo:0,storeCreditKobo:600000,createdAt:'2026-10-24T08:41:00Z'},
-  {id:'22222222-2222-4222-8222-222222222223',displayName:'Ngozi Okoro',balanceKobo:85000,storeCreditKobo:0,createdAt:'2026-10-24T08:41:00Z'},
-  {id:'22222222-2222-4222-8222-222222222224',displayName:'Tunde Bakare',balanceKobo:0,storeCreditKobo:0,createdAt:'2026-10-24T08:41:00Z'},
+  {id:'22222222-2222-4222-8222-222222222221',displayName:'Mama Chidi',balanceKobo:450000,storeCreditKobo:0,hasDebtActivity:true,hasStoreCreditActivity:false,createdAt:'2026-10-24T08:41:00Z'},
+  {id:'22222222-2222-4222-8222-222222222222',displayName:'Bolu Adeyemi',balanceKobo:0,storeCreditKobo:600000,hasDebtActivity:false,hasStoreCreditActivity:true,createdAt:'2026-10-24T08:41:00Z'},
+  {id:'22222222-2222-4222-8222-222222222223',displayName:'Ngozi Okoro',balanceKobo:85000,storeCreditKobo:0,hasDebtActivity:true,hasStoreCreditActivity:false,createdAt:'2026-10-24T08:41:00Z'},
+  {id:'22222222-2222-4222-8222-222222222224',displayName:'Tunde Bakare',balanceKobo:0,storeCreditKobo:0,hasDebtActivity:false,hasStoreCreditActivity:false,createdAt:'2026-10-24T08:41:00Z'},
 ];
 const sales = [];
 const submissions = new Map();
@@ -99,7 +99,7 @@ const server = createServer(async (request,response) => {
     if (body.contactPlaceholder !== undefined && (typeof body.contactPlaceholder !== 'string' || [...body.contactPlaceholder].length > 60)) errors.push({field:'contactPlaceholder',message:'Use at most 60 characters.'});
     if (Object.keys(body).some((key) => !['displayName','contactPlaceholder'].includes(key))) errors.push({field:'body',message:'Unexpected property.'});
     if (errors.length) {problem(400,'VALIDATION_FAILED','Check customer fields.',errors); return;}
-    const customer = {...body,displayName:body.displayName.trim(),id:randomUUID(),balanceKobo:0,storeCreditKobo:0,createdAt:new Date().toISOString()};
+    const customer = {...body,displayName:body.displayName.trim(),id:randomUUID(),balanceKobo:0,storeCreditKobo:0,hasDebtActivity:false,hasStoreCreditActivity:false,createdAt:new Date().toISOString()};
     customers.push(customer);send(201,customer);return;
   }
   if (url.pathname === '/sales' && request.method === 'GET') {
@@ -142,7 +142,7 @@ const server = createServer(async (request,response) => {
     const totalKobo = Number(total); const applied = customer ? Math.min(customer.storeCreditKobo,totalKobo) : 0;
     if (customer && body.paymentType === 'CREDIT' && BigInt(customer.balanceKobo)+total-BigInt(applied) > BigInt(Number.MAX_SAFE_INTEGER)) {problem(400,'VALIDATION_FAILED','Customer balance would exceed the supported amount.'); return;}
     for (const line of lines) {const product = products.find((item) => item.id === line.productId); product.quantity -= line.quantity; product.version++; product.updatedAt = new Date().toISOString();}
-    if (customer) {customer.storeCreditKobo -= applied; if (body.paymentType === 'CREDIT') customer.balanceKobo += totalKobo-applied;}
+    if (customer) {customer.storeCreditKobo -= applied; if (body.paymentType === 'CREDIT') {customer.balanceKobo += totalKobo-applied; if (totalKobo-applied > 0) customer.hasDebtActivity=true;}}
     const sale = {id:randomUUID(),reference:`S-${String(sales.length+1).padStart(6,'0')}`,paymentType:body.paymentType,...(body.customerId ? {customerId:body.customerId} : {}),...(body.dueDate ? {dueDate:body.dueDate} : {}),totalKobo,lines,createdBy:user.id,createdAt:new Date().toISOString()};
     sales.unshift(sale); submissions.set(submissionKey,{body:serialized,sale}); response.setHeader('Location',`/sales/${sale.id}`); send(201,sale); return;
   }
