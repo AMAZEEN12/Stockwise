@@ -88,9 +88,10 @@ export function NewSalePage() {
     pending?.customer ||
     customers.data?.find((item) => item.id === customerId) ||
     (selectedCustomer?.id === customerId ? selectedCustomer : undefined);
+  const sessionToken = readSession()?.accessToken;
   const simulation =
-    import.meta.env.DEV &&
-    readSession()?.accessToken === "stockwise-contract-mock-token";
+    sessionToken === "stockwise-contract-mock-token" ||
+    Boolean(sessionToken?.startsWith("stockwise-simulation-"));
   const busy = ["checking", "sending", "retrying"].includes(state);
   const frozen = busy || pending !== null;
   const invalidRecovery = typeof initial === "string";
