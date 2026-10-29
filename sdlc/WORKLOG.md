@@ -695,5 +695,4 @@ Decided by Victor Oyeleke (scope); Codex (implementation/verification mechanics)
     - Production build: built cleanly in 19.21s with all assets bundled.
     - Contract lint: Redocly validated `contract/openapi.yaml` in 186ms.
     - Playwright: 30/30 tests passed (2.6m) across desktop and mobile with zero axe accessibility violations.
-
-
+- 2026-10-29 · Isaac Bassey (API and access owner), with an AI assistant · Reviewed v0.2.0 B, C, D and the customer activity fields after merge and signed them off in decisions.md §3 with follow-ups. Branch `feat/api-history-ledger-dashboard`: contract adds `GET /products/{productId}/movements` (R13), `GET /customers/{customerId}/ledger` (R10) and `GET /dashboard` (R14), all read-only, any role. New `history` package (`MovementQueries`, `MovementController`, `LedgerQueries`, `LedgerController` and records) and `dashboard` package (`DashboardQueries`, `DashboardController`, `Dashboard`); both `package-info.java` placeholders removed. Running totals are window sums over the whole history, computed before paging; "today" is the Africa/Lagos day from the injected `Clock`. New tests: `MovementHistoryIT` (6), `LedgerIT` (5), `DashboardIT` (5). No migration and no write path changed. Once merged, `load/k6/dashboard.js` can call `GET /dashboard` directly.
