@@ -2,6 +2,14 @@
 
 Record actual AI use, human decisions and verification. Do not include credentials, tokens, passwords or real customer data.
 
+## 2026-10-29: Movement history, customer ledger and dashboard (R13, R10, R14), and the v0.2.0 reviews
+
+- Engineer and decision maker: Isaac Bassey (API and access). Assistant: Claude, used through a chat session; no AI runs in CI.
+- Human decisions: Isaac chose to build the read-only features in his area first, in one PR so the contract changes once, and to sign off v0.2.0 B, C, D and the customer activity fields with recorded follow-ups.
+- Work: the assistant reviewed the merged v0.2.0 code and drafted the three endpoints, their contract entries and tests. Isaac applies, runs and commits them.
+- Checked-and-found-wrong: a first movement-history draft mapped `created_at` with `java.sql.Timestamp`; the existing repositories use `OffsetDateTime`, so it was changed to match. Running totals are computed over the whole history before paging; tests on page 2 fail if they are computed per page. The review found that proposal C bounds prices but not sale totals.
+- Verification: `redocly lint` valid; web types regenerated, typecheck, lint and 53 web unit tests green in the assistant's workspace. The service suite runs on Isaac's machine before the PR is opened.
+
 ## 2026-10-25: API and access review, request-ID logging and contract additions
 
 - Engineer and decision maker: Isaac Bassey (API and access). Assistant: Claude, used through a chat session; no AI runs in CI.
