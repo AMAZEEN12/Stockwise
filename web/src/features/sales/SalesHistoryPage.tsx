@@ -1,4 +1,5 @@
 import { useEffect, useRef, useState, type ReactNode } from "react";
+import { useNavigate } from "react-router";
 import { Button } from "../../components/ui/button";
 import { Card } from "../../components/ui/card";
 import { FormField } from "../../components/ui/form-field";
@@ -60,6 +61,7 @@ function SalesResults({
   children: ReactNode;
   onRangeRefresh: () => boolean;
 }) {
+  const navigate = useNavigate();
   const [throughPage, setThroughPage] = useState(0);
   const query = useSalesHistoryQuery(
     { filters, throughPage },
@@ -195,7 +197,29 @@ function SalesResults({
                 </thead>
                 <tbody>
                   {rows.map((sale) => (
-                    <tr key={sale.id} data-highlight={sale.id === highlight}>
+                    <tr
+                      key={sale.id}
+                      data-highlight={sale.id === highlight}
+                      className="history-row-clickable"
+                      tabIndex={0}
+                      onClick={() => void navigate(`/app/receipts/${sale.id}`)}
+                      onKeyDown={(event) => {
+                        if (event.key === "Enter" || event.key === " ") {
+                          event.preventDefault();
+                          void navigate(`/app/receipts/${sale.id}`);
+                        } else if (event.key === "ArrowDown") {
+                          event.preventDefault();
+                          const next = event.currentTarget
+                            .nextElementSibling as HTMLElement | null;
+                          next?.focus();
+                        } else if (event.key === "ArrowUp") {
+                          event.preventDefault();
+                          const prev = event.currentTarget
+                            .previousElementSibling as HTMLElement | null;
+                          prev?.focus();
+                        }
+                      }}
+                    >
                       <th scope="row">{sale.reference}</th>
                       <td>
                         <time dateTime={sale.createdAt}>
@@ -226,9 +250,36 @@ function SalesResults({
                 {rows.map((sale) => (
                   <li key={sale.id}>
                     <Card
-                      className="history-card"
+                      className="history-card history-card-clickable"
                       bodyClassName="history-card-body"
                       data-highlight={sale.id === highlight}
+                      tabIndex={0}
+                      onClick={() => void navigate(`/app/receipts/${sale.id}`)}
+                      onKeyDown={(event) => {
+                        if (event.key === "Enter" || event.key === " ") {
+                          event.preventDefault();
+                          void navigate(`/app/receipts/${sale.id}`);
+                        } else if (event.key === "ArrowDown") {
+                          event.preventDefault();
+                          const nextLi =
+                            event.currentTarget.closest("li")?.nextElementSibling;
+                          (
+                            nextLi?.querySelector(
+                              ".history-card-clickable",
+                            ) as HTMLElement | null
+                          )?.focus();
+                        } else if (event.key === "ArrowUp") {
+                          event.preventDefault();
+                          const prevLi =
+                            event.currentTarget.closest("li")
+                              ?.previousElementSibling;
+                          (
+                            prevLi?.querySelector(
+                              ".history-card-clickable",
+                            ) as HTMLElement | null
+                          )?.focus();
+                        }
+                      }}
                     >
                       <div className="history-card-top">
                         <span>{sale.reference}</span>
