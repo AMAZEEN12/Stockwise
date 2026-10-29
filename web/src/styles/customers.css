@@ -506,6 +506,17 @@
 .customer-unused-balance {
   color: var(--color-text-muted);
 }
+.issue-credit-btn {
+  font-size: 13px;
+  height: 32px;
+  padding: 0 10px;
+  color: var(--color-primary);
+  border: 1px solid var(--color-border);
+}
+.issue-credit-btn:hover {
+  background: var(--color-surface-subtle);
+}
+
 .customer-balance-summary {
   display: grid;
   gap: 8px;
