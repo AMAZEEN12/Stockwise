@@ -6,6 +6,8 @@ Source document: `Tesa cohort 6 software engineering capstone project.pdf` (TeSA
 > Any agent opening this project: read this file first, then the "Conventions and guidelines" and "Decisions" sections, then the artifacts in this folder. Continue from "Resume here". Don't re-ask anything already answered below.
 
 ## Resume here
+Oldest-outstanding-sale allocation proposal, 2026-10-29: Victor authorized a separate draft proposal for applying repayments to the customer's oldest outstanding credit sale, to support sale reversal R11/R12. See [proposal](../docs/oldest-outstanding-sale-allocation-proposal.md). The document specifies `(created_at, id)` ordering, the two-sale example, transaction and idempotency requirements, history and test gates, and unresolved repayment-reversal, historical-data and settlement-split questions. It aligns sale reversal with PR #31's `/sales/{saleId}/reversal` route without claiming API or data-owner approval. No service, API contract or UI behavior changes are included. Branch `docs/oldest-debt-allocation` starts at `origin/main` `424b297`; the existing `feat/restocks` worktree remains separate. `npm test -- --run` passed 53 tests in 16 files using the existing installed dependencies. GitHub CLI reported no authenticated session; no PR is claimed until it is confirmed.
+
 Current frontend work, 2026-10-28 (Victor Oyeleke; logged by Antigravity):
 1. **PR #30 (`feat/store-credit-ui`)**: Customer store credit issuing and tender simulation completed and submitted for review.
 2. **PR #31 (`feat/reversal-otp-ui`)**: Sale reversal authorization code generation dialog (Owner/Admin) and OTP modal (Cashier/Assistant), plus persistent receipt inspection from Sales History and interactive row selection highlights.
