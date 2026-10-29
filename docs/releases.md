@@ -33,7 +33,8 @@ Rows up to 29 Oct were back-filled by Isaac Bassey (release manager, DM26) on 20
 | 2026-10-28 11:13 | 2452da8 | None (no gate) | None | Steady shop-sized load test |
 | 2026-10-28 16:02 | b696832 | None (no gate) | None | Performance and testing documentation |
 | 2026-10-29 12:16 | c48bbd0 | None (no gate) | None | PR #32, customer portal UI (web only; calls `/portal/...` endpoints not yet in the contract or the service) |
-| 2026-10-29 12:18 | 86f3776 | None (no gate) | None | PR #30, store credit UI; also carries PR #31, reversal OTP UI, whose own run was cancelled. Web only; calls endpoints not yet in the contract or the service. Live as of 2026-10-29 |
+| 2026-10-29 12:18 | 86f3776 | None (no gate) | None | PR #30, store credit UI; also carries PR #31, reversal OTP UI, whose own run was cancelled. Web only; calls endpoints not yet in the contract or the service |
+| 2026-10-29 13:54 | 7da5f00 | None (no gate) | None | PR #33, product movement history, customer ledger and dashboard (R13, R10, R14). Read-only, no migration. Deploy and smoke green in 7 min. First row logged at deploy time. Live as of 2026-10-29 |
 
 ### Runs that did not deploy
 
