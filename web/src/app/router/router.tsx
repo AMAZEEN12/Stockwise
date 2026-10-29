@@ -81,6 +81,14 @@ export const router = createBrowserRouter([
       },
     ],
   },
+  {
+    path: "/c/:token",
+    lazy: async () => ({
+      Component: (await import("../../features/portal/CustomerPortalPage"))
+        .CustomerPortalPage,
+    }),
+    errorElement: <RouteErrorPage />,
+  },
   { path: '/workspace', loader: legacyWorkspaceLoader, errorElement: <RouteErrorPage /> },
   { path: "*", element: <RouteErrorPage notFound /> },
 ]);

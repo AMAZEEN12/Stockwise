@@ -20,8 +20,83 @@ const customers = [
   {id:'22222222-2222-4222-8222-222222222223',displayName:'Ngozi Okoro',balanceKobo:85000,storeCreditKobo:0,hasDebtActivity:true,hasStoreCreditActivity:false,createdAt:'2026-10-24T08:41:00Z'},
   {id:'22222222-2222-4222-8222-222222222224',displayName:'Tunde Bakare',balanceKobo:0,storeCreditKobo:0,hasDebtActivity:false,hasStoreCreditActivity:false,createdAt:'2026-10-24T08:41:00Z'},
 ];
-const sales = [];
+const sales = [
+  {
+    id: '33333333-3333-4333-8333-000000000003',
+    reference: 'S-000003',
+    paymentType: 'PAID',
+    totalKobo: 196000,
+    lines: [
+      {
+        productId: '11111111-1111-4111-8111-000000000004',
+        productName: 'Golden Penny Spaghetti 500g',
+        quantity: 2,
+        unitPriceKobo: 98000,
+        lineTotalKobo: 196000,
+      },
+    ],
+    createdBy: 'a2222222-2222-4222-8222-222222222223',
+    createdAt: new Date(Date.now() - 3600 * 1000).toISOString(),
+  },
+  {
+    id: '33333333-3333-4333-8333-000000000002',
+    reference: 'S-000002',
+    paymentType: 'CREDIT',
+    customerId: '22222222-2222-4222-8222-222222222221',
+    dueDate: new Date(Date.now() + 7 * 86400000).toISOString().slice(0, 10),
+    totalKobo: 395000,
+    lines: [
+      {
+        productId: '11111111-1111-4111-8111-000000000005',
+        productName: 'Cadbury Bournvita Chocolate Malt Drink Refill Pouch 900g',
+        quantity: 1,
+        unitPriceKobo: 395000,
+        lineTotalKobo: 395000,
+      },
+    ],
+    createdBy: 'a2222222-2222-4222-8222-222222222223',
+    createdAt: new Date(Date.now() - 2 * 3600 * 1000).toISOString(),
+  },
+  {
+    id: '33333333-3333-4333-8333-000000000001',
+    reference: 'S-000001',
+    paymentType: 'PAID',
+    totalKobo: 225000,
+    lines: [
+      {
+        productId: '11111111-1111-4111-8111-000000000001',
+        productName: 'Indomie Chicken 70g',
+        quantity: 1,
+        unitPriceKobo: 45000,
+        lineTotalKobo: 45000,
+      },
+      {
+        productId: '11111111-1111-4111-8111-000000000003',
+        productName: 'Dettol 250ml',
+        quantity: 1,
+        unitPriceKobo: 180000,
+        lineTotalKobo: 180000,
+      },
+    ],
+    createdBy: 'a2222222-2222-4222-8222-222222222222',
+    createdAt: new Date(Date.now() - 3 * 3600 * 1000).toISOString(),
+  },
+];
 const submissions = new Map();
+const reversalAuthorizations = new Map([
+  [
+    '839201',
+    {
+      code: '839201',
+      saleId: '33333333-3333-4333-8333-000000000002',
+      expiresAt: new Date(Date.now() + 24 * 3600 * 1000).toISOString(),
+      generatedBy: 'Demo Owner',
+      generatedByRole: 'OWNER',
+      redeemedAt: null,
+      createdAt: new Date().toISOString(),
+    },
+  ],
+]);
 const isUuid = (text) => typeof text === 'string' && /^[0-9a-f]{8}-[0-9a-f]{4}-[1-5][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i.test(text);
 const server = createServer(async (request,response) => {
   const origin = request.headers.origin;
@@ -53,6 +128,125 @@ const server = createServer(async (request,response) => {
     send(201,{accessToken:token,tokenType:'Bearer',expiresAt,user}); return;
   }
   if (url.pathname === '/health') {send(200,{status:'UP',service:'stockwise',version:'development-simulation'}); return;}
+
+  const portalCustomerMatch = url.pathname.match(/^\/portal\/customer\/([^/]+)$/);
+  if (portalCustomerMatch && request.method === 'GET') {
+    const rawToken = decodeURIComponent(portalCustomerMatch[1]);
+    if (rawToken === 'expired-token') {
+      problem(410, 'TOKEN_EXPIRED', 'This customer portal link has expired. Request a new link from the shop.');
+      return;
+    }
+    if (rawToken === 'invalid-token') {
+      problem(404, 'NOT_FOUND', 'Customer portal link is invalid.');
+      return;
+    }
+    const customer = rawToken === 'chidi-demo-token' ? customers[0] : customers[1];
+    send(200, {
+      shop: {
+        name: 'Ngozi Provisions Store',
+        address: 'Shop 4, TeSA Commercial Hub, Lagos',
+        currency: 'NGN',
+        whatsappPhone: '+2348021234567',
+      },
+      customer: {
+        id: customer.id,
+        displayName: customer.displayName,
+        balanceKobo: customer.balanceKobo,
+        storeCreditKobo: customer.storeCreditKobo,
+        hasDebtActivity: customer.hasDebtActivity,
+        hasStoreCreditActivity: customer.hasStoreCreditActivity,
+      },
+      tokenExpiresAt: new Date(Date.now() + 30 * 86400000).toISOString(),
+    });
+    return;
+  }
+
+  const portalProductsMatch = url.pathname.match(/^\/portal\/customer\/([^/]+)\/products$/);
+  if (portalProductsMatch && request.method === 'GET') {
+    const rawToken = decodeURIComponent(portalProductsMatch[1]);
+    if (rawToken === 'expired-token') {
+      problem(410, 'TOKEN_EXPIRED', 'This customer portal link has expired.');
+      return;
+    }
+    if (rawToken === 'invalid-token') {
+      problem(404, 'NOT_FOUND', 'Customer portal link is invalid.');
+      return;
+    }
+    const q = (url.searchParams.get('q') || '').trim().toLowerCase();
+    const activeProducts = products
+      .filter((p) => p.active && p.quantity > 0 && (!q || p.name.toLowerCase().includes(q)))
+      .map((p) => ({
+        id: p.id,
+        name: p.name,
+        priceKobo: p.priceKobo,
+        quantity: p.quantity,
+        active: p.active,
+      }));
+    send(200, {
+      items: activeProducts,
+      totalItems: activeProducts.length,
+    });
+    return;
+  }
+
+  const portalOrdersMatch = url.pathname.match(/^\/portal\/customer\/([^/]+)\/orders$/);
+  if (portalOrdersMatch && request.method === 'POST') {
+    const rawToken = decodeURIComponent(portalOrdersMatch[1]);
+    if (rawToken === 'expired-token') {
+      problem(410, 'TOKEN_EXPIRED', 'This customer portal link has expired.');
+      return;
+    }
+    if (rawToken === 'invalid-token') {
+      problem(404, 'NOT_FOUND', 'Customer portal link is invalid.');
+      return;
+    }
+    const customer = rawToken === 'chidi-demo-token' ? customers[0] : customers[1];
+    if (!body || !Array.isArray(body.lines) || body.lines.length === 0) {
+      problem(400, 'VALIDATION_FAILED', 'Order must contain at least one product.');
+      return;
+    }
+    let totalKobo = 0;
+    let itemsCount = 0;
+    for (const line of body.lines) {
+      const product = products.find((p) => p.id === line.productId);
+      if (!product) {
+        problem(404, 'NOT_FOUND', 'One or more products were not found.');
+        return;
+      }
+      if (product.quantity < line.quantity) {
+        problem(409, 'INSUFFICIENT_STOCK', `Insufficient stock for ${product.name}. Available: ${product.quantity}.`);
+        return;
+      }
+      totalKobo += product.priceKobo * line.quantity;
+      itemsCount += line.quantity;
+    }
+    let storeCreditAppliedKobo = 0;
+    if (body.paymentPreference === 'USE_STORE_CREDIT') {
+      storeCreditAppliedKobo = Math.min(customer.storeCreditKobo, totalKobo);
+      customer.storeCreditKobo -= storeCreditAppliedKobo;
+      customer.hasStoreCreditActivity = true;
+    } else if (body.paymentPreference === 'ON_ACCOUNT') {
+      customer.balanceKobo += totalKobo;
+      customer.hasDebtActivity = true;
+    }
+    const orderNumber = `ORD-${Date.now().toString().slice(-6)}`;
+    const formattedAmount = `₦${(totalKobo / 100).toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`;
+    const whatsappMsg = `Hello Ngozi Provisions Store, I placed pre-order ${orderNumber} for ${itemsCount} items (${formattedAmount}). ${body.pickupNote ? `Pickup note: ${body.pickupNote}` : ''}`;
+    const whatsappUrl = `https://wa.me/2348021234567?text=${encodeURIComponent(whatsappMsg)}`;
+
+    send(201, {
+      orderNumber,
+      customerName: customer.displayName,
+      itemsCount,
+      totalKobo,
+      storeCreditAppliedKobo,
+      paymentPreference: body.paymentPreference || 'PAY_ON_PICKUP',
+      pickupNote: body.pickupNote || '',
+      createdAt: new Date().toISOString(),
+      whatsappUrl,
+    });
+    return;
+  }
   const session=sessions.get(request.headers.authorization?.replace(/^Bearer /,''));
   if(!session || Date.parse(session.expiresAt)<=Date.now()){problem(401,'UNAUTHENTICATED','Sign in again.');return;}
   const user=session.user;
@@ -163,6 +357,101 @@ const server = createServer(async (request,response) => {
   }
   if (/^\/sales\/[^/]+$/.test(url.pathname) && request.method === 'GET') {
     const sale = sales.find((item) => item.id === url.pathname.split('/')[2]); if (!sale) {problem(404,'NOT_FOUND','Sale not found.'); return;} send(200,sale); return;
+  }
+  if (url.pathname === '/reversals/authorizations' && request.method === 'POST') {
+    if (!['OWNER', 'ADMIN'].includes(user.role)) {
+      problem(403, 'FORBIDDEN', 'Only Owners and Admins can generate reversal codes.');
+      return;
+    }
+    if (!body || !isUuid(body.saleId)) {
+      problem(400, 'VALIDATION_FAILED', 'A valid saleId is required.');
+      return;
+    }
+    const sale = sales.find((item) => item.id === body.saleId);
+    if (!sale) {
+      problem(404, 'NOT_FOUND', 'Sale not found.');
+      return;
+    }
+    if (sale.reversed) {
+      problem(409, 'SALE_ALREADY_REVERSED', 'This sale has already been reversed.');
+      return;
+    }
+    const code = String(Math.floor(100000 + Math.random() * 900000));
+    const validMinutes = typeof body.validMinutes === 'number' && body.validMinutes > 0 && body.validMinutes <= 60 ? body.validMinutes : 15;
+    const expiresAt = new Date(Date.now() + validMinutes * 60 * 1000).toISOString();
+    const auth = {
+      code,
+      saleId: body.saleId,
+      expiresAt,
+      generatedBy: user.displayName,
+      generatedByRole: user.role,
+      redeemedAt: null,
+      createdAt: new Date().toISOString(),
+    };
+    reversalAuthorizations.set(code, auth);
+    send(201, auth);
+    return;
+  }
+  if (/^\/sales\/[^/]+\/reversal$/.test(url.pathname) && request.method === 'POST') {
+    const saleId = url.pathname.split('/')[2];
+    const key = request.headers['idempotency-key'];
+    if (!isUuid(key)) {
+      problem(400, 'VALIDATION_FAILED', 'A UUID Idempotency-Key is required.');
+      return;
+    }
+    const sale = sales.find((item) => item.id === saleId);
+    if (!sale) {
+      problem(404, 'NOT_FOUND', 'Sale not found.');
+      return;
+    }
+    if (sale.reversed) {
+      problem(409, 'SALE_ALREADY_REVERSED', 'This sale has already been reversed.');
+      return;
+    }
+    if (user.role === 'ASSISTANT') {
+      if (!body?.authorizationCode || typeof body.authorizationCode !== 'string') {
+        problem(403, 'SUPERVISOR_CODE_REQUIRED', 'Supervisor authorization code is required for assistants to reverse sales.');
+        return;
+      }
+      const auth = reversalAuthorizations.get(body.authorizationCode.trim());
+      if (!auth || Date.parse(auth.expiresAt) <= Date.now()) {
+        problem(422, 'INVALID_AUTHORIZATION_CODE', 'The authorization code is invalid or has expired.');
+        return;
+      }
+      if (auth.saleId !== sale.id) {
+        problem(422, 'AUTHORIZATION_SALE_MISMATCH', 'This authorization code was not issued for this sale.');
+        return;
+      }
+      if (auth.redeemedAt) {
+        problem(409, 'AUTHORIZATION_ALREADY_USED', 'This authorization code has already been redeemed.');
+        return;
+      }
+      auth.redeemedAt = new Date().toISOString();
+      auth.redeemedBy = user.displayName;
+    }
+    sale.reversed = true;
+    sale.reversedAt = new Date().toISOString();
+    sale.reversedBy = user.displayName;
+    sale.reversalReason = body?.reason || 'CUSTOMER_RETURN';
+    sale.reversalNote = body?.note;
+    for (const line of sale.lines) {
+      const product = products.find((item) => item.id === line.productId);
+      if (product) {
+        product.quantity += line.quantity;
+        product.version++;
+        product.updatedAt = new Date().toISOString();
+      }
+    }
+    send(200, {
+      reversalId: randomUUID(),
+      saleId: sale.id,
+      reversedAt: sale.reversedAt,
+      reversedBy: user.displayName,
+      reason: sale.reversalReason,
+      note: sale.reversalNote,
+      stockRestored: true,
+    });
+    return;
   }
   problem(404,'NOT_FOUND','This operation is not available in this simulation.');
 });
