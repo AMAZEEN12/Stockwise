@@ -8,12 +8,14 @@ Source document: `Tesa cohort 6 software engineering capstone project.pdf` (TeSA
 ## Resume here
 Current frontend work, 2026-10-28 (Victor Oyeleke; logged by Antigravity):
 1. **PR #30 (`feat/store-credit-ui`)**: Customer store credit issuing and tender simulation completed and submitted for review.
-2. **PR #31 (`feat/reversal-otp-ui`)**: Sale reversal authorization code generation dialog (Owner/Admin) and OTP modal (Cashier/Assistant), plus persistent receipt inspection from Sales History:
-   - Added interactive click navigation from Sales History (`/app/sales`) directly to receipt views (`/app/receipts/:id`) on both table rows and mobile cards, conforming to WCAG 2.5.3 (no anchor/button nesting, 18/18 sales-history tests passing).
-   - Pre-seeded realistic demonstration sales and an active 24-hour supervisor authorization code (`839201`) in `development-api.mjs`.
-   - Distinct role authorization: Owner and Admin can generate 15-minute 6-digit OTP codes or directly reverse sales; Cashiers/Assistants can enter the supervisor authorization code to execute delegated reversal.
-   - Enhanced sales selection highlight and keyboard navigation: added hover/focus-visible lime primary highlights and active press feedback across desktop table rows and mobile cards, along with full ArrowUp/ArrowDown and Enter/Space keyboard navigation between sales rows/cards.
-   - 100% test verification (vitest: 14/14 suites passing, Playwright: 12/12 sales tests and 18/18 sales-history tests passing, zero lint warnings, strict typecheck clean).
+2. **PR #31 (`feat/reversal-otp-ui`)**: Sale reversal authorization code generation dialog (Owner/Admin) and OTP modal (Cashier/Assistant), plus persistent receipt inspection from Sales History and interactive row selection highlights.
+3. **PR #32 (`feat/customer-portal-ui`)**: Customer Self-Service Online Portal (`/c/:token`):
+   - Zero-authentication tokenized public route at `/c/:token` allowing customers to access their live ledger statement without login friction.
+   - Transparent balance summary: shows live debt balance owed, available store credit, and net account position in integer kobo.
+   - Mobile shopping catalogue: product search and interactive stepper quantity controls (`+`, `-`) with stock limits.
+   - Pre-order checkout and submission dialog: supports flexible payment preferences (`USE_STORE_CREDIT`, `PAY_ON_PICKUP`, `ON_ACCOUNT`), optional pickup note, and auto-generated order reference with instant WhatsApp link.
+   - Mock simulation endpoints in `development-api.mjs` for `/portal/customer/:token`, `/portal/customer/:token/products`, and `/portal/customer/:token/orders`.
+   - 100% test verification (vitest: 45/45 passing across 14 test suites, Playwright: 22/22 passing with 0 axe violations, zero lint warnings, clean strict typecheck, and successful production build).
 
 ### Earlier deployment handover
 
