@@ -16,5 +16,8 @@ export interface SaleReversalResponse {
   reason: string;
   note?: string;
   stockRestored: boolean;
+  /** Development simulation only; not an agreed service response. */
+  debtRemovedKobo?: number;
+  storeCreditAddedKobo?: number;
 }
 

@@ -8,6 +8,8 @@ import { Button } from "../../components/ui/button";
 import { LoadingState } from "../../components/ui/loading-state";
 import { StatusPanel } from "../../components/ui/status-panel";
 import { readReceipt, validSale } from "./sale-draft";
+import { isReversalSimulation } from "./reversal-simulation";
+import type { SaleReversalResponse } from "../../models/responses/reversals.response";
 import { ReverseSaleDialog } from "./ReverseSaleDialog";
 import { GenerateReversalCodeDialog } from "./GenerateReversalCodeDialog";
 import "../../styles/sales.css";
@@ -15,9 +17,10 @@ import "../../styles/sales.css";
 export function ReceiptPage() {
   const { saleId = "" } = useParams();
   const user = useOutletContext<User>();
+  const simulation = isReversalSimulation();
   const [saved] = useState(() => readReceipt(saleId, user.id));
-  const query = useSaleQuery(saleId, { skip: !!saved });
-  const sale = saved?.sale || query.data;
+  const query = useSaleQuery(saleId, { skip: !!saved && !simulation });
+  const sale = query.data || saved?.sale;
 
   const customers = useCustomersQuery(undefined, { skip: !sale?.customerId });
   const customerName =
@@ -27,6 +30,7 @@ export function ReceiptPage() {
   const [reverseDialogOpen, setReverseDialogOpen] = useState(false);
   const [generateCodeDialogOpen, setGenerateCodeDialogOpen] = useState(false);
   const [isReversed, setIsReversed] = useState(false);
+  const [reversalResult, setReversalResult] = useState<SaleReversalResponse | null>(null);
   const reversed =
     isReversed || Boolean((sale as { reversed?: boolean } | undefined)?.reversed);
 
@@ -73,6 +77,7 @@ export function ReceiptPage() {
                 This sale has been reversed. Inventory items have been returned to stock.
               </div>
             )}
+            {reversalResult && simulation && <p className="micro" role="status">Simulated debt removed: {formatMoney(reversalResult.debtRemovedKobo || 0)} · Store credit returned: {formatMoney(reversalResult.storeCreditAddedKobo || 0)}</p>}
             <div className="receipt-lines">
               {sale.lines.map((line, index) => (
                 <div key={`${line.productId}-${index}`}>
@@ -143,6 +148,7 @@ export function ReceiptPage() {
               View in Sales
             </Button>
           </div>
+          {!reversed && <p className="micro">{simulation ? 'Sale reversal is a simulation; no real shop data is changed.' : 'Sale reversal is unavailable until the service contract is approved.'}</p>}
           <p id="history-note" className="micro">
             Open Sales from the menu to view history. Receipt linking is coming
             later.
@@ -155,7 +161,7 @@ export function ReceiptPage() {
             saleReference={sale.reference}
             totalKobo={sale.totalKobo}
             userRole={user.role}
-            onSuccess={() => setIsReversed(true)}
+            onSuccess={(result) => { setReversalResult(result); setIsReversed(true); }}
             onRequestCodeClick={() => {
               setReverseDialogOpen(false);
               setGenerateCodeDialogOpen(true);
