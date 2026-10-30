@@ -486,6 +486,14 @@
 .customers-table th:nth-child(2) {
   width: 25%;
 }
+.customers-table th:first-child,
+.customers-table td:first-child {
+  padding-left: 10px;
+}
+.customers-table th:last-child,
+.customers-table td:last-child {
+  padding-right: 10px;
+}
 .customers-table td,
 .customers-table tbody th {
   padding: 16px 0;
@@ -878,16 +886,33 @@
 /* Clickable customer rows and cards in directory */
 .customer-row-clickable {
   cursor: pointer;
-  transition: background-color 0.15s ease;
+  transition: background-color 150ms ease, color 150ms ease;
 }
 
 .customer-row-clickable:hover {
-  background-color: var(--color-surface-hover);
+  background-color: color-mix(in srgb, var(--color-primary) 8%, var(--color-surface));
+}
+
+.customer-row-clickable:hover th[scope="row"],
+.customer-row-clickable:hover .customer-name-link {
+  color: var(--color-primary);
+  text-decoration: none;
 }
 
 .customer-row-clickable:focus-visible {
   outline: 2px solid var(--color-primary);
   outline-offset: -2px;
+  background-color: color-mix(in srgb, var(--color-primary) 10%, var(--color-surface));
+}
+
+.customer-row-clickable:focus-visible th[scope="row"],
+.customer-row-clickable:focus-visible .customer-name-link {
+  color: var(--color-primary);
+  text-decoration: none;
+}
+
+.customer-row-clickable:active {
+  background-color: color-mix(in srgb, var(--color-primary) 14%, var(--color-surface));
 }
 
 .customer-name-link {
@@ -896,24 +921,32 @@
   font-weight: 600;
 }
 
-.customer-name-link:hover {
-  text-decoration: underline;
+.customer-name-link:hover,
+.customer-name-link:focus,
+.customer-name-link:active {
+  text-decoration: none;
   color: var(--color-primary);
 }
 
 .customer-card-clickable {
   cursor: pointer;
-  transition: border-color 0.15s ease, background-color 0.15s ease;
+  transition: border-color 150ms ease, background-color 150ms ease;
 }
 
 .customer-card-clickable:hover {
-  border-color: var(--color-border-hover);
-  background-color: var(--color-surface-hover);
+  border-color: var(--color-primary);
+  background-color: color-mix(in srgb, var(--color-primary) 6%, var(--color-surface));
 }
 
 .customer-card-clickable:focus-visible {
   outline: 2px solid var(--color-primary);
   outline-offset: 2px;
+  border-color: var(--color-primary);
+  background-color: color-mix(in srgb, var(--color-primary) 6%, var(--color-surface));
+}
+
+.customer-card-clickable:active {
+  background-color: color-mix(in srgb, var(--color-primary) 10%, var(--color-surface));
 }
 
 .customer-card-header {
