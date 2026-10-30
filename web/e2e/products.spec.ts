@@ -1,4 +1,4 @@
-﻿import {test, expect} from '@playwright/test';
+import {test, expect} from '@playwright/test';
 import AxeBuilder from '@axe-core/playwright';
 import {makeProducts} from '../scripts/mock-data.mjs';
 const products = makeProducts();
@@ -36,4 +36,80 @@ test('catalogue, filter, add product, exact kobo and duplicate response', async 
   await expect(page.getByRole('dialog',{name:'Discard this product?'})).toBeVisible();
   await page.getByRole('button',{name:'Keep editing',exact:true}).click();
   await expect(page.getByLabel('Reference',{exact:true})).toHaveValue('IND-070');
+});
+
+test('stock movement history dedicated page opens on product row click and shows movement timeline', async ({page}, info) => {
+  const targetProduct = products[0]; // Indomie Chicken 70g
+  await page.route(`**/products/${targetProduct.id}`, (route) => route.fulfill({json: targetProduct}));
+  await page.route(`**/products/${targetProduct.id}/movements*`, (route) => {
+    return route.fulfill({
+      json: {
+        productId: targetProduct.id,
+        currentQuantity: targetProduct.quantity,
+        items: [
+          {
+            id: '44444444-4444-4444-8444-000000000002',
+            delta: -1,
+            sourceType: 'SALE',
+            sourceId: '33333333-3333-4333-8333-000000000001',
+            quantityAfter: targetProduct.quantity,
+            createdAt: '2026-10-24T09:00:00Z',
+          },
+          {
+            id: '44444444-4444-4444-8444-000000000001',
+            delta: targetProduct.quantity + 1,
+            sourceType: 'OPENING',
+            quantityAfter: targetProduct.quantity + 1,
+            createdAt: '2026-10-24T08:00:00Z',
+          },
+        ],
+        page: 0,
+        size: 20,
+        totalItems: 2,
+      },
+    });
+  });
+
+  await page.goto('/app/products');
+  await expect(page.getByRole('heading', { name: 'Products', exact: true })).toBeVisible();
+
+  // Click on the product row
+  const row = page.locator('.product-row-clickable').first();
+  await expect(row).toBeVisible();
+  await row.click();
+
+  // Dedicated page opens
+  await expect(page).toHaveURL(new RegExp(`/app/products/${targetProduct.id}/movements`));
+  await expect(page.getByRole('heading', { level: 1, name: 'Stock Movements' })).toBeVisible();
+  await expect(page.getByRole('heading', { level: 2, name: targetProduct.name })).toBeVisible();
+
+  // Restock button is visible and primary
+  await expect(page.getByRole('button', { name: 'Restock' })).toBeVisible();
+
+  // Displays product details
+  await expect(page.getByText(new RegExp(targetProduct.category))).toBeVisible();
+  await expect(page.getByText(/In stock/i).first()).toBeVisible();
+  await expect(page.getByText(/2 records/i)).toBeVisible();
+
+  // Displays movements
+  await expect(page.getByText('Sale', { exact: true }).filter({ visible: true })).toBeVisible();
+  await expect(page.getByText('-1', { exact: true }).filter({ visible: true })).toBeVisible();
+  await expect(page.getByText('Opening stock', { exact: true }).filter({ visible: true })).toBeVisible();
+  await expect(page.getByText(`+${targetProduct.quantity + 1}`, { exact: true }).filter({ visible: true })).toBeVisible();
+
+  // Verify there is no "Close" button and no 'x' icon
+  await expect(page.getByRole('button', { name: 'Close', exact: true })).toHaveCount(0);
+  await expect(page.getByRole('link', { name: 'Close stock movements' })).toHaveCount(0);
+
+  // Accessibility audit
+  const axe = await new AxeBuilder({ page }).analyze();
+  expect(axe.violations.filter((v) => ['serious', 'critical'].includes(v.impact || ''))).toEqual([]);
+
+  await page.screenshot({ path: info.outputPath('product-movements-page.png'), fullPage: true });
+
+  // Return to products via breadcrumb
+  const backLink = page.getByRole('link', { name: /Back to products/i });
+  await expect(backLink).toBeVisible();
+  await backLink.click();
+  await expect(page).toHaveURL(/\/app\/products$/);
 });

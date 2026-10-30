@@ -1,6 +1,6 @@
 import { authApi } from './auth.api';
 import { productsEndpoints } from '../endpoints/products.endpoints';
-import type { Product, ProductPage, SaleCatalogue } from '../../models/responses/products.response';
+import type { MovementPage, Product, ProductPage, SaleCatalogue } from '../../models/responses/products.response';
 import type { ProductCreate, ProductFilters } from '../../models/requests/products.request';
 import { compareProductNames, validSaleCataloguePage } from '../../shared/product-catalogue';
 export const productsApi = authApi.injectEndpoints({ endpoints: (builder) => ({
@@ -50,6 +50,13 @@ export const productsApi = authApi.injectEndpoints({ endpoints: (builder) => ({
   }),
   products: builder.query<ProductPage, ProductFilters>({ query: (params) => ({url: productsEndpoints.list, params}), providesTags: ['Products'] }),
   product: builder.query<Product, string>({ query: (id) => ({url: productsEndpoints.detail(id)}), providesTags: ['Products'] }),
+  productMovements: builder.query<MovementPage, { productId: string; page?: number; size?: number }>({
+    query: ({ productId, page = 0, size = 50 }) => ({
+      url: productsEndpoints.movements(productId),
+      params: { page, size },
+    }),
+    providesTags: (_result, _error, { productId }) => [{ type: 'Products', id: `${productId}-movements` }, 'Products'],
+  }),
   createProduct: builder.mutation<Product, ProductCreate>({ query: (data) => ({url: productsEndpoints.list, method: 'POST', data}), invalidatesTags: ['Products'] }),
 }) });
-export const { useProductsQuery, useProductQuery, useCatalogueQuery, useSaleCatalogueQuery, useCreateProductMutation } = productsApi;
+export const { useProductsQuery, useProductQuery, useCatalogueQuery, useSaleCatalogueQuery, useProductMovementsQuery, useCreateProductMutation } = productsApi;

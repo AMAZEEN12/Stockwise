@@ -31,6 +31,7 @@ describe('ShopLayout role-based sidebar navigation', () => {
       email: 'owner@stockwise.test',
       role: 'OWNER',
     });
+    expect(screen.getAllByRole('link', { name: 'Dashboard' }).length).toBeGreaterThan(0);
     expect(screen.getAllByRole('link', { name: 'Sell' }).length).toBeGreaterThan(0);
     expect(screen.getAllByRole('link', { name: 'Products' }).length).toBeGreaterThan(0);
     expect(screen.getAllByRole('link', { name: 'Customers' }).length).toBeGreaterThan(0);
@@ -44,6 +45,7 @@ describe('ShopLayout role-based sidebar navigation', () => {
       email: 'assistant@stockwise.test',
       role: 'ASSISTANT',
     });
+    expect(screen.getAllByRole('link', { name: 'Dashboard' }).length).toBeGreaterThan(0);
     expect(screen.getAllByRole('link', { name: 'Sell' }).length).toBeGreaterThan(0);
     expect(screen.getAllByRole('link', { name: 'Products' }).length).toBeGreaterThan(0);
     expect(screen.getAllByRole('link', { name: 'Customers' }).length).toBeGreaterThan(0);
@@ -57,6 +59,7 @@ describe('ShopLayout role-based sidebar navigation', () => {
       email: 'admin@stockwise.test',
       role: 'ADMIN',
     });
+    expect(screen.getAllByRole('link', { name: 'Dashboard' }).length).toBeGreaterThan(0);
     expect(screen.queryByRole('link', { name: 'Sell' })).toBeNull();
     expect(screen.getAllByRole('link', { name: 'Products' }).length).toBeGreaterThan(0);
     expect(screen.getAllByRole('link', { name: 'Customers' }).length).toBeGreaterThan(0);
