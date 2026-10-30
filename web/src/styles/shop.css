@@ -239,7 +239,7 @@
   color: var(--color-primary);
 }
 .product-quantity {
-  text-align: left;
+  text-align: right;
   color: var(--color-text);
   font-size: 14px;
   font-family: var(--font-mono);
