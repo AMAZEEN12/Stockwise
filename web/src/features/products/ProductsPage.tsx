@@ -65,7 +65,7 @@ export function ProductsPage() {
         </div>
         {user.role === "OWNER" && (
           <Link className="primary-link add-product" to="new">
-            ＋ Add product
+            Add product
           </Link>
         )}
       </div>
@@ -112,7 +112,6 @@ export function ProductsPage() {
               <span>Price</span>
               <span>Stock</span>
               <span>Quantity</span>
-              <span>Actions</span>
             </div>
             {data.items.map((product) => (
               <article
@@ -166,17 +165,6 @@ export function ProductsPage() {
                 <span className="product-quantity micro">
                   <span>Qty </span>
                   {product.quantity}
-                </span>
-                <span className="product-actions">
-                  {user.role === "OWNER" && product.active && (
-                    <Link
-                      className="restock-link"
-                      to={`${product.id}/restock${location.search}`}
-                      onClick={(e) => e.stopPropagation()}
-                    >
-                      Restock
-                    </Link>
-                  )}
                 </span>
               </article>
             ))}
