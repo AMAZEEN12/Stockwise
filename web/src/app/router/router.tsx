@@ -28,6 +28,13 @@ export const router = createBrowserRouter([
         }),
       },
       {
+        path: "customers/:customerId",
+        lazy: async () => ({
+          Component: (await import("../../features/customers/CustomerDetailPage"))
+            .CustomerDetailPage,
+        }),
+      },
+      {
         path: "sales",
         lazy: async () => ({
           Component: (await import("../../features/sales/SalesHistoryPage"))

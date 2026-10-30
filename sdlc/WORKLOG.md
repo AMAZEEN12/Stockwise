@@ -6,26 +6,23 @@ Source document: `Tesa cohort 6 software engineering capstone project.pdf` (TeSA
 > Any agent opening this project: read this file first, then the "Conventions and guidelines" and "Decisions" sections, then the artifacts in this folder. Continue from "Resume here". Don't re-ask anything already answered below.
 
 ## Resume here
-Customer Ledger Statement UI (PR 1), 2026-10-30: Implemented responsive Customer Ledger Statement drawer (`R10`) on branch `feat/customer-ledger-ui`.
-1. **Frontend UI & Presentation (`CustomerLedgerDrawer.tsx`, `customer-ledger.ts`, `customers.css`)**:
-   - Slide-over statement drawer displaying customer's running balance statement for credit purchases (`CREDIT_SALE`), repayments (`REPAYMENT`), reversals (`REVERSAL`), and store credit grants/deductions (`STORE_CREDIT`).
-   - Summary balance cards detailing both current debt owed and available store credit in integer kobo (`formatMoney`).
-   - Delta amounts styled by transaction type with directional signs (`+₦...`, `-₦...`).
-   - Africa/Lagos WAT timestamps (`formatLagosDateTime`).
-   - Implemented all 5 screen states (loading skeletons, error with retry, empty state, success timeline feed, and running balance summaries).
-   - Responsive layout adapting from right slide-over on desktop to centered modal sheet on mobile screens (<=768px).
-2. **Customers Directory Integration (`CustomersPage.tsx`)**:
-   - Desktop table includes dedicated "Ledger" action button alongside "+ Credit".
-   - Mobile card layout includes full-width "View ledger" action button.
-3. **Data & Mock Integration (`customers.api.ts`, `customers.endpoints.ts`, `development-api.mjs`)**:
-   - Wired RTK Query endpoint `customerLedger` with runtime validation (`validLedgerPage`) against `GET /customers/{customerId}/ledger`.
-   - Updated development simulation mock backend (`development-api.mjs`) to seed customer ledger transactions and append real-time credit purchases and store credit allocations.
-4. **Verification**:
-   - Vitest: 20 test files passed (67 tests, 0 failures), including 9 new customer ledger unit tests (`customer-ledger.test.ts`).
-   - TypeScript: `tsc --noEmit` passed with 0 errors.
-   - ESLint: `eslint . --max-warnings 0` passed with 0 warnings/errors.
+Customer Ledger Dedicated Page (PR 1), 2026-10-30: Per Victor's design direction to eliminate repetitive row buttons when the customer list grows large, evolved the customer ledger feature from an overlay drawer into a clean, dedicated statement page (`/app/customers/:customerId`) on branch `feat/customer-ledger-ui`.
+1. **Dedicated Page & Routing (`CustomerDetailPage.tsx`, `router.tsx`, `role-landing.ts`)**:
+   - Registered `/app/customers/:customerId` under `ShopLayout` and permitted in `role-landing.ts` for deep-linking.
+   - Breadcrumb navigation (`← Back to customers`) returning to directory list with cached RTK Query state.
+   - Header with customer display name, optional fictional contact details, customer ID preview, and `+ Issue store credit` button (for `OWNER` and `ADMIN`).
+   - Summary cards displaying current debt balance and available store credit in integer kobo (`formatMoney`).
+   - Full-width transaction statement table on desktop and responsive statement feed on mobile with all 5 screen states (loading skeletons, error with retry, empty state, success data, and balance summaries).
+2. **Directory Cleanliness (`CustomersPage.tsx`)**:
+   - Removed repetitive "Ledger" buttons from every table row and card.
+   - Made table rows and mobile cards directly clickable (`customer-row-clickable`, keyboard accessible on Enter/Space, matching `SalesHistoryPage`).
+   - Directory table only displays `Name`, `Balance owed`, `Store credit`, and a clean `+ Credit` button when permitted.
+3. **Verification**:
+   - Vitest: 20 test files passed (67 tests, 0 failures), including all 9 ledger unit tests.
+   - TypeScript: `tsc --noEmit` clean (0 errors).
+   - ESLint: `eslint . --max-warnings 0` clean (0 errors, 0 warnings).
    - Vite Build: `npm run build` succeeded.
-   - Playwright E2E: 14/14 tests in `customers.spec.ts` passed across desktop and mobile projects, including axe-core accessibility checks with 0 serious or critical violations.
+   - Playwright E2E: 14/14 tests in `customers.spec.ts` passed across desktop and mobile projects, verifying clickable row navigation to `/app/customers/:id`, statement presentation, axe-core 0 violations, and back-link navigation.
 
 PR #39 conflict resolution, 2026-10-30: merged `origin/main` at `a1e7918` into `feat/sale-reversal-simulation`. Preserved both the simulated reversal settlement/idempotency state and the restock mock state, as well as both work-log histories. Web lint and typecheck passed; `npm test -- --run` passed 58 tests in 19 files; `npm run check:reversal-simulation` passed; focused reversal, restock and picker Playwright checks passed 18/18 across desktop and mobile. The reversal remains a simulation and does not implement the real service or imply contract approval.
 

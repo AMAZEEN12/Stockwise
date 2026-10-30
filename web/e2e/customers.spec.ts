@@ -60,7 +60,7 @@ test('directory and form fit narrow and short viewports with long names',async({
   await page.setViewportSize({width:360,height:500});await add(page);await page.getByRole('textbox',{name:'Display name (required)'}).fill('Short screen');await expect(page.getByRole('button',{name:'Save customer',exact:true})).toBeInViewport();
 });
 
-test('customer ledger drawer opens, displays balance statement and passes axe check', async ({ page }, info) => {
+test('customer ledger dedicated page navigates, displays statement and passes axe check', async ({ page }, info) => {
   await setup(page);
   await page.route('**/customers?*', (route) =>
     route.fulfill({ json: { items: customers, page: 0, size: 100, totalItems: customers.length } })
@@ -92,20 +92,23 @@ test('customer ledger drawer opens, displays balance statement and passes axe ch
   await page.goto('/app/customers');
   await expect(page.getByText('Chinedu Obi', { exact: true }).filter({ visible: true })).toBeVisible();
 
-  const ledgerBtn = page.getByRole('button', { name: /ledger/i }).filter({ visible: true }).first();
-  await ledgerBtn.click();
+  // Click on customer name/row
+  await page.getByText('Chinedu Obi', { exact: true }).filter({ visible: true }).click();
 
-  await expect(page.getByRole('dialog', { name: /Chinedu Obi.*Ledger/ })).toBeVisible();
+  await expect(page).toHaveURL(new RegExp(`/app/customers/${customers[0].id}`));
+  await expect(page.getByRole('heading', { name: /Chinedu Obi.*Ledger/ })).toBeVisible();
   await expect(page.getByText('Current debt owed')).toBeVisible();
-  await expect(page.getByText('Credit sale', { exact: true })).toBeVisible();
-  await expect(page.getByText('+₦12,300.00')).toBeVisible();
-  await capture(page, info, 'ledger-drawer');
+  await expect(page.getByText('Credit sale', { exact: true }).filter({ visible: true })).toBeVisible();
+  await expect(page.getByText('+₦12,300.00').filter({ visible: true })).toBeVisible();
+  await capture(page, info, 'ledger-page');
 
   const axe = await new AxeBuilder({ page }).analyze();
   expect(axe.violations.filter((v) => ['serious', 'critical'].includes(v.impact || ''))).toEqual([]);
 
-  await page.keyboard.press('Escape');
-  await expect(page.getByRole('dialog', { name: /Chinedu Obi.*Ledger/ })).toHaveCount(0);
+  // Back link returns to customers list
+  await page.getByRole('link', { name: /Back to customers/i }).click();
+  await expect(page).toHaveURL(/\/app\/customers$/);
+  await expect(page.getByText('Chinedu Obi', { exact: true }).filter({ visible: true })).toBeVisible();
 });
 
 

@@ -57,3 +57,4 @@ export function formatLagosDateTime(iso: string): string {
   }).format(date);
   return `${formatted} WAT`;
 }
+
