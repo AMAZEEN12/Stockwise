@@ -127,7 +127,7 @@ Measured on 2026-10-28 from a GitHub Actions runner against the live free-tier s
 | Dashboard p95 (warm) | ≤ 800 ms | Read paths only (product and sales lists; no `GET /dashboard` yet). After tuning, held to 38 to 50 virtual users (29 to 41 requests/s); p95 800 to 832 ms where each run stopped |
 | Product catalogue p95 (warm) | 500 ms yardstick | After tuning, held to 30 to 47 virtual users (26 to 41 requests/s); p95 505 to 543 ms where each run stopped |
 | Saturation point | reported | Sales: 4 to 7 virtual users (about 2.5 sales/s). Reads: about 30 to 50 virtual users |
-| Cold start (Render) | reported separately | **Not measured yet** (the one attempt on 2026-10-28 answered in 0.3 s because the service had not gone to sleep) |
+| Cold start (Render) | reported separately | **62 s** to the first 200 after 30 minutes idle (one run, 2026-10-30). Warm `/health` afterwards: 161 to 330 ms |
 | Last-unit test, 10 devices, 3 rounds | one 201, nine 409, stock 0 | **Passed in all 9 runs, on the deployed service** |
 | LCP (Lighthouse, deployed address, 2026-10-30) | ≤ 2.5 s | **Met, narrowly:** 2.4 s mobile, 0.5 s desktop (one run each) |
 | INP (web-vitals, deployed address, 2026-10-30) | ≤ 200 ms | **Not met, by 16 ms:** 216 ms worst interaction in the session (it read 40 ms early on and rose later) |
@@ -143,7 +143,7 @@ How to read this:
 - No sign-up, password reset or email (see "Simulated or not yet built").
 - Tokens last 8 hours and can't be revoked early, although removing a user or changing their role takes effect on their next request (DM15).
 - No rate limit on login yet.
-- Render's free service sleeps; open the service address about 2 minutes before a demo.
+- Render's free service sleeps after 15 minutes idle. The first request after that took 62 s on 2026-10-30 (one run). Open the service address about 2 minutes before a demo.
 - Free-tier compute caps limit the load figures; they will be reported as measured, with the date.
 - **`POST /sales` meets the 500 ms target at shop-sized load, but not when every sale hits the same product.** After the sale change (one statement per line instead of three, and no re-read of the finished sale), p95 was 403 ms with 3 tills selling spread-out items. With every sale on a single product it was 596 ms. Sales to the same product queue on its stock row, which is the price of the stock guard. Before the change the target was missed in every test (steady p95 656 to 689 ms). The stock guard passed the last-unit test in all 11 runs.
 - **Cold start.** Render's free service sleeps after 15 minutes idle and takes about a minute to wake. Open the service address about 2 minutes before a demo.
