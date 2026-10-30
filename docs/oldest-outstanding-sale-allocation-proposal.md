@@ -1,8 +1,10 @@
 # Proposal: apply repayments to the oldest outstanding credit sale
 
-**Status:** Draft for review; not an implemented or approved contract.  
+**Status:** Approved by Nnaemeka Chukwuma (Data and rules owner, 2026-10-30; DM72). Pending API and access sign-off by Isaac Bassey before OpenAPI contract and migration implementation.  
 **Requested by:** Victor Oyeleke. **Prepared by:** Codex, 2026-10-29.  
-**Review requested from:** Nnaemeka Chukwuma (data and rules) and Isaac Bassey (API and access). Existing team review and high-risk-code gates apply.
+**Data & Rules Approval:** Nnaemeka Chukwuma, 2026-10-30 (DM72).  
+**API & Access Sign-off:** Pending Isaac Bassey.  
+**Implementation Status:** NOT STARTED (NO CODE WRITTEN). Existing team review and high-risk-code gates apply.
 
 ## Problem and proposed rule
 
@@ -36,6 +38,17 @@ The reversal restores A's stock; removes only A's outstanding ₦4,000 debt; and
 3. **Settlement splits and other adjustments:** agree how to restore store credit originally used for a reversed sale, how refunds or other adjustments interact with allocation, and how the ledger distinguishes debt and credit activity. Do not assume PR #30's simulated settlement fields are an approved service contract.
 4. **Ordering and API contract:** confirm `(created_at, id)` rather than due date, response and error details, and how both sale and repayment history expose allocations. Reconcile PR #31's route and idempotency behavior with the authoritative OpenAPI before implementing; its frontend/mock does not establish service behavior or approval.
 5. **Migration and delivery:** select the next unused migration version after prerequisite branches merge, include its matching undo script and up/down/up test, and agree how existing seeded data is handled. `feat/restocks` separately proposes V5; do not assume that version is available.
+
+## Data and Rules Owner Decisions (Nnaemeka Chukwuma, 2026-10-30; DM72)
+
+1. **Deterministic Order:** Confirmed strictly ascending `(created_at, id)` with customer UUID isolation. Due date does not reorder allocation.
+2. **Reversal Invariant:** Reversing sale A removes only A's outstanding debt and converts repaid kobo into store credit (DM5). Sale B remains untouched.
+3. **Repayment Reversal Policy:** If a repayment is reversed after a sale reversal, reject with `409 REVERSAL_CONFLICT` if the issued store credit was already drawn down; store credit must never become negative.
+4. **Atomicity & Invariants:**
+   - Customer debt balance must strictly reconcile with the sum of unpaid credit sales: `customer.debt_kobo = SUM(sale.unpaid_kobo)`.
+   - Store credit balance must reconcile with append-only ledger entries: `customer.store_credit_kobo >= 0`.
+   - All monetary amounts strictly integer kobo bounded within `[0, 9007199254740991]`.
+5. **Implementation Note:** **No code written yet.** Schema definition, migration scripts, repository transactions, and API endpoints will be written only when implementation is formally initiated.
 
 ## Acceptance tests for the implementation PR
 
