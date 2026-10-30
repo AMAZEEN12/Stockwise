@@ -76,6 +76,7 @@ The agent (or engineer) runs these itself and iterates until they pass, before a
 | R10 ledger | `ReconciliationIT#ledgerMatchesBalance` | integration |
 | R11 reversals | `ReversalIT` (stock and balance restored, both visible, parallel double reversal → one, restock reversal below zero → 409, ADMIN allowed, ASSISTANT 403) | integration |
 | R12 store credit | `StoreCreditIT` (₦10,000 / ₦6,000 → credit ₦6,000; next ₦4,000 sale leaves ₦2,000; parallel double-spend blocked; fails with the guard removed) | integration |
+| R11 + R12 sale reversal gate | One `POST /sales/{saleId}/reversal` transaction must restore stock and append reversal movements, adjust the credit-sale debt and append ledger entries, and create store credit for eligible repaid excess. Verify the ₦10,000 / ₦6,000 / ₦4,000 example, identical-key replay, changed-key parallel duplicate rejection, rollback after a failing effect, and guarded concurrent credit use. Check original and reversal history. The assistant-code cases apply only after that separate proposal is agreed. | integration, concurrency, rule removal, contract |
 | R13 movement history | `ReconciliationIT#movementsMatchQuantity` | integration |
 | R14 dashboard | `DashboardIT` (matches hand SQL; moves on reversal; sale at 00:30 WAT counts as today) | integration |
 | R15 auth/roles | `AuthorizationIT` (each role × each write endpoint; 401 missing or expired; demotion takes effect next request); `RoleMatrixTest` | integration, unit |

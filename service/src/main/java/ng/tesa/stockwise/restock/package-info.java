@@ -1,10 +1,5 @@
 /**
- * Restocks: add stock with an Idempotency-Key. Not started (after Monday).
- *
- * <p>Owner area: Data and rules (service) with API and access (controller). Contract paths: restock paths, not yet in the contract.
- * <p>Layout to follow (copy the {@code sale} package): record types, {@code XRepository} (JdbcClient, plain SQL),
- * {@code XService} (transaction), {@code XController} (API owner), exceptions in {@code XExceptions}.
- * Tests: {@code XIT} against real Postgres, one rule test per business rule that fails when the rule is removed.
- * Delete this file when the first real class lands.
+ * Retry-safe restock recording (spec R5 and R6). A restock and its positive stock movement are
+ * committed in one transaction; history is append-only and corrections are future reversals.
  */
 package ng.tesa.stockwise.restock;

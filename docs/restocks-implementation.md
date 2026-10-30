@@ -1,0 +1,9 @@
+# Restocks: draft implementation
+
+`feat/restocks` implements R5/R6 for an owner recording stock received against a product. The Products list opens a restock sheet with a positive whole-number quantity, received date (defaulted to the Lagos day), and optional note. Assistants and admins can read restock records but cannot create them. Product editing, archiving, and reversals remain separate work.
+
+The proposed v0.3 contract adds `POST /restocks`, `GET /restocks` and `GET /restocks/{restockId}`. The create request requires a UUID idempotency key. The service claims that key, increases stock with a guarded SQL update, inserts an append-only restock record and appends a stock movement in one transaction. A same-user, same-body replay returns the original record. The stock limit is the existing signed 32-bit product quantity limit. The paired V5/U5 migration adds and removes the record and its mutation guard.
+
+Before submitting, the browser stores the exact request and key in session storage, bound to the current user and API base. An uncertain response keeps that request locked for an explicit replay. A fresh attempt is blocked if recovery storage is unavailable or an earlier attempt belongs to another user or service. The development simulation is in-memory and is not evidence of database concurrency or authorization in the real service.
+
+This contract is a draft awaiting Isaac Bassey and Nnaemeka Chukwuma's agreement in `decisions.md`; do not merge it as an agreed contract until both sign off. On 2026-10-30 the PostgreSQL integration, migration rollback and clean full service verification passed, and five rule-removal checks demonstrated the corresponding tests fail without their protections. See `sdlc/WORKLOG.md` and `docs/rule-removal-log.md` for actual results and the initial debug-environment failure.

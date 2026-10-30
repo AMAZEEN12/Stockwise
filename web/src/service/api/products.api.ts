@@ -49,7 +49,7 @@ export const productsApi = authApi.injectEndpoints({ endpoints: (builder) => ({
     }, providesTags:['Products'],
   }),
   products: builder.query<ProductPage, ProductFilters>({ query: (params) => ({url: productsEndpoints.list, params}), providesTags: ['Products'] }),
-  product: builder.query<Product, string>({ query: (id) => ({url: productsEndpoints.detail(id)}) }),
+  product: builder.query<Product, string>({ query: (id) => ({url: productsEndpoints.detail(id)}), providesTags: ['Products'] }),
   createProduct: builder.mutation<Product, ProductCreate>({ query: (data) => ({url: productsEndpoints.list, method: 'POST', data}), invalidatesTags: ['Products'] }),
 }) });
-export const { useProductsQuery, useCatalogueQuery, useSaleCatalogueQuery, useCreateProductMutation } = productsApi;
+export const { useProductsQuery, useProductQuery, useCatalogueQuery, useSaleCatalogueQuery, useCreateProductMutation } = productsApi;

@@ -151,6 +151,59 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/restocks": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /**
+         * List recorded restocks
+         * @description Safe. Any authenticated role. Newest first, with UUID as the stable tie-breaker.
+         */
+        get: operations["listRestocks"];
+        put?: never;
+        /**
+         * Record stock received
+         * @description **Idempotent via `Idempotency-Key`** (required). OWNER only.
+         *
+         *     In one transaction the service claims the key, increases the product quantity, increments
+         *     its version, records the immutable restock and appends a `RESTOCK` stock movement. The
+         *     `receivedOn` date records when the stock arrived; `createdAt` records when Stockwise saved it.
+         *
+         *     Client's part: generate one UUID for the confirmed attempt and keep the same body and key
+         *     until a definitive response arrives. A replay by the same user with the same normalized body
+         *     returns the original 201 response without increasing stock again. A different body or user
+         *     with that key gets 422 `IDEMPOTENCY_KEY_REUSED`.
+         */
+        post: operations["createRestock"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/restocks/{restockId}": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /**
+         * One recorded restock
+         * @description Safe. Any authenticated role.
+         */
+        get: operations["getRestock"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/customers": {
         parameters: {
             query?: never;
@@ -324,7 +377,7 @@ export interface components {
              *     `INTERNAL_ERROR` (500) means an unexpected failure; quote the `requestId` when reporting it.
              * @enum {string}
              */
-            code: "VALIDATION_FAILED" | "UNAUTHENTICATED" | "FORBIDDEN" | "NOT_FOUND" | "DUPLICATE_REFERENCE" | "INSUFFICIENT_STOCK" | "IDEMPOTENCY_KEY_REUSED" | "DATABASE_UNAVAILABLE" | "INTERNAL_ERROR";
+            code: "VALIDATION_FAILED" | "UNAUTHENTICATED" | "FORBIDDEN" | "NOT_FOUND" | "DUPLICATE_REFERENCE" | "INSUFFICIENT_STOCK" | "STOCK_LIMIT_EXCEEDED" | "IDEMPOTENCY_KEY_REUSED" | "DATABASE_UNAVAILABLE" | "INTERNAL_ERROR";
             /** Format: uuid */
             requestId: string;
             errors?: {
@@ -396,6 +449,39 @@ export interface components {
         };
         ProductPage: {
             items: components["schemas"]["Product"][];
+            /** Format: int32 */
+            page: number;
+            /** Format: int32 */
+            size: number;
+            /** Format: int64 */
+            totalItems: number;
+        };
+        RestockCreate: {
+            /** Format: uuid */
+            productId: string;
+            /** Format: int32 */
+            quantity: number;
+            /** Format: date */
+            receivedOn: string;
+            note?: string;
+        };
+        Restock: {
+            /** Format: uuid */
+            id: string;
+            /** Format: uuid */
+            productId: string;
+            /** Format: int32 */
+            quantity: number;
+            /** Format: date */
+            receivedOn: string;
+            note?: string;
+            /** Format: uuid */
+            createdBy: string;
+            /** Format: date-time */
+            createdAt: string;
+        };
+        RestockPage: {
+            items: components["schemas"]["Restock"][];
             /** Format: int32 */
             page: number;
             /** Format: int32 */
@@ -939,6 +1025,122 @@ export interface operations {
             };
             400: components["responses"]["BadRequest"];
             401: components["responses"]["Unauthorized"];
+        };
+    };
+    listRestocks: {
+        parameters: {
+            query?: {
+                /** @description Return restocks for one product only. */
+                productId?: string;
+                /** @description Zero-based page number. */
+                page?: components["parameters"]["Page"];
+                size?: components["parameters"]["Size"];
+            };
+            header?: {
+                /** @description Client-generated UUID used to trace one action across both tiers. */
+                "X-Request-Id"?: components["parameters"]["RequestId"];
+            };
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description A page of restocks */
+            200: {
+                headers: {
+                    "X-Request-Id": components["headers"]["RequestId"];
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["RestockPage"];
+                };
+            };
+            400: components["responses"]["BadRequest"];
+            401: components["responses"]["Unauthorized"];
+        };
+    };
+    createRestock: {
+        parameters: {
+            query?: never;
+            header: {
+                /** @description Client-generated UUID used to trace one action across both tiers. */
+                "X-Request-Id"?: components["parameters"]["RequestId"];
+                /** @description Client-generated UUID, one per user attempt; reused on retry. */
+                "Idempotency-Key": components["parameters"]["IdempotencyKey"];
+            };
+            path?: never;
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["RestockCreate"];
+            };
+        };
+        responses: {
+            /** @description Restock recorded (or the original result of a replayed key) */
+            201: {
+                headers: {
+                    "X-Request-Id": components["headers"]["RequestId"];
+                    /** @description URL of the restock */
+                    Location?: string;
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["Restock"];
+                };
+            };
+            400: components["responses"]["BadRequest"];
+            401: components["responses"]["Unauthorized"];
+            403: components["responses"]["Forbidden"];
+            404: components["responses"]["NotFound"];
+            /** @description `STOCK_LIMIT_EXCEEDED`: adding the quantity would exceed the supported 32-bit stock count; nothing was recorded. */
+            409: {
+                headers: {
+                    "X-Request-Id": components["headers"]["RequestId"];
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/problem+json": components["schemas"]["Problem"];
+                };
+            };
+            /** @description `IDEMPOTENCY_KEY_REUSED`: this key was already used with a different request body or by another user. */
+            422: {
+                headers: {
+                    "X-Request-Id": components["headers"]["RequestId"];
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/problem+json": components["schemas"]["Problem"];
+                };
+            };
+        };
+    };
+    getRestock: {
+        parameters: {
+            query?: never;
+            header?: {
+                /** @description Client-generated UUID used to trace one action across both tiers. */
+                "X-Request-Id"?: components["parameters"]["RequestId"];
+            };
+            path: {
+                restockId: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description The restock */
+            200: {
+                headers: {
+                    "X-Request-Id": components["headers"]["RequestId"];
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["Restock"];
+                };
+            };
+            401: components["responses"]["Unauthorized"];
+            404: components["responses"]["NotFound"];
         };
     };
     listCustomers: {

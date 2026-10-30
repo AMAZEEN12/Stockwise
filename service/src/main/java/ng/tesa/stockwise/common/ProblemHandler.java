@@ -29,6 +29,7 @@ import org.springframework.web.method.annotation.MethodArgumentTypeMismatchExcep
 
 import ng.tesa.stockwise.config.RequestIdFilter;
 import ng.tesa.stockwise.product.Product;
+import ng.tesa.stockwise.restock.RestockExceptions;
 import ng.tesa.stockwise.sale.SaleExceptions;
 import tools.jackson.core.JacksonException;
 
@@ -69,6 +70,12 @@ public class ProblemHandler {
     @ExceptionHandler(IdempotencyKeyReused.class)
     ResponseEntity<Problem> keyReusedGeneric(IdempotencyKeyReused e, HttpServletRequest request) {
         return problem(request, ErrorCode.IDEMPOTENCY_KEY_REUSED, e.getMessage(), null);
+    }
+
+    @ExceptionHandler(RestockExceptions.StockLimitExceeded.class)
+    ResponseEntity<Problem> stockLimit(RestockExceptions.StockLimitExceeded e, HttpServletRequest request) {
+        return problem(request, ErrorCode.STOCK_LIMIT_EXCEEDED, e.getMessage(),
+                List.of(new Problem.FieldError("quantity", "would exceed the supported stock count")));
     }
 
     @ExceptionHandler(SaleExceptions.ReferenceNotFound.class)
