@@ -182,7 +182,7 @@ class SeedVerificationIT extends DatabaseTestSupport {
     /** The demo profile's Flyway locations apply the seed as a repeatable migration. */
     @Test
     void flywayAppliesTheSeedFromTheDemoLocation() {
-        jdbc.sql("TRUNCATE ledger_entry, stock_movement, sale_line, sale, customer, product RESTART IDENTITY").update();
+        jdbc.sql("TRUNCATE repayment_allocation, reversal_authorization, restock, ledger_entry, stock_movement, sale_line, sale, customer, product RESTART IDENTITY").update();
         jdbc.sql("DELETE FROM app_user WHERE email LIKE '%@stockwise.test'").update();
         jdbc.sql("DELETE FROM flyway_schema_history WHERE version IS NULL").update();
 

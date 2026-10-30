@@ -29,6 +29,7 @@ import org.springframework.web.method.annotation.MethodArgumentTypeMismatchExcep
 
 import ng.tesa.stockwise.config.RequestIdFilter;
 import ng.tesa.stockwise.product.Product;
+import ng.tesa.stockwise.restock.RestockExceptions;
 import ng.tesa.stockwise.sale.SaleExceptions;
 import tools.jackson.core.JacksonException;
 
@@ -69,6 +70,44 @@ public class ProblemHandler {
     @ExceptionHandler(IdempotencyKeyReused.class)
     ResponseEntity<Problem> keyReusedGeneric(IdempotencyKeyReused e, HttpServletRequest request) {
         return problem(request, ErrorCode.IDEMPOTENCY_KEY_REUSED, e.getMessage(), null);
+    }
+
+    // Reversal rules (spec R11, R12, R14, R15, R16)
+
+    @ExceptionHandler(ng.tesa.stockwise.reversal.ReversalExceptions.SaleAlreadyReversedException.class)
+    ResponseEntity<Problem> saleAlreadyReversed(ng.tesa.stockwise.reversal.ReversalExceptions.SaleAlreadyReversedException e, HttpServletRequest request) {
+        return problem(request, ErrorCode.SALE_ALREADY_REVERSED, e.getMessage(), null);
+    }
+
+    @ExceptionHandler(ng.tesa.stockwise.reversal.ReversalExceptions.InvalidAuthorizationCodeException.class)
+    ResponseEntity<Problem> invalidAuthCode(ng.tesa.stockwise.reversal.ReversalExceptions.InvalidAuthorizationCodeException e, HttpServletRequest request) {
+        return problem(request, ErrorCode.INVALID_AUTHORIZATION_CODE, e.getMessage(), null);
+    }
+
+    @ExceptionHandler(ng.tesa.stockwise.reversal.ReversalExceptions.AuthorizationAlreadyUsedException.class)
+    ResponseEntity<Problem> authCodeUsed(ng.tesa.stockwise.reversal.ReversalExceptions.AuthorizationAlreadyUsedException e, HttpServletRequest request) {
+        return problem(request, ErrorCode.AUTHORIZATION_ALREADY_USED, e.getMessage(), null);
+    }
+
+    @ExceptionHandler(ng.tesa.stockwise.reversal.ReversalExceptions.AuthorizationSaleMismatchException.class)
+    ResponseEntity<Problem> authCodeMismatch(ng.tesa.stockwise.reversal.ReversalExceptions.AuthorizationSaleMismatchException e, HttpServletRequest request) {
+        return problem(request, ErrorCode.AUTHORIZATION_SALE_MISMATCH, e.getMessage(), null);
+    }
+
+    @ExceptionHandler(ng.tesa.stockwise.reversal.ReversalExceptions.ReversalManualReviewException.class)
+    ResponseEntity<Problem> reversalManualReview(ng.tesa.stockwise.reversal.ReversalExceptions.ReversalManualReviewException e, HttpServletRequest request) {
+        return problem(request, ErrorCode.REVERSAL_MANUAL_REVIEW_REQUIRED, e.getMessage(), null);
+    }
+
+    @ExceptionHandler(ng.tesa.stockwise.reversal.ReversalExceptions.ReversalConflictException.class)
+    ResponseEntity<Problem> reversalConflict(ng.tesa.stockwise.reversal.ReversalExceptions.ReversalConflictException e, HttpServletRequest request) {
+        return problem(request, ErrorCode.REVERSAL_CONFLICT, e.getMessage(), null);
+    }
+
+    @ExceptionHandler(RestockExceptions.StockLimitExceeded.class)
+    ResponseEntity<Problem> stockLimit(RestockExceptions.StockLimitExceeded e, HttpServletRequest request) {
+        return problem(request, ErrorCode.STOCK_LIMIT_EXCEEDED, e.getMessage(),
+                List.of(new Problem.FieldError("quantity", "would exceed the supported stock count")));
     }
 
     @ExceptionHandler(SaleExceptions.ReferenceNotFound.class)

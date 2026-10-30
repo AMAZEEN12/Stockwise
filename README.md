@@ -121,9 +121,9 @@ Measured on 2026-10-28 from a GitHub Actions runner against the live free-tier s
 
 | Measure | Target (DM12) | Result |
 |----|----|----|
-| `POST /sales` p95, 3 tills, steady, sales spread across 20 products (warm) | ≤ 500 ms | **Not met: p95 656 ms** (median 605 ms, slowest 717 ms, 136 requests, no failures) |
-| `POST /sales` p95, ramp, every sale on one product | ≤ 500 ms | **Not met:** p95 1.45 to 1.69 s at 6 to 7 virtual users (9 runs) |
-| `POST /sales` p95, ramp, sales spread across 20 products | ≤ 500 ms | **Not met:** p95 660 to 667 ms at 4 virtual users (2 runs, about 55 requests each) |
+| `POST /sales` p95, 3 tills, steady, sales spread across 20 products (warm) | ≤ 500 ms | **Met after the sale change: p95 403 ms** (median 367 ms, slowest 479 ms, no failures). Before the change: 656 to 689 ms. |
+| `POST /sales` p95, ramp, sales spread across 20 products | ≤ 500 ms | Held to about 39 virtual users (28 requests/s; p95 502 ms where it stopped). Before the change it stopped at 4 to 5 users. |
+| `POST /sales` p95, ramp, every sale on one product (worst case) | ≤ 500 ms | **Not met: p95 596 ms** (median 372 ms) at the first check, about 7 users. Before the change: 1.46 to 1.70 s. |
 | Dashboard p95 (warm) | ≤ 800 ms | Read paths only (product and sales lists; no `GET /dashboard` yet). After tuning, held to 38 to 50 virtual users (29 to 41 requests/s); p95 800 to 832 ms where each run stopped |
 | Product catalogue p95 (warm) | 500 ms yardstick | After tuning, held to 30 to 47 virtual users (26 to 41 requests/s); p95 505 to 543 ms where each run stopped |
 | Saturation point | reported | Sales: 4 to 7 virtual users (about 2.5 sales/s). Reads: about 30 to 50 virtual users |
@@ -145,7 +145,7 @@ How to read this:
 - No rate limit on login yet.
 - Render's free service sleeps; open the service address about 2 minutes before a demo.
 - Free-tier compute caps limit the load figures; they will be reported as measured, with the date.
-- - **`POST /sales` does not meet the 500 ms target on the free tier.** Over 6 runs on 2026-10-28, p95 was 1.48 to 1.69 s (median about 0.9 s) and the test stopped at 6 to 7 concurrent virtual users (about 2.5 sales per second). The service runs on Render's free plan (0.1 CPU) with Neon's free database, and each sale makes about 8 database calls. The reads meet their targets at far higher load (dashboard and catalogue held to 38 to 50 virtual users). The load test sends every sale to a single product, which also makes sales queue on one stock row, so this is a worst case. We have not isolated how much of the slowdown comes from the free server's CPU and how much from that single-row queueing. The stock guard itself is not affected: the last-unit test passed in every run (one sale succeeds, nine are refused, stock stays at zero).
+- **`POST /sales` meets the 500 ms target at shop-sized load, but not when every sale hits the same product.** After the sale change (one statement per line instead of three, and no re-read of the finished sale), p95 was 403 ms with 3 tills selling spread-out items. With every sale on a single product it was 596 ms. Sales to the same product queue on its stock row, which is the price of the stock guard. Before the change the target was missed in every test (steady p95 656 to 689 ms). The stock guard passed the last-unit test in all 11 runs.
 - **Cold start.** Render's free service sleeps after 15 minutes idle and takes about a minute to wake. Open the service address about 2 minutes before a demo.
 - **Measured from a GitHub-hosted runner** against the live free-tier services, so network time is included.
 - **INP is 216 ms, over the 200 ms target (DM12).** Measured on 2026-10-30 with the web-vitals library on the deployed web address. It read 40 ms early in the session and rose later, because INP reports the worst interaction. The interaction responsible is [name it / not identified]. We report it as measured. LCP on mobile passes by only 0.1 s (2.4 s against 2.5 s).

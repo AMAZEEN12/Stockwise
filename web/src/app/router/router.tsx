@@ -28,6 +28,13 @@ export const router = createBrowserRouter([
         }),
       },
       {
+        path: "customers/:customerId",
+        lazy: async () => ({
+          Component: (await import("../../features/customers/CustomerDetailPage"))
+            .CustomerDetailPage,
+        }),
+      },
+      {
         path: "sales",
         lazy: async () => ({
           Component: (await import("../../features/sales/SalesHistoryPage"))
@@ -54,6 +61,14 @@ export const router = createBrowserRouter([
               Component: (
                 await import("../../features/products/AddProductPage")
               ).AddProductPage,
+            }),
+          },
+          {
+            path: ":productId/restock",
+            lazy: async () => ({
+              Component: (
+                await import("../../features/restocks/RestockProductPage")
+              ).RestockProductPage,
             }),
           },
         ],

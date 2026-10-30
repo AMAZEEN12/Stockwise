@@ -83,6 +83,94 @@ const sales = [
   },
 ];
 const submissions = new Map();
+// Demonstration-only allocations: the seeded credit sale has received ₦550 and the
+// remaining ₦1,100 of this customer's debt is an unrelated opening balance.
+const saleSettlements = new Map([
+  ['33333333-3333-4333-8333-000000000002', { debt: 340000, repaid: 55000, creditUsed: 0 }],
+]);
+const customerLedgers = new Map([
+  [
+    '22222222-2222-4222-8222-222222222221',
+    [
+      {
+        id: '44444444-4444-4444-8444-000000000002',
+        sourceType: 'CREDIT_SALE',
+        sourceId: '33333333-3333-4333-8333-000000000002',
+        deltaKobo: 395000,
+        balanceAfterKobo: 450000,
+        storeCreditAfterKobo: 0,
+        createdAt: new Date(Date.now() - 2 * 3600 * 1000).toISOString(),
+      },
+      {
+        id: '44444444-4444-4444-8444-000000000001',
+        sourceType: 'CREDIT_SALE',
+        sourceId: null,
+        deltaKobo: 55000,
+        balanceAfterKobo: 55000,
+        storeCreditAfterKobo: 0,
+        createdAt: new Date(Date.now() - 24 * 3600 * 1000).toISOString(),
+      },
+    ],
+  ],
+  [
+    '22222222-2222-4222-8222-222222222222',
+    [
+      {
+        id: '44444444-4444-4444-8444-000000000005',
+        sourceType: 'STORE_CREDIT',
+        sourceId: null,
+        deltaKobo: 600000,
+        balanceAfterKobo: 0,
+        storeCreditAfterKobo: 600000,
+        createdAt: new Date(Date.now() - 24 * 3600 * 1000).toISOString(),
+      },
+      {
+        id: '44444444-4444-4444-8444-000000000004',
+        sourceType: 'REVERSAL',
+        sourceId: null,
+        deltaKobo: -1000000,
+        balanceAfterKobo: 0,
+        storeCreditAfterKobo: 0,
+        createdAt: new Date(Date.now() - 24 * 3600 * 1000).toISOString(),
+      },
+      {
+        id: '44444444-4444-4444-8444-000000000003',
+        sourceType: 'REPAYMENT',
+        sourceId: null,
+        deltaKobo: -600000,
+        balanceAfterKobo: 400000,
+        storeCreditAfterKobo: 0,
+        createdAt: new Date(Date.now() - 48 * 3600 * 1000).toISOString(),
+      },
+      {
+        id: '44444444-4444-4444-8444-000000000002',
+        sourceType: 'CREDIT_SALE',
+        sourceId: null,
+        deltaKobo: 1000000,
+        balanceAfterKobo: 1000000,
+        storeCreditAfterKobo: 0,
+        createdAt: new Date(Date.now() - 72 * 3600 * 1000).toISOString(),
+      },
+    ],
+  ],
+  [
+    '22222222-2222-4222-8222-222222222223',
+    [
+      {
+        id: '44444444-4444-4444-8444-000000000006',
+        sourceType: 'CREDIT_SALE',
+        sourceId: null,
+        deltaKobo: 85000,
+        balanceAfterKobo: 85000,
+        storeCreditAfterKobo: 0,
+        createdAt: new Date(Date.now() - 48 * 3600 * 1000).toISOString(),
+      },
+    ],
+  ],
+]);
+const reversalSubmissions = new Map();
+const restocks = [];
+const restockSubmissions = new Map();
 const reversalAuthorizations = new Map([
   [
     '839201',
@@ -98,6 +186,7 @@ const reversalAuthorizations = new Map([
   ],
 ]);
 const isUuid = (text) => typeof text === 'string' && /^[0-9a-f]{8}-[0-9a-f]{4}-[1-5][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i.test(text);
+const isDate = (value) => typeof value === 'string' && /^\d{4}-\d{2}-\d{2}$/.test(value) && Number.isFinite(Date.parse(value)) && new Date(value).toISOString().slice(0,10) === value;
 const server = createServer(async (request,response) => {
   const origin = request.headers.origin;
   if (origin && !/^http:\/\/(127\.0\.0\.1|localhost):\d+$/.test(origin)) {response.writeHead(403); response.end(); return;}
@@ -280,6 +369,68 @@ const server = createServer(async (request,response) => {
     if (!product) {problem(404,'NOT_FOUND','Product not found.'); return;}
     send(200,{...product,stockState:stockState(product)}); return;
   }
+  if (url.pathname === '/restocks' && request.method === 'GET') {
+    const page = Number(url.searchParams.get('page') || 0); const size = Number(url.searchParams.get('size') || 20);
+    const productId = url.searchParams.get('productId');
+    if (!Number.isInteger(page) || page < 0 || !Number.isInteger(size) || size < 1 || size > 100 || (productId && !isUuid(productId))) {problem(400,'VALIDATION_FAILED','Invalid restock filters.'); return;}
+    const items = restocks.filter((restock) => !productId || restock.productId === productId)
+      .sort((a,b) => b.createdAt.localeCompare(a.createdAt) || b.id.localeCompare(a.id));
+    send(200,{items:items.slice(page*size,(page+1)*size),page,size,totalItems:items.length}); return;
+  }
+  if (url.pathname === '/restocks' && request.method === 'POST') {
+    if (user.role !== 'OWNER') {problem(403,'FORBIDDEN','Only the owner can record restocks.'); return;}
+    const key = request.headers['idempotency-key'];
+    if (!isUuid(key)) {problem(400,'VALIDATION_FAILED','A UUID Idempotency-Key is required.'); return;}
+    const errors = [];
+    if (!isUuid(body.productId)) errors.push({field:'productId',message:'Choose a valid product.'});
+    if (!Number.isInteger(body.quantity) || body.quantity < 1 || body.quantity > 2147483647) errors.push({field:'quantity',message:'Enter a supported positive whole number.'});
+    if (!isDate(body.receivedOn)) errors.push({field:'receivedOn',message:'Choose a valid date.'});
+    if (body.note !== undefined && (typeof body.note !== 'string' || [...body.note].length > 500)) errors.push({field:'note',message:'Use at most 500 characters.'});
+    if (Object.keys(body).some((property) => !['productId','quantity','receivedOn','note'].includes(property))) errors.push({field:'body',message:'Unexpected property.'});
+    if (errors.length) {problem(400,'VALIDATION_FAILED','Check restock fields.',errors); return;}
+    const canonical = JSON.stringify({productId:body.productId,quantity:body.quantity,receivedOn:body.receivedOn,note:typeof body.note === 'string' && body.note.trim() ? body.note.trim() : null});
+    const submissionKey = key;
+    if (restockSubmissions.has(submissionKey)) {
+      const saved = restockSubmissions.get(submissionKey);
+      if (saved.userId !== user.id || saved.body !== canonical) {problem(422,'IDEMPOTENCY_KEY_REUSED','This key was already used with a different request.'); return;}
+      send(201,saved.restock); return;
+    }
+    const product = products.find((item) => item.id === body.productId);
+    if (!product) {problem(404,'NOT_FOUND','Product not found.'); return;}
+    if (body.quantity > 2147483647 - product.quantity) {problem(409,'STOCK_LIMIT_EXCEEDED','The resulting stock quantity is too large.',[{field:'quantity',message:'Choose a smaller quantity.'}]); return;}
+    const createdAt = new Date().toISOString();
+    const restock = {id:randomUUID(),productId:product.id,quantity:body.quantity,receivedOn:body.receivedOn,...(body.note?.trim() ? {note:body.note.trim()} : {}),createdBy:user.id,createdAt};
+    product.quantity += body.quantity; product.version++; product.updatedAt = createdAt; product.stockState = stockState(product);
+    restocks.unshift(restock); restockSubmissions.set(submissionKey,{userId:user.id,body:canonical,restock}); response.setHeader('Location',`/restocks/${restock.id}`); send(201,restock); return;
+  }
+  if (/^\/restocks\/[^/]+$/.test(url.pathname) && request.method === 'GET') {
+    const restock = restocks.find((item) => item.id === url.pathname.split('/')[2]);
+    if (!restock) {problem(404,'NOT_FOUND','Restock not found.'); return;}
+    send(200,restock); return;
+  }
+  const customerLedgerMatch = url.pathname.match(/^\/customers\/([^/]+)\/ledger$/);
+  if (customerLedgerMatch && request.method === 'GET') {
+    const customerId = customerLedgerMatch[1];
+    const customer = customers.find((c) => c.id === customerId);
+    if (!customer) { problem(404, 'NOT_FOUND', 'Customer not found.'); return; }
+    const page = Number(url.searchParams.get('page') || 0);
+    const size = Number(url.searchParams.get('size') || 20);
+    if (!Number.isInteger(page) || page < 0 || !Number.isInteger(size) || size < 1 || size > 100) {
+      problem(400, 'VALIDATION_FAILED', 'Invalid pagination.');
+      return;
+    }
+    const entries = customerLedgers.get(customerId) || [];
+    send(200, {
+      customerId: customer.id,
+      balanceKobo: customer.balanceKobo,
+      storeCreditKobo: customer.storeCreditKobo,
+      items: entries.slice(page * size, (page + 1) * size),
+      page,
+      size,
+      totalItems: entries.length,
+    });
+    return;
+  }
   if (url.pathname === '/customers' && request.method === 'GET') {
     const page = Number(url.searchParams.get('page') || 0); const size = Number(url.searchParams.get('size') || 20);
     if (!Number.isInteger(page) || page < 0 || !Number.isInteger(size) || size < 1 || size > 100) {problem(400,'VALIDATION_FAILED','Invalid pagination.'); return;}
@@ -308,6 +459,17 @@ const server = createServer(async (request,response) => {
     }
     customer.storeCreditKobo += amountKobo;
     customer.hasStoreCreditActivity = true;
+    const history = customerLedgers.get(customer.id) || [];
+    history.unshift({
+      id: randomUUID(),
+      sourceType: 'STORE_CREDIT',
+      sourceId: null,
+      deltaKobo: amountKobo,
+      balanceAfterKobo: customer.balanceKobo,
+      storeCreditAfterKobo: customer.storeCreditKobo,
+      createdAt: new Date().toISOString(),
+    });
+    customerLedgers.set(customer.id, history);
     send(201, customer);
     return;
   }
@@ -351,8 +513,39 @@ const server = createServer(async (request,response) => {
     const totalKobo = Number(total); const applied = customer && (body.useStoreCredit || body.useStoreCredit === undefined) ? Math.min(customer.storeCreditKobo,totalKobo) : 0;
     if (customer && body.paymentType === 'CREDIT' && BigInt(customer.balanceKobo)+total-BigInt(applied) > BigInt(Number.MAX_SAFE_INTEGER)) {problem(400,'VALIDATION_FAILED','Customer balance would exceed the supported amount.'); return;}
     for (const line of lines) {const product = products.find((item) => item.id === line.productId); product.quantity -= line.quantity; product.version++; product.updatedAt = new Date().toISOString();}
-    if (customer) {customer.storeCreditKobo -= applied; if (body.paymentType === 'CREDIT') {customer.balanceKobo += totalKobo-applied; if (totalKobo-applied > 0) customer.hasDebtActivity=true;}}
     const sale = {id:randomUUID(),reference:`S-${String(sales.length+1).padStart(6,'0')}`,paymentType:body.paymentType,...(body.customerId ? {customerId:body.customerId} : {}),...(body.dueDate ? {dueDate:body.dueDate} : {}),totalKobo,lines,createdBy:user.id,createdAt:new Date().toISOString()};
+    if (customer) {
+      customer.storeCreditKobo -= applied;
+      if (applied > 0) {
+        const history = customerLedgers.get(customer.id) || [];
+        history.unshift({
+          id: randomUUID(),
+          sourceType: 'STORE_CREDIT',
+          sourceId: sale.id,
+          deltaKobo: -applied,
+          balanceAfterKobo: customer.balanceKobo,
+          storeCreditAfterKobo: customer.storeCreditKobo,
+          createdAt: sale.createdAt,
+        });
+        customerLedgers.set(customer.id, history);
+      }
+      if (body.paymentType === 'CREDIT') {
+        customer.balanceKobo += totalKobo-applied;
+        if (totalKobo-applied > 0) customer.hasDebtActivity=true;
+        const history = customerLedgers.get(customer.id) || [];
+        history.unshift({
+          id: randomUUID(),
+          sourceType: 'CREDIT_SALE',
+          sourceId: sale.id,
+          deltaKobo: totalKobo-applied,
+          balanceAfterKobo: customer.balanceKobo,
+          storeCreditAfterKobo: customer.storeCreditKobo,
+          createdAt: sale.createdAt,
+        });
+        customerLedgers.set(customer.id, history);
+      }
+    }
+    saleSettlements.set(sale.id,{debt:body.paymentType === 'CREDIT' ? totalKobo-applied : 0,repaid:0,creditUsed:applied});
     sales.unshift(sale); submissions.set(submissionKey,{body:serialized,sale}); response.setHeader('Location',`/sales/${sale.id}`); send(201,sale); return;
   }
   if (/^\/sales\/[^/]+$/.test(url.pathname) && request.method === 'GET') {
@@ -399,6 +592,12 @@ const server = createServer(async (request,response) => {
       problem(400, 'VALIDATION_FAILED', 'A UUID Idempotency-Key is required.');
       return;
     }
+    const serialized = JSON.stringify({saleId,reason:body.reason,note:body.note || null,authorizationCode:body.authorizationCode || null});
+    const prior = reversalSubmissions.get(key);
+    if (prior) {
+      if (prior.userId !== user.id || prior.body !== serialized) {problem(422,'IDEMPOTENCY_KEY_REUSED','This key was already used for a different request.'); return;}
+      send(200,prior.result); return;
+    }
     const sale = sales.find((item) => item.id === saleId);
     if (!sale) {
       problem(404, 'NOT_FOUND', 'Sale not found.');
@@ -408,6 +607,15 @@ const server = createServer(async (request,response) => {
       problem(409, 'SALE_ALREADY_REVERSED', 'This sale has already been reversed.');
       return;
     }
+    const settlement = saleSettlements.get(sale.id);
+    const customer = sale.customerId ? customers.find((item) => item.id === sale.customerId) : null;
+    if (sale.paymentType === 'CREDIT' && (!settlement || !customer || customer.balanceKobo < settlement.debt)) {
+      problem(409,'SIMULATION_DATA_UNAVAILABLE','This demonstration sale has no reconciled settlement details.'); return;
+    }
+    if (settlement?.creditUsed && !customer) {problem(409,'SIMULATION_DATA_UNAVAILABLE','Customer settlement details are unavailable.'); return;}
+    const creditReturned = (settlement?.repaid || 0) + (settlement?.creditUsed || 0);
+    if (customer && !Number.isSafeInteger(customer.storeCreditKobo + creditReturned)) {problem(409,'SIMULATION_DATA_UNAVAILABLE','Store credit exceeds the supported amount.'); return;}
+    if (sale.lines.some((line) => {const product = products.find((item) => item.id === line.productId); return !product || product.quantity > 2147483647 - line.quantity;})) {problem(409,'SIMULATION_DATA_UNAVAILABLE','Stock cannot be restored for this demonstration sale.'); return;}
     if (user.role === 'ASSISTANT') {
       if (!body?.authorizationCode || typeof body.authorizationCode !== 'string') {
         problem(403, 'SUPERVISOR_CODE_REQUIRED', 'Supervisor authorization code is required for assistants to reverse sales.');
@@ -434,6 +642,12 @@ const server = createServer(async (request,response) => {
     sale.reversedBy = user.displayName;
     sale.reversalReason = body?.reason || 'CUSTOMER_RETURN';
     sale.reversalNote = body?.note;
+    if (customer && settlement) {
+      customer.balanceKobo -= settlement.debt;
+      customer.storeCreditKobo += creditReturned;
+      if (settlement.debt) customer.hasDebtActivity = true;
+      if (creditReturned) customer.hasStoreCreditActivity = true;
+    }
     for (const line of sale.lines) {
       const product = products.find((item) => item.id === line.productId);
       if (product) {
@@ -442,7 +656,7 @@ const server = createServer(async (request,response) => {
         product.updatedAt = new Date().toISOString();
       }
     }
-    send(200, {
+    const result = {
       reversalId: randomUUID(),
       saleId: sale.id,
       reversedAt: sale.reversedAt,
@@ -450,7 +664,11 @@ const server = createServer(async (request,response) => {
       reason: sale.reversalReason,
       note: sale.reversalNote,
       stockRestored: true,
-    });
+      debtRemovedKobo: settlement?.debt || 0,
+      storeCreditAddedKobo: creditReturned,
+    };
+    reversalSubmissions.set(key,{userId:user.id,body:serialized,result});
+    send(200, result);
     return;
   }
   problem(404,'NOT_FOUND','This operation is not available in this simulation.');
