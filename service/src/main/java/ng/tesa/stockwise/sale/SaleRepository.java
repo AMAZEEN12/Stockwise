@@ -5,6 +5,7 @@ import java.sql.SQLException;
 import java.time.LocalDate;
 import java.time.OffsetDateTime;
 import java.util.ArrayList;
+import java.util.Comparator;
 import java.util.HashMap;
 import java.util.LinkedHashMap;
 import java.util.List;
@@ -17,6 +18,7 @@ import org.springframework.jdbc.core.simple.JdbcClient;
 import org.springframework.stereotype.Repository;
 
 import ng.tesa.stockwise.common.Page;
+
 
 /**
  * SQL for the sale transaction (spec "Data flow: recording a sale"). Every rule-bearing
@@ -119,6 +121,64 @@ public class SaleRepository {
                 .param("delta", -quantity)
                 .param("saleId", saleId)
                 .update();
+    }
+
+    /** What one sold line returns: the product name and the copied price (R3), for the response. */
+    public record SoldLine(String productName, long unitPriceKobo, long lineTotalKobo) {
+    }
+
+    /**
+     * Steps 3.2 and 3.3 in ONE statement: the guarded stock update, the sale line with its copied
+     * price, and the matching stock movement. Empty means the guard refused (R4): nothing was
+     * written, because the line and the movement are inserted from the rows the update returned.
+     * Same rule as {@link #takeStock} plus {@link #insertLine}, with two fewer round trips.
+     */
+    public Optional<SoldLine> sellLine(UUID saleId, UUID productId, int quantity) {
+        return jdbc.sql("""
+                        WITH taken AS (
+                            UPDATE product
+                            SET quantity = quantity - CAST(:quantity AS integer), version = version + 1, updated_at = now()
+                            WHERE id = :productId AND active AND quantity >= CAST(:quantity AS integer)
+                            RETURNING id, name, price_kobo),
+                        line AS (
+                            INSERT INTO sale_line (sale_id, product_id, quantity, unit_price_kobo, line_total_kobo)
+                            SELECT :saleId, id, CAST(:quantity AS integer), price_kobo, price_kobo * CAST(:quantity AS integer)
+                            FROM taken
+                            RETURNING 1),
+                        move AS (
+                            INSERT INTO stock_movement (product_id, delta, source_type, source_id)
+                            SELECT id, -CAST(:quantity AS integer), 'SALE', :saleId
+                            FROM taken
+                            RETURNING 1)
+                        SELECT name, price_kobo, price_kobo * CAST(:quantity AS integer) AS line_total_kobo
+                        FROM taken
+                        """)
+                .param("saleId", saleId)
+                .param("productId", productId)
+                .param("quantity", quantity)
+                .query((rs, row) -> new SoldLine(rs.getString("name"), rs.getLong("price_kobo"), rs.getLong("line_total_kobo")))
+                .optional();
+    }
+
+    /** Lines in the order the database sorts uuid values (unsigned bytes), as {@link #findSale} returns them. */
+    private static final Comparator<Sale.Line> LINE_ORDER = Comparator
+            .comparingLong((Sale.Line l) -> l.productId().getMostSignificantBits() ^ Long.MIN_VALUE)
+            .thenComparingLong(l -> l.productId().getLeastSignificantBits() ^ Long.MIN_VALUE);
+
+    /**
+     * Writes the total and returns the finished sale from the same statement, so the response needs
+     * no re-read. The lines are the ones this transaction just wrote.
+     */
+    public Sale finishSale(UUID saleId, long totalKobo, List<Sale.Line> lines) {
+        List<Sale.Line> ordered = lines.stream().sorted(LINE_ORDER).toList();
+        return jdbc.sql("""
+                        UPDATE sale SET total_kobo = :total WHERE id = :id
+                        RETURNING id, reference, payment_type, customer_id, due_date, total_kobo, created_by, created_at
+                        """)
+                .param("total", totalKobo)
+                .param("id", saleId)
+                .query((rs, row) -> mapSale(rs, ordered))
+                .single();
     }
 
     public void setTotal(UUID saleId, long totalKobo) {
