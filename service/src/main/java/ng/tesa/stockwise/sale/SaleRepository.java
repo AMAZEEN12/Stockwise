@@ -122,7 +122,12 @@ public class SaleRepository {
     }
 
     public void setTotal(UUID saleId, long totalKobo) {
-        jdbc.sql("UPDATE sale SET total_kobo = :total WHERE id = :id")
+        jdbc.sql("""
+                UPDATE sale
+                SET total_kobo = :total,
+                    unpaid_kobo = CASE WHEN payment_type = 'CREDIT' THEN :total ELSE 0 END
+                WHERE id = :id
+                """)
                 .param("total", totalKobo)
                 .param("id", saleId)
                 .update();
@@ -173,7 +178,8 @@ public class SaleRepository {
                         rs.getInt("quantity"), rs.getLong("unit_price_kobo"), rs.getLong("line_total_kobo")))
                 .list();
         return jdbc.sql("""
-                        SELECT id, reference, payment_type, customer_id, due_date, total_kobo, created_by, created_at
+                        SELECT id, reference, payment_type, customer_id, due_date, total_kobo, created_by, created_at,
+                               reversed_at, reversed_by, reversal_reason, reversal_notes, unpaid_kobo
                         FROM sale WHERE id = :id
                         """)
                 .param("id", saleId)
@@ -214,7 +220,8 @@ public class SaleRepository {
         long total = jdbc.sql("SELECT count(*) FROM sale" + whereClause).params(params).query(Long.class).single();
         Map<UUID, List<Sale.Line>> lines = new LinkedHashMap<>();
         List<Sale> headers = jdbc.sql("""
-                        SELECT id, reference, payment_type, customer_id, due_date, total_kobo, created_by, created_at
+                        SELECT id, reference, payment_type, customer_id, due_date, total_kobo, created_by, created_at,
+                               reversed_at, reversed_by, reversal_reason, reversal_notes, unpaid_kobo
                         FROM sale""" + whereClause + " ORDER BY created_at DESC, id LIMIT :limit OFFSET :offset")
                 .params(params)
                 .param("limit", page.size())
@@ -243,6 +250,7 @@ public class SaleRepository {
     }
 
     private static Sale mapSale(ResultSet rs, List<Sale.Line> lines) throws SQLException {
+        OffsetDateTime revAt = rs.getObject("reversed_at", OffsetDateTime.class);
         return new Sale(
                 rs.getObject("id", UUID.class),
                 rs.getString("reference"),
@@ -252,6 +260,11 @@ public class SaleRepository {
                 rs.getLong("total_kobo"),
                 lines,
                 rs.getObject("created_by", UUID.class),
-                rs.getObject("created_at", OffsetDateTime.class).toInstant());
+                rs.getObject("created_at", OffsetDateTime.class).toInstant(),
+                revAt != null ? revAt.toInstant() : null,
+                rs.getObject("reversed_by", UUID.class),
+                rs.getString("reversal_reason"),
+                rs.getString("reversal_notes"),
+                rs.getLong("unpaid_kobo"));
     }
 }

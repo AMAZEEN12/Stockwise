@@ -346,6 +346,52 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/sales/{saleId}/reversal": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /**
+         * Reverse an existing sale
+         * @description Reverses a recorded sale, restoring product inventory stock and appending reversing `SALE_REVERSAL` movements.
+         *     For credit sales, relieves remaining unpaid debt and converts any repaid excess amount to customer store credit (DM5, R12).
+         *     Restores any store credit originally tendered at checkout.
+         *     `OWNER` and `ADMIN` can reverse directly. `ASSISTANT` must provide a valid unused supervisor `authorizationCode`.
+         *     Idempotent via required `Idempotency-Key`.
+         */
+        post: operations["reverseSale"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/reversals/authorizations": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /**
+         * Generate a supervisor authorization code for an assistant reversal
+         * @description `OWNER` or `ADMIN` only. Generates a cryptographically random, single-use 6-digit numeric authorization code.
+         *     Expires in 15 minutes by default (or custom `validMinutes` between 1 and 60).
+         *     Can optionally be bound to a specific `saleId`.
+         */
+        post: operations["createReversalAuthorization"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
 }
 export type webhooks = Record<string, never>;
 export interface components {
@@ -377,7 +423,7 @@ export interface components {
              *     `INTERNAL_ERROR` (500) means an unexpected failure; quote the `requestId` when reporting it.
              * @enum {string}
              */
-            code: "VALIDATION_FAILED" | "UNAUTHENTICATED" | "FORBIDDEN" | "NOT_FOUND" | "DUPLICATE_REFERENCE" | "INSUFFICIENT_STOCK" | "STOCK_LIMIT_EXCEEDED" | "IDEMPOTENCY_KEY_REUSED" | "DATABASE_UNAVAILABLE" | "INTERNAL_ERROR";
+            code: "VALIDATION_FAILED" | "UNAUTHENTICATED" | "FORBIDDEN" | "NOT_FOUND" | "DUPLICATE_REFERENCE" | "INSUFFICIENT_STOCK" | "STOCK_LIMIT_EXCEEDED" | "IDEMPOTENCY_KEY_REUSED" | "SALE_ALREADY_REVERSED" | "INVALID_AUTHORIZATION_CODE" | "AUTHORIZATION_EXPIRED" | "AUTHORIZATION_ALREADY_USED" | "AUTHORIZATION_SALE_MISMATCH" | "REVERSAL_MANUAL_REVIEW_REQUIRED" | "REVERSAL_CONFLICT" | "DATABASE_UNAVAILABLE" | "INTERNAL_ERROR";
             /** Format: uuid */
             requestId: string;
             errors?: {
@@ -692,6 +738,13 @@ export interface components {
             createdBy: string;
             /** Format: date-time */
             createdAt: string;
+            /** Format: date-time */
+            reversedAt?: string;
+            /** Format: uuid */
+            reversedBy?: string;
+            reversalReason?: components["schemas"]["ReversalReason"];
+            reversalNotes?: string;
+            unpaidKobo?: components["schemas"]["Kobo"];
         };
         SalePage: {
             items: components["schemas"]["Sale"][];
@@ -701,6 +754,51 @@ export interface components {
             size: number;
             /** Format: int64 */
             totalItems: number;
+        };
+        /** @enum {string} */
+        ReversalReason: "CUSTOMER_RETURN" | "BILLING_ERROR" | "DAMAGED_PRODUCT" | "OTHER";
+        ReversalAuthorizationCreate: {
+            /** Format: uuid */
+            saleId?: string;
+            /** @default 15 */
+            validMinutes: number;
+        };
+        ReversalAuthorization: {
+            /** @example 583921 */
+            code: string;
+            /** Format: uuid */
+            saleId?: string;
+            /** Format: date-time */
+            expiresAt: string;
+            /** Format: uuid */
+            generatedBy: string;
+            generatedByRole?: components["schemas"]["Role"];
+        };
+        SaleReversalRequest: {
+            reason: components["schemas"]["ReversalReason"];
+            note?: string;
+            authorizationCode?: string;
+        };
+        SaleReversalResponse: {
+            /** Format: uuid */
+            reversalId: string;
+            /** Format: uuid */
+            saleId: string;
+            /** Format: date-time */
+            reversedAt: string;
+            /** Format: uuid */
+            reversedBy: string;
+            reason: components["schemas"]["ReversalReason"];
+            note?: string;
+            stockRestored: boolean;
+            debtRemovedKobo?: components["schemas"]["Kobo"];
+            storeCreditAddedKobo?: components["schemas"]["Kobo"];
+            storeCreditRestoredKobo?: components["schemas"]["Kobo"];
+            stockRestoredLines?: {
+                /** Format: uuid */
+                productId: string;
+                quantity: number;
+            }[];
         };
     };
     responses: {
@@ -1410,6 +1508,91 @@ export interface operations {
             };
             401: components["responses"]["Unauthorized"];
             404: components["responses"]["NotFound"];
+        };
+    };
+    reverseSale: {
+        parameters: {
+            query?: never;
+            header: {
+                /** @description Client-generated UUID used to trace one action across both tiers. */
+                "X-Request-Id"?: components["parameters"]["RequestId"];
+                /** @description Client-generated UUID, one per user attempt; reused on retry. */
+                "Idempotency-Key": components["parameters"]["IdempotencyKey"];
+            };
+            path: {
+                saleId: string;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["SaleReversalRequest"];
+            };
+        };
+        responses: {
+            /** @description Sale reversed successfully */
+            200: {
+                headers: {
+                    "X-Request-Id": components["headers"]["RequestId"];
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["SaleReversalResponse"];
+                };
+            };
+            400: components["responses"]["BadRequest"];
+            401: components["responses"]["Unauthorized"];
+            403: components["responses"]["Forbidden"];
+            404: components["responses"]["NotFound"];
+            /** @description Sale already reversed or conflicting supervisor authorization */
+            409: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/problem+json": components["schemas"]["Problem"];
+                };
+            };
+            /** @description Idempotency key reused with different body */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/problem+json": components["schemas"]["Problem"];
+                };
+            };
+        };
+    };
+    createReversalAuthorization: {
+        parameters: {
+            query?: never;
+            header?: {
+                /** @description Client-generated UUID used to trace one action across both tiers. */
+                "X-Request-Id"?: components["parameters"]["RequestId"];
+            };
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: {
+            content: {
+                "application/json": components["schemas"]["ReversalAuthorizationCreate"];
+            };
+        };
+        responses: {
+            /** @description Authorization code created */
+            201: {
+                headers: {
+                    "X-Request-Id": components["headers"]["RequestId"];
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ReversalAuthorization"];
+                };
+            };
+            400: components["responses"]["BadRequest"];
+            401: components["responses"]["Unauthorized"];
+            403: components["responses"]["Forbidden"];
         };
     };
 }
