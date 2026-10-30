@@ -363,6 +363,63 @@ const server = createServer(async (request,response) => {
   if(!session || Date.parse(session.expiresAt)<=Date.now()){problem(401,'UNAUTHENTICATED','Sign in again.');return;}
   const user=session.user;
   if (url.pathname === '/me' && request.method === 'GET') {send(200,user); return;}
+  if (url.pathname === '/dashboard' && request.method === 'GET') {
+    const now = new Date();
+    const lagosDateStr = new Intl.DateTimeFormat('en-CA', { timeZone: 'Africa/Lagos' }).format(now);
+    const todaySalesList = sales.filter((sale) => {
+      const saleLagosDate = new Intl.DateTimeFormat('en-CA', { timeZone: 'Africa/Lagos' }).format(new Date(sale.createdAt));
+      return saleLagosDate === lagosDateStr;
+    });
+    const paidSales = todaySalesList.filter((s) => s.paymentType === 'PAID');
+    const creditSales = todaySalesList.filter((s) => s.paymentType === 'CREDIT');
+    const totalKobo = todaySalesList.reduce((sum, s) => sum + s.totalKobo, 0);
+    const paidKobo = paidSales.reduce((sum, s) => sum + s.totalKobo, 0);
+    const creditKobo = creditSales.reduce((sum, s) => sum + s.totalKobo, 0);
+
+    const outstandingCreditKobo = customers.reduce((sum, c) => sum + (c.balanceKobo || 0), 0);
+    const customersOwing = customers.filter((c) => (c.balanceKobo || 0) > 0).length;
+    const storeCreditHeldKobo = customers.reduce((sum, c) => sum + (c.storeCreditKobo || 0), 0);
+
+    const lowStockAll = products.filter((p) => p.active && p.quantity <= p.lowStockThreshold)
+      .sort((a, b) => a.quantity - b.quantity || a.name.localeCompare(b.name));
+    const lowStockCount = lowStockAll.length;
+    const lowStock = lowStockAll.slice(0, 10).map((p) => ({
+      id: p.id,
+      reference: p.reference,
+      name: p.name,
+      quantity: p.quantity,
+      lowStockThreshold: p.lowStockThreshold,
+    }));
+
+    const recentSales = sales.slice(0, 5).map((s) => ({
+      id: s.id,
+      reference: s.reference,
+      paymentType: s.paymentType,
+      totalKobo: s.totalKobo,
+      createdAt: s.createdAt,
+    }));
+
+    send(200, {
+      computedAt: now.toISOString(),
+      isDemonstrationData: true,
+      today: lagosDateStr,
+      todaySales: {
+        count: todaySalesList.length,
+        totalKobo,
+        paidCount: paidSales.length,
+        paidKobo,
+        creditCount: creditSales.length,
+        creditKobo,
+      },
+      outstandingCreditKobo,
+      customersOwing,
+      storeCreditHeldKobo,
+      lowStockCount,
+      lowStock,
+      recentSales,
+    });
+    return;
+  }
   if (url.pathname === '/product-categories' && request.method === 'GET') {
     const cats = [...new Set(products.map((p) => p.category).filter(Boolean))].sort((a,b) => a.localeCompare(b, undefined, { sensitivity: 'base' }));
     send(200, cats); return;

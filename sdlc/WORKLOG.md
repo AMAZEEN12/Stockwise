@@ -6,6 +6,31 @@ Source document: `Tesa cohort 6 software engineering capstone project.pdf` (TeSA
 > Any agent opening this project: read this file first, then the "Conventions and guidelines" and "Decisions" sections, then the artifacts in this folder. Continue from "Resume here". Don't re-ask anything already answered below.
 
 ## Resume here
+Dashboard UI & Interactive Sales Donut Chart (PR 3 / R14), 2026-10-30 (Victor Oyeleke; logged by Antigravity):
+Branch `feat/dashboard-ui` branched from conflict-free `feat/product-movements-ui` implements the Shop Dashboard screen (`/app/dashboard`, `R14`).
+1. **Interactive Sales Pie/Donut Chart (`InteractiveSalesChart.tsx`, `donut-geometry.ts`)**:
+   - Follows Victor's reference design (`https://tanstack.com/charts/catalog/charts/164-shadcn-pie-interactive` and uploaded image reference).
+   - SVG Donut Chart with center numeric total and descriptive sublabel (`donut-center-value`, `donut-center-label`).
+   - Outer Highlight Arc: Active/hovered slice triggers a separate floating highlight ring arc (`slice-highlight-arc`, `r = 110px`, `stroke-width = 3.5px`, opacity 0.85) and an expanded outer radius (+10px).
+   - Segment Selection Dropdown: Native `<select className="chart-segment-select">` with live colored dot indicator for quick slice inspection (All, Paid sales, Credit sales).
+   - Metric Toggle: Seamless toggle between Revenue (₦ kobo formatted) and Volume (sales count).
+   - Fully Accessible (WCAG AAA): Interactive semantic legend buttons, keyboard support, `<svg aria-hidden="true">` to prevent nested interactive SVG violations, passing Axe-core with 0 violations.
+2. **Dashboard Overview (`DashboardPage.tsx`, `dashboard.css`)**:
+   - 4 KPI Metric Cards: Today's Revenue (kobo), Outstanding Customer Credit (kobo), Store Credit Held (kobo), and Low Stock Alerts count.
+   - Low Stock Watchlist: Displays items with stock at or below threshold with quick navigation links to `/app/products/:id/movements`.
+   - Recent Sales Stream: Displays latest transactions with receipt reference and payment type badges.
+   - 5 Screen States (R17): Clean skeleton loaders, retryable error alert, empty state, and live demonstration badge.
+3. **API & Navigation Integration (`router.tsx`, `ShopLayout.tsx`, `role-landing.ts`, `development-api.mjs`)**:
+   - Mounted at `/app/dashboard` under `ShopLayout`. Added Dashboard navigation link with icon to sidebar for `OWNER` and `ADMIN`.
+   - Permitted in `role-landing.ts` for safe routing.
+   - Implemented `GET /dashboard` endpoint simulation in `development-api.mjs`.
+4. **Verification**:
+   - Vitest: 23 test suites, 85/85 tests passed (`donut-geometry.test.ts` 5/5, `dashboard.test.tsx` 4/4).
+   - Strict TypeScript (`tsc --noEmit`): 0 errors.
+   - ESLint: 0 errors, 0 warnings.
+   - Vite Production Build: Succeeded in 28.35s with all chunks and css emitted cleanly.
+   - Playwright: 2/2 tests passed in `dashboard.spec.ts` across desktop and mobile with 0 axe-core critical or serious accessibility violations.
+
 PR #44 conflict resolution, 2026-10-30: merged `origin/main` at `250a7b85` into `feat/product-movements-ui`. Preserved both the product stock movements dedicated page implementation and the customer ledger dedicated page implementation from PR #42, along with all recent main branch commits and worklog entries. Preserved user-requested removals (no decorative icons on product status badges, no plus sign on the Add customer button).
 
 Product stock movements dedicated page (PR 2 / PR #44), 2026-10-30 (Victor Oyeleke; logged by Antigravity):
