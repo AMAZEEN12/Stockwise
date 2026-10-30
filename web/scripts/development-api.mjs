@@ -91,6 +91,29 @@ const saleSettlements = new Map([
 const reversalSubmissions = new Map();
 const restocks = [];
 const restockSubmissions = new Map();
+const stockMovements = [
+  { id: '44444444-4444-4444-8444-000000000001', productId: '11111111-1111-4111-8111-000000000001', delta: 49, sourceType: 'OPENING', createdAt: '2026-10-24T08:41:00Z' },
+  { id: '44444444-4444-4444-8444-000000000002', productId: '11111111-1111-4111-8111-000000000001', delta: -1, sourceType: 'SALE', sourceId: '33333333-3333-4333-8333-000000000001', createdAt: new Date(Date.now() - 3 * 3600 * 1000).toISOString() },
+
+  { id: '44444444-4444-4444-8444-000000000003', productId: '11111111-1111-4111-8111-000000000002', delta: 10, sourceType: 'OPENING', createdAt: '2026-10-24T08:41:00Z' },
+  { id: '44444444-4444-4444-8444-000000000004', productId: '11111111-1111-4111-8111-000000000002', delta: -10, sourceType: 'SALE', createdAt: new Date(Date.now() - 4 * 3600 * 1000).toISOString() },
+
+  { id: '44444444-4444-4444-8444-000000000005', productId: '11111111-1111-4111-8111-000000000003', delta: 6, sourceType: 'OPENING', createdAt: '2026-10-24T08:41:00Z' },
+  { id: '44444444-4444-4444-8444-000000000006', productId: '11111111-1111-4111-8111-000000000003', delta: -1, sourceType: 'SALE', sourceId: '33333333-3333-4333-8333-000000000001', createdAt: new Date(Date.now() - 3 * 3600 * 1000).toISOString() },
+
+  { id: '44444444-4444-4444-8444-000000000007', productId: '11111111-1111-4111-8111-000000000004', delta: 5, sourceType: 'OPENING', createdAt: '2026-10-24T08:41:00Z' },
+  { id: '44444444-4444-4444-8444-000000000008', productId: '11111111-1111-4111-8111-000000000004', delta: -2, sourceType: 'SALE', sourceId: '33333333-3333-4333-8333-000000000003', createdAt: new Date(Date.now() - 3600 * 1000).toISOString() },
+
+  { id: '44444444-4444-4444-8444-000000000009', productId: '11111111-1111-4111-8111-000000000005', delta: 13, sourceType: 'OPENING', createdAt: '2026-10-24T08:41:00Z' },
+  { id: '44444444-4444-4444-8444-000000000010', productId: '11111111-1111-4111-8111-000000000005', delta: -1, sourceType: 'SALE', sourceId: '33333333-3333-4333-8333-000000000002', createdAt: new Date(Date.now() - 2 * 3600 * 1000).toISOString() },
+
+  { id: '44444444-4444-4444-8444-000000000011', productId: '11111111-1111-4111-8111-000000000006', delta: 30, sourceType: 'OPENING', createdAt: '2026-10-24T08:41:00Z' },
+
+  { id: '44444444-4444-4444-8444-000000000012', productId: '11111111-1111-4111-8111-000000000007', delta: 5, sourceType: 'OPENING', createdAt: '2026-10-20T08:00:00Z' },
+  { id: '44444444-4444-4444-8444-000000000013', productId: '11111111-1111-4111-8111-000000000007', delta: -5, sourceType: 'SALE', createdAt: '2026-10-21T08:00:00Z' },
+
+  { id: '44444444-4444-4444-8444-000000000014', productId: '11111111-1111-4111-8111-000000000008', delta: 18, sourceType: 'OPENING', createdAt: '2026-10-24T08:41:00Z' },
+];
 const reversalAuthorizations = new Map([
   [
     '839201',
@@ -282,7 +305,49 @@ const server = createServer(async (request,response) => {
     if (errors.length) {problem(400,'VALIDATION_FAILED','Check product fields.',errors); return;}
     if (products.some((product) => product.reference === body.reference)) {problem(409,'DUPLICATE_REFERENCE','A product with this reference already exists'); return;}
     const product = {...body,id:randomUUID(),active:true,version:1,createdAt:new Date().toISOString(),updatedAt:new Date().toISOString()};
-    product.stockState = stockState(product); products.unshift(product); response.setHeader('Location',`/products/${product.id}`); send(201,product); return;
+    product.stockState = stockState(product); products.unshift(product);
+    if (product.quantity > 0) stockMovements.push({ id: randomUUID(), productId: product.id, delta: product.quantity, sourceType: 'OPENING', createdAt: product.createdAt });
+    response.setHeader('Location',`/products/${product.id}`); send(201,product); return;
+  }
+  const movementsMatch = url.pathname.match(/^\/products\/([^/]+)\/movements$/);
+  if (movementsMatch && request.method === 'GET') {
+    const productId = decodeURIComponent(movementsMatch[1]);
+    const product = products.find((item) => item.id === productId);
+    if (!product) { problem(404, 'NOT_FOUND', 'Product not found.'); return; }
+    const page = Number(url.searchParams.get('page') || 0);
+    const size = Number(url.searchParams.get('size') || 20);
+    if (!Number.isInteger(page) || page < 0 || !Number.isInteger(size) || size < 1 || size > 100) {
+      problem(400, 'VALIDATION_FAILED', 'Invalid pagination.');
+      return;
+    }
+    const productMovements = stockMovements
+      .filter((m) => m.productId === productId)
+      .sort((a, b) => a.createdAt.localeCompare(b.createdAt) || a.id.localeCompare(b.id));
+
+    let running = 0;
+    const withRunning = productMovements.map((m) => {
+      running += m.delta;
+      return {
+        id: m.id,
+        delta: m.delta,
+        sourceType: m.sourceType,
+        ...(m.sourceId ? { sourceId: m.sourceId } : {}),
+        quantityAfter: running,
+        createdAt: m.createdAt,
+      };
+    });
+
+    const newestFirst = [...withRunning].reverse();
+    const items = newestFirst.slice(page * size, (page + 1) * size);
+    send(200, {
+      productId: product.id,
+      currentQuantity: product.quantity,
+      items,
+      page,
+      size,
+      totalItems: newestFirst.length,
+    });
+    return;
   }
   if (/^\/products\/[^/]+$/.test(url.pathname) && request.method === 'GET') {
     const product = products.find((item) => item.id === url.pathname.split('/')[2]);
@@ -321,7 +386,7 @@ const server = createServer(async (request,response) => {
     const createdAt = new Date().toISOString();
     const restock = {id:randomUUID(),productId:product.id,quantity:body.quantity,receivedOn:body.receivedOn,...(body.note?.trim() ? {note:body.note.trim()} : {}),createdBy:user.id,createdAt};
     product.quantity += body.quantity; product.version++; product.updatedAt = createdAt; product.stockState = stockState(product);
-    restocks.unshift(restock); restockSubmissions.set(submissionKey,{userId:user.id,body:canonical,restock}); response.setHeader('Location',`/restocks/${restock.id}`); send(201,restock); return;
+    restocks.unshift(restock); stockMovements.push({ id: randomUUID(), productId: product.id, delta: body.quantity, sourceType: 'RESTOCK', sourceId: restock.id, createdAt }); restockSubmissions.set(submissionKey,{userId:user.id,body:canonical,restock}); response.setHeader('Location',`/restocks/${restock.id}`); send(201,restock); return;
   }
   if (/^\/restocks\/[^/]+$/.test(url.pathname) && request.method === 'GET') {
     const restock = restocks.find((item) => item.id === url.pathname.split('/')[2]);
@@ -402,7 +467,7 @@ const server = createServer(async (request,response) => {
     if (customer) {customer.storeCreditKobo -= applied; if (body.paymentType === 'CREDIT') {customer.balanceKobo += totalKobo-applied; if (totalKobo-applied > 0) customer.hasDebtActivity=true;}}
     const sale = {id:randomUUID(),reference:`S-${String(sales.length+1).padStart(6,'0')}`,paymentType:body.paymentType,...(body.customerId ? {customerId:body.customerId} : {}),...(body.dueDate ? {dueDate:body.dueDate} : {}),totalKobo,lines,createdBy:user.id,createdAt:new Date().toISOString()};
     saleSettlements.set(sale.id,{debt:body.paymentType === 'CREDIT' ? totalKobo-applied : 0,repaid:0,creditUsed:applied});
-    sales.unshift(sale); submissions.set(submissionKey,{body:serialized,sale}); response.setHeader('Location',`/sales/${sale.id}`); send(201,sale); return;
+    sales.unshift(sale); for (const line of lines) stockMovements.push({ id: randomUUID(), productId: line.productId, delta: -line.quantity, sourceType: 'SALE', sourceId: sale.id, createdAt: sale.createdAt }); submissions.set(submissionKey,{body:serialized,sale}); response.setHeader('Location',`/sales/${sale.id}`); send(201,sale); return;
   }
   if (/^\/sales\/[^/]+$/.test(url.pathname) && request.method === 'GET') {
     const sale = sales.find((item) => item.id === url.pathname.split('/')[2]); if (!sale) {problem(404,'NOT_FOUND','Sale not found.'); return;} send(200,sale); return;
@@ -510,6 +575,7 @@ const server = createServer(async (request,response) => {
         product.quantity += line.quantity;
         product.version++;
         product.updatedAt = new Date().toISOString();
+        stockMovements.push({ id: randomUUID(), productId: line.productId, delta: line.quantity, sourceType: 'SALE_REVERSAL', sourceId: sale.id, createdAt: sale.reversedAt });
       }
     }
     const result = {

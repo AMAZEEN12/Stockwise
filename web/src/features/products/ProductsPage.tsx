@@ -1,4 +1,4 @@
-import { Link, Outlet, useOutletContext, useSearchParams } from "react-router";
+import { Link, Outlet, useLocation, useNavigate, useOutletContext, useSearchParams } from "react-router";
 import {
   useProductsQuery,
   useCatalogueQuery,
@@ -25,6 +25,8 @@ const filters: [string, StockState | ""][] = [
 ];
 export function ProductsPage() {
   const user = useOutletContext<User>();
+  const navigate = useNavigate();
+  const location = useLocation();
   const [params, setParams] = useSearchParams();
   const stock =
     filters.find(([, value]) => value === params.get("stockState"))?.[1] ||
@@ -113,7 +115,23 @@ export function ProductsPage() {
               <span>Actions</span>
             </div>
             {data.items.map((product) => (
-              <article className="product-row" key={product.id}>
+              <article
+                className="product-row product-row-clickable"
+                key={product.id}
+                tabIndex={0}
+                aria-label={`${product.name}, ${product.reference}, ${product.category}. View stock movements.`}
+                onClick={(e) => {
+                  if ((e.target as HTMLElement).closest("a, button")) return;
+                  void navigate(`${product.id}/movements${location.search}`);
+                }}
+                onKeyDown={(e) => {
+                  if (e.key === "Enter" || e.key === " ") {
+                    if ((e.target as HTMLElement).closest("a, button")) return;
+                    e.preventDefault();
+                    void navigate(`${product.id}/movements${location.search}`);
+                  }
+                }}
+              >
                 <div className="product-name">
                   <strong title={product.name}>{product.name}</strong>
                   <span className="micro">
@@ -150,7 +168,15 @@ export function ProductsPage() {
                   {product.quantity}
                 </span>
                 <span className="product-actions">
-                  {user.role === "OWNER" && product.active && <Link className="restock-link" to={`${product.id}/restock`}>Restock</Link>}
+                  {user.role === "OWNER" && product.active && (
+                    <Link
+                      className="restock-link"
+                      to={`${product.id}/restock${location.search}`}
+                      onClick={(e) => e.stopPropagation()}
+                    >
+                      Restock
+                    </Link>
+                  )}
                 </span>
               </article>
             ))}

@@ -165,6 +165,29 @@
   border-bottom: 1px solid var(--color-border);
   font-size: 16px;
 }
+.product-row-clickable {
+  cursor: pointer;
+  transition: background-color 150ms ease, color 150ms ease;
+}
+.product-row-clickable:hover {
+  background-color: color-mix(in srgb, var(--color-primary) 8%, var(--color-surface));
+}
+.product-row-clickable:hover strong {
+  color: var(--color-primary);
+  text-decoration: none;
+}
+.product-row-clickable:focus-visible {
+  outline: 2px solid var(--color-primary);
+  outline-offset: -2px;
+  background-color: color-mix(in srgb, var(--color-primary) 10%, var(--color-surface));
+}
+.product-row-clickable:focus-visible strong {
+  color: var(--color-primary);
+  text-decoration: none;
+}
+.product-row-clickable:active {
+  background-color: color-mix(in srgb, var(--color-primary) 14%, var(--color-surface));
+}
 .product-table-head {
   border-top: 1px solid var(--color-border);
   color: var(--color-text-muted);
@@ -423,6 +446,102 @@
 .mobile-menu {
   display: none;
 }
+
+/* Product Movements Drawer */
+.product-movements-sheet {
+  overscroll-behavior: contain;
+}
+.movement-sheet-body {
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+}
+.product-movement-summary-card {
+  padding: 16px;
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-md);
+  background: var(--color-surface-hover);
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+.movement-summary-main {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+.movement-summary-main strong {
+  font-size: 18px;
+  font-weight: 600;
+  line-height: 1.25;
+}
+.movement-summary-meta {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  flex-wrap: wrap;
+  gap: 8px;
+}
+.movement-total-count {
+  font: 12px/1.5 var(--font-mono);
+  color: var(--color-text-muted);
+}
+.movement-feed {
+  list-style: none;
+  padding: 0;
+  margin: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+.movement-feed-item {
+  padding: 14px 16px;
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-md);
+  background: var(--color-surface);
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+.movement-item-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 8px;
+}
+.movement-item-details {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 8px;
+}
+.movement-delta {
+  font: 600 15px/1.2 var(--font-mono);
+}
+.movement-after {
+  color: var(--color-text-muted);
+}
+.movement-after strong {
+  color: var(--color-text);
+}
+.delta-positive {
+  color: var(--color-primary);
+}
+.delta-negative {
+  color: var(--color-danger);
+}
+.movement-source-ref {
+  color: var(--color-text-muted);
+  font: 12px/1.4 var(--font-mono);
+}
+.movement-source-ref code {
+  font-family: inherit;
+  font-size: inherit;
+}
+.movement-empty-panel {
+  margin: 12px 0;
+}
+
 @media (min-width: 769px) and (max-width: 1150px) {
   .shop-sidebar {
     width: 190px;

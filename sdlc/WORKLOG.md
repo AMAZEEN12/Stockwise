@@ -6,6 +6,21 @@ Source document: `Tesa cohort 6 software engineering capstone project.pdf` (TeSA
 > Any agent opening this project: read this file first, then the "Conventions and guidelines" and "Decisions" sections, then the artifacts in this folder. Continue from "Resume here". Don't re-ask anything already answered below.
 
 ## Resume here
+Product stock movements drawer (PR 2), 2026-10-30 (Victor Oyeleke; logged by Antigravity):
+Branch `feat/product-movements-ui` implements the stock movements history drawer for products (`GET /api/v1/products/{id}/movements`, `R17`).
+1. Frontend implementation:
+   - Added `ProductMovementsDrawer.tsx` mounted at child route `/app/products/:productId/movements` via React Router.
+   - Drawer surfaces product name, current quantity badge, movement timeline with directional tags (`RESTOCK`, `SALE`, `INITIAL`, `REVERSAL`), Africa/Lagos (WAT) timestamps, quantity delta badges, and running balance (`quantityAfter`), plus loading skeletons, error state with retry, and empty state.
+   - Products catalogue rows in `ProductsPage.tsx` are clickable and keyboard accessible (`tabIndex={0}`, Enter/Space), styled with brand highlight (`color-mix(in srgb, var(--color-primary) 8%, var(--color-surface))`) without text underlines, preserving active search parameters and keeping restock action buttons isolated.
+   - Added pure validators and formatters in `product-movements.ts`.
+   - Updated development API simulation (`development-api.mjs`) to record and return stock movements for product creation, restocks, sales, and reversals.
+2. Verification:
+   - Vitest: 20 test files, 67 tests passing (`product-movements.test.ts` 9/9).
+   - Strict TypeScript (`tsc --noEmit`): 0 errors.
+   - ESLint: 0 errors, 0 warnings (`--max-warnings 0`).
+   - Vite production build: SUCCESS (`dist/` generated cleanly).
+   - Playwright: 4/4 passing on `products.spec.ts` and 4/4 passing on `restocks.spec.ts` across desktop and mobile with 0 axe accessibility violations.
+
 PR #39 conflict resolution, 2026-10-30: merged `origin/main` at `a1e7918` into `feat/sale-reversal-simulation`. Preserved both the simulated reversal settlement/idempotency state and the restock mock state, as well as both work-log histories. Web lint and typecheck passed; `npm test -- --run` passed 58 tests in 19 files; `npm run check:reversal-simulation` passed; focused reversal, restock and picker Playwright checks passed 18/18 across desktop and mobile. The reversal remains a simulation and does not implement the real service or imply contract approval.
 
 Sale reversal simulation, 2026-10-29: Victor requested the existing PR #31 UI be made ready using mock data while PR #35 and the service contract await agreement. On `feat/sale-reversal-simulation` from `origin/main` `424b297`, the receipt and supervisor dialogs are clearly labelled simulation-only; the API adapter refuses reversal/code requests outside a local simulation session. The simulation restores stock and the selected sale's fixture debt/credit effects, preserves unrelated customer debt, supports identical-key replay and rejects another reversal. This is not a repayment allocator, real authorization or database implementation. See [simulation notes](../docs/sale-reversal-simulation.md); PR #35 remains draft.

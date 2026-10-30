@@ -64,6 +64,16 @@ export const router = createBrowserRouter([
               ).RestockProductPage,
             }),
           },
+          {
+            path: ":productId/movements",
+            lazy: async () => ({
+              Component: (
+                await import(
+                  "../../features/products/ProductMovementsDrawer"
+                )
+              ).ProductMovementsDrawer,
+            }),
+          },
         ],
       },
     ],
