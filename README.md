@@ -129,13 +129,15 @@ Measured on 2026-10-28 from a GitHub Actions runner against the live free-tier s
 | Saturation point | reported | Sales: 4 to 7 virtual users (about 2.5 sales/s). Reads: about 30 to 50 virtual users |
 | Cold start (Render) | reported separately | **Not measured yet** (the one attempt on 2026-10-28 answered in 0.3 s because the service had not gone to sleep) |
 | Last-unit test, 10 devices, 3 rounds | one 201, nine 409, stock 0 | **Passed in all 9 runs, on the deployed service** |
-| LCP / INP | ≤ 2.5 s / ≤ 200 ms | TBD |
+| LCP (Lighthouse, deployed address, 2026-10-30) | ≤ 2.5 s | **Met, narrowly:** 2.4 s mobile, 0.5 s desktop (one run each) |
+| INP (web-vitals, deployed address, 2026-10-30) | ≤ 200 ms | **Not met, by 16 ms:** 216 ms worst interaction in the session (it read 40 ms early on and rose later) |
+| CLS, TBT, Lighthouse scores (deployed address, 2026-10-30) | reported | CLS 0 mobile / 0.001 desktop. TBT 180 ms mobile / 0 ms desktop. Performance 90 mobile / 100 desktop. Accessibility 100 both (automated). Detail: [docs/evidence/web-vitals-2026-10-30/](docs/evidence/web-vitals-2026-10-30/README.md) |
 
 How to read this:
 - Each k6 ramp test stops itself the moment p95 passes its target, so the p95 shown "at stop" is always just over the target. The user count at that moment is the saturation point.
 - The steady test is the fairest sales figure: 3 tills, each selling about every 2 seconds, after a 20 second warm-up. Its times are tight (median 605 ms, p99 675 ms), which points to a fixed cost per sale on this hardware rather than queueing.
 - Spreading sales across products cut p95 by more than half (about 1.5 s to about 0.66 s) but did not reach 500 ms.
-
+- LCP and CLS come from Lighthouse on the opening screen, a lab run with simulated mobile throttling. INP comes from the web-vitals library during a real session and is the slowest interaction seen, so it rose from 40 ms to 216 ms as more of the app was used. Neither is field data from real shops.
 
 ## Known limitations
 - No sign-up, password reset or email (see "Simulated or not yet built").
@@ -146,3 +148,4 @@ How to read this:
 - - **`POST /sales` does not meet the 500 ms target on the free tier.** Over 6 runs on 2026-10-28, p95 was 1.48 to 1.69 s (median about 0.9 s) and the test stopped at 6 to 7 concurrent virtual users (about 2.5 sales per second). The service runs on Render's free plan (0.1 CPU) with Neon's free database, and each sale makes about 8 database calls. The reads meet their targets at far higher load (dashboard and catalogue held to 38 to 50 virtual users). The load test sends every sale to a single product, which also makes sales queue on one stock row, so this is a worst case. We have not isolated how much of the slowdown comes from the free server's CPU and how much from that single-row queueing. The stock guard itself is not affected: the last-unit test passed in every run (one sale succeeds, nine are refused, stock stays at zero).
 - **Cold start.** Render's free service sleeps after 15 minutes idle and takes about a minute to wake. Open the service address about 2 minutes before a demo.
 - **Measured from a GitHub-hosted runner** against the live free-tier services, so network time is included.
+- **INP is 216 ms, over the 200 ms target (DM12).** Measured on 2026-10-30 with the web-vitals library on the deployed web address. It read 40 ms early in the session and rose later, because INP reports the worst interaction. The interaction responsible is [name it / not identified]. We report it as measured. LCP on mobile passes by only 0.1 s (2.4 s against 2.5 s).

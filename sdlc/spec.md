@@ -158,7 +158,7 @@ Not applicable: a new, standalone product. The only shared assets are the cross-
 | Seed data with awkward cases | R19 | planned |
 | Five screen states; optimistic action with rollback; slow network | R17, R18, N11 | planned (R18 = archive/unarchive, DM11) |
 | WCAG 2.2 AA plus a screen-reader test | N9 | planned (final) |
-| LCP/INP target published and measured on the deployed address | N8 | planned (targets DM12) |
+| LCP/INP target published and measured on the deployed address | N8 | measured 2026-10-30: LCP met (2.4 s mobile), INP not met (216 ms), docs/evidence/web-vitals-2026-10-30/ |
 | Stale figures and estimates labelled | UI/UX section | planned |
 | GitHub Actions deploys both tiers; failures block | Pipeline component | planned |
 | Free tiers only; terms verified and dated | N14 | **concerns C2, C3** |

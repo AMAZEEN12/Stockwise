@@ -21,4 +21,4 @@ Last-unit (10 devices, 3 rounds): passed in all 9 runs.
 
 Excluded: one run that stopped at the login step (nothing was measured), and one cold-start attempt that answered in 0.3 s because the service had not gone to sleep.
 Failed dashboard requests in runs 2, 5 and 7: cause not identified. In runs 8 and 9, requests logged as failed were cut off at the moment the test stopped itself.
-Not measured: cold start, Lighthouse (LCP/INP).
+Not measured on 2026-10-28: cold start, Lighthouse. LCP, INP and CLS were measured on 2026-10-30: see docs/evidence/web-vitals-2026-10-30/.
