@@ -215,6 +215,7 @@ const server = createServer(async (request,response) => {
   const isAllowedOrigin =
     !origin ||
     /^http:\/\/(127\.0\.0\.1|localhost):\d+$/.test(origin) ||
+    origin === 'http://192.168.0.143:5173' ||
     origin.includes("devtunnels.ms") ||
     origin === "https://wg7l5hc6-4710.uks1.devtunnels.ms";
   if (origin && !isAllowedOrigin) {response.writeHead(403); response.end(); return;}
@@ -229,6 +230,8 @@ const server = createServer(async (request,response) => {
   const problem = (status,code,detail,errors) => send(status,{type:`https://stockwise.example/problems/${code.toLowerCase().replaceAll('_','-')}`,title:detail,status,code,detail,requestId,...(errors ? {errors}: {})});
   if (request.method === 'OPTIONS') {response.writeHead(204); response.end(); return;}
   const url = new URL(request.url,'http://127.0.0.1:4710');
+  // Match the deployed API base path while preserving existing local mock clients.
+  url.pathname = url.pathname.replace(/^\/api\/v1(?=\/|$)/, '') || '/';
   let body;
   try {
     if (request.method === 'POST') {

@@ -1,3 +1,4 @@
+import { createUuid } from '../../shared/utils/uuid';
 import { useEffect, useState } from "react";
 import { Link, useNavigate, useOutletContext } from "react-router";
 import { Button } from "../../components/ui/button";
@@ -402,7 +403,7 @@ export function NewSalePage() {
     if (state !== "confirm" || (changes.length > 0 && !accepted) || !canConfirm)
       return;
     const snapshot: PendingSale = {
-      key: crypto.randomUUID(),
+      key: createUuid(),
       userId: user.id,
       body: {
         paymentType,

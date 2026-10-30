@@ -1,3 +1,4 @@
+import { useId } from 'react';
 import { Button } from '../../components/ui/button';
 import { StatusBadge } from '../../components/ui/status-badge';
 import { Skeleton } from '../../components/ui/skeleton';
@@ -7,6 +8,26 @@ import { formatMoney } from '../../lib/money';
 import { useDashboardQuery } from '../../service/api/dashboard.api';
 import { InteractiveSalesChart } from './InteractiveSalesChart';
 import '../../styles/dashboard.css';
+
+// Decorative direction cue for the existing demo percentages, not historical sales data.
+function TrendSparkline({ direction }: { direction: 'up' | 'down' }) {
+  const fillId = useId();
+  const points = direction === 'up'
+    ? '2,32 12,27 22,30 32,19 42,23 52,12 62,16 74,4'
+    : '2,5 12,11 22,8 32,20 42,16 52,27 62,23 74,34';
+  return (
+    <svg className={`overview-trend-chart overview-trend-chart--${direction}`} viewBox="0 0 76 40" aria-hidden="true" focusable="false">
+      <defs>
+        <linearGradient id={fillId} x1="0" y1="0" x2="0" y2="1">
+          <stop offset="0%" stopColor="currentColor" stopOpacity="0.22" />
+          <stop offset="75%" stopColor="currentColor" stopOpacity="0" />
+        </linearGradient>
+      </defs>
+      <polygon points={`2,40 ${points} 74,40`} fill={`url(#${fillId})`} />
+      <polyline points={points} fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round" />
+    </svg>
+  );
+}
 
 function formatLagosTime(isoString: string): string {
   const date = new Date(isoString);
@@ -24,29 +45,13 @@ export function DashboardPage() {
   const { data, isLoading, isError, isFetching, refetch } = useDashboardQuery(
     undefined,
     { refetchOnMountOrArgChange: true }
-  );
-
-  const lagosAsOf = data?.computedAt
-    ? new Intl.DateTimeFormat('en-GB', {
-        hour: '2-digit',
-        minute: '2-digit',
-        hour12: false,
-        timeZone: 'Africa/Lagos',
-      }).format(new Date(data.computedAt))
-    : null;
+  )
 
   return (
     <div className="dashboard-page" aria-label="Shop Dashboard">
       <header className="dashboard-header">
         <div className="dashboard-title-group">
           <h1 className="dashboard-page-title">Dashboard</h1>
-          <p
-            className="micro dashboard-subtitle"
-            title="Figures computed from shop records in Africa/Lagos (WAT)."
-          >
-            {lagosAsOf ? `as of ${lagosAsOf} WAT` : 'Computing shop metrics…'}
-            {isFetching && data ? ' · refreshing…' : ''}
-          </p>
         </div>
 
         <div className="dashboard-actions">
@@ -81,80 +86,60 @@ export function DashboardPage() {
         />
       ) : (
         <div className="dashboard-main-grid">
-          {/* Left Column: Top Overview Cards + Recent Sales Table */}
+          {/* Left column: Overview cards, recent sales and low stock alerts */}
           <div className="dashboard-main-column">
             {/* Top Overview Cards Hero Container (following design of screenshot) */}
-            <section
-              className="dashboard-overview-container"
-              aria-label="Shop key performance indicators"
-            >
+
               <div className="overview-cards-row">
                 {/* Card 1: Today's Revenue */}
-                <div className="overview-card">
-                  <div className="overview-card-header">
-                    <span className="overview-info-icon" aria-hidden="true">
-                      ⓘ
-                    </span>
+                <div className="bg-[#1a1c22] rounded-xl p-4 py-6">
+                  <div className="overview-card-header mb-4">
                     <span className="overview-card-label">Total Revenue</span>
-                  </div>
-                  <strong className="overview-card-value">
-                    {formatMoney(data.todaySales.totalKobo)}
-                  </strong>
-                  <div className="overview-card-footer">
-                    <span className="overview-card-subtext">
-                      {data.todaySales.count}{' '}
-                      {data.todaySales.count === 1 ? 'sale' : 'sales'} recorded
-                    </span>
+
                     <span className="metric-trend trend-up">
                       <span aria-hidden="true">↑</span> 17.0%
                     </span>
                   </div>
+                  <div className="overview-card-amount-row">
+                  <strong className="overview-card-value">
+                    {formatMoney(data.todaySales.totalKobo)}
+                  </strong>
+                    <TrendSparkline direction="up" />
+                  </div>
                 </div>
 
                 {/* Card 2: Outstanding Credit */}
-                <div className="overview-card">
-                  <div className="overview-card-header">
-                    <span className="overview-info-icon" aria-hidden="true">
-                      ⓘ
-                    </span>
+                <div className="bg-[#1a1c22] rounded-xl p-4 py-6">
+                  <div className="overview-card-header mb-4">
                     <span className="overview-card-label">Outstanding Credit</span>
+                       <span className="metric-trend trend-down">
+                      <span aria-hidden="true">↓</span> 7.0%
+                    </span>
                   </div>
+                  <div className="overview-card-amount-row">
                   <strong className="overview-card-value text-warning">
                     {formatMoney(data.outstandingCreditKobo)}
                   </strong>
-                  <div className="overview-card-footer">
-                    <span className="overview-card-subtext">
-                      {data.customersOwing}{' '}
-                      {data.customersOwing === 1 ? 'customer' : 'customers'} owing
-                    </span>
-                    <span className="metric-trend trend-down">
-                      <span aria-hidden="true">↓</span> 7.0%
-                    </span>
+                    <TrendSparkline direction="down" />
                   </div>
                 </div>
 
                 {/* Card 3: Store Credit Held */}
-                <div className="overview-card">
-                  <div className="overview-card-header">
-                    <span className="overview-info-icon" aria-hidden="true">
-                      ⓘ
-                    </span>
+                <div className="bg-[#1a1c22] rounded-xl p-4 py-6">
+                  <div className="overview-card-header mb-4">
                     <span className="overview-card-label">Store Credit Held</span>
-                  </div>
-                  <strong className="overview-card-value text-primary">
-                    {formatMoney(data.storeCreditHeldKobo)}
-                  </strong>
-                  <div className="overview-card-footer">
-                    <span className="overview-card-subtext">
-                      Customer deposits held
-                    </span>
-                    <span className="metric-trend trend-up">
+                     <span className="metric-trend trend-up">
                       <span aria-hidden="true">↑</span> 1.8%
                     </span>
                   </div>
+                  <div className="overview-card-amount-row">
+                  <strong className="overview-card-value text-primary">
+                    {formatMoney(data.storeCreditHeldKobo)}
+                  </strong>
+                    <TrendSparkline direction="up" />
+                  </div>
                 </div>
               </div>
-            </section>
 
             {/* Recent Sales Table (Replacing Transaction History, sitting beneath Overview) */}
             <section
@@ -164,9 +149,7 @@ export function DashboardPage() {
               <div className="section-card-header">
                 <div>
                   <h2 className="section-card-title">Recent Sales</h2>
-                  <p className="micro section-card-subtitle">
-                    Newest shop transactions recorded
-                  </p>
+
                 </div>
               </div>
 
@@ -237,16 +220,6 @@ export function DashboardPage() {
                 </div>
               )}
             </section>
-          </div>
-
-          {/* Right Column: Pie Chart (Top Right) + Low Stock (Beneath Pie Chart) */}
-          <div className="dashboard-side-column">
-            {/* Top Right: Pie Chart Card */}
-            <InteractiveSalesChart
-              todaySales={data.todaySales}
-              dateLabel="Today's sales split"
-            />
-
             {/* Low Stock Alerts (Replacing Recent Activity) */}
             <section
               className="dashboard-section-card"
@@ -255,11 +228,7 @@ export function DashboardPage() {
               <div className="section-card-header">
                 <div>
                   <h2 className="section-card-title">Low Stock Alerts</h2>
-                  <p className="micro section-card-subtitle">
-                    {data.lowStockCount > 0
-                      ? `${data.lowStockCount} items at or below reorder threshold`
-                      : 'All products well stocked'}
-                  </p>
+
                 </div>
               </div>
 
@@ -325,6 +294,11 @@ export function DashboardPage() {
                 </div>
               )}
             </section>
+          </div>
+
+          {/* Right column: Sales breakdown */}
+          <div className="dashboard-side-column">
+            <InteractiveSalesChart todaySales={data.todaySales} />
           </div>
         </div>
       )}

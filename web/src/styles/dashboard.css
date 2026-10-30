@@ -104,9 +104,38 @@
 .overview-card-header {
   display: flex;
   align-items: center;
+  justify-content: space-between;
   gap: 8px;
   color: var(--color-text-muted);
 }
+
+.overview-card-header .metric-trend {
+  flex-shrink: 0;
+  white-space: nowrap;
+}
+
+.overview-card-amount-row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 8px;
+  min-width: 0;
+}
+
+.overview-card-amount-row .overview-card-value {
+  min-width: 0;
+  overflow-wrap: anywhere;
+  font-size: clamp(16px, 1.25vw, 20px);
+}
+
+.overview-trend-chart {
+  width: 36px;
+  height: 40px;
+  flex-shrink: 0;
+}
+
+.overview-trend-chart--up { color: #4ade80; }
+.overview-trend-chart--down { color: #fda4af; }
 
 .overview-info-icon {
   display: inline-flex;
@@ -273,6 +302,7 @@
    Interactive Sales Chart Card (Top Right)
    ========================================================================== */
 .interactive-chart-card {
+  container-type: inline-size;
   background: var(--color-surface);
   border: 1px solid var(--color-border);
   border-radius: 16px;
@@ -312,7 +342,9 @@
   display: flex;
   align-items: center;
   gap: 10px;
-  flex-wrap: wrap;
+  flex-wrap: nowrap;
+  width: 100%;
+  justify-content: space-between;
 }
 
 .chart-metric-toggle {
@@ -352,13 +384,12 @@
 }
 
 .custom-select-indicator {
-  display: inline-flex;
-  align-items: center;
   gap: 8px;
   background: color-mix(in srgb, var(--color-primary) 8%, var(--color-surface));
   border: 1px solid color-mix(in srgb, var(--color-primary) 28%, var(--color-border));
   border-radius: var(--radius-md);
-  padding: 6px 12px;
+  padding: 8px 12px;
+  min-height: 44px;
   font: 500 13px/1.4 var(--font-sans);
   color: var(--color-text);
   transition: all 0.15s ease;
@@ -376,14 +407,10 @@
   background: color-mix(in srgb, var(--color-primary) 18%, var(--color-surface));
 }
 
-.color-swatch {
-  width: 10px;
-  height: 10px;
-  border-radius: 2px;
-  flex-shrink: 0;
-}
+
 
 .chart-segment-select {
+  min-width: 100px;
   background: transparent;
   border: none;
   color: var(--color-text);
@@ -391,11 +418,51 @@
   cursor: pointer;
   outline: none;
   padding-right: 4px;
+  text-align:right;
 }
 
 .chart-segment-select option {
   background: #18191d;
   color: var(--color-text);
+}
+
+/* Keep native select semantics while styling Chrome's in-page option picker. */
+@supports (appearance: base-select) {
+  .chart-segment-select,
+  .chart-segment-select::picker(select) {
+    appearance: base-select;
+  }
+
+  .chart-segment-select::picker(select) {
+    margin-top: 10px;
+    min-width: 160px;
+    padding: 6px;
+    border: 1px solid var(--color-border);
+    border-radius: var(--radius-md);
+    background: var(--color-surface);
+    color: var(--color-text);
+  }
+
+  .chart-segment-select option {
+    min-height: 44px;
+    padding: 10px 12px;
+    border-radius: var(--radius-sm);
+    background: transparent;
+  }
+
+  .chart-segment-select option:is(:checked, :hover, :focus) {
+    background: color-mix(in srgb, var(--color-primary) 20%, var(--color-surface));
+    color: var(--color-primary);
+    outline: none;
+  }
+}
+
+@container (max-width: 380px) {
+  .chart-controls { gap: 6px; }
+  .metric-btn { padding: 8px 7px; font-size: 11px; }
+  .chart-metric-detail { display: none; }
+  .custom-select-indicator { padding: 8px; gap: 6px; }
+  .chart-segment-select { min-width: 86px; font-size: 12px; }
 }
 
 /* Donut Chart Visual */

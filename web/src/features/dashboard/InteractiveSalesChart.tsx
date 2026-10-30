@@ -13,7 +13,7 @@ export type ChartMetric = 'revenue' | 'count';
 
 export function InteractiveSalesChart({
   todaySales,
-  dateLabel = "Today's sales",
+  dateLabel,
   className = '',
 }: InteractiveSalesChartProps) {
   const [metric, setMetric] = useState<ChartMetric>('revenue');
@@ -87,7 +87,7 @@ export function InteractiveSalesChart({
       <header className="chart-header">
         <div className="chart-title-group">
           <h2 className="chart-title">Sales Breakdown</h2>
-          <p className="micro chart-subtitle">{dateLabel}</p>
+          {dateLabel && <p className="micro chart-subtitle">{dateLabel}</p>}
         </div>
 
         <div className="chart-controls">
@@ -97,16 +97,18 @@ export function InteractiveSalesChart({
               className={`metric-btn ${metric === 'revenue' ? 'active' : ''}`}
               onClick={() => setMetric('revenue')}
               aria-pressed={metric === 'revenue'}
+              aria-label="Revenue (₦)"
             >
-              Revenue (₦)
+              Revenue<span className="chart-metric-detail"> (₦)</span>
             </button>
             <button
               type="button"
               className={`metric-btn ${metric === 'count' ? 'active' : ''}`}
               onClick={() => setMetric('count')}
               aria-pressed={metric === 'count'}
+              aria-label="Volume (Count)"
             >
-              Volume (Count)
+              Volume<span className="chart-metric-detail"> (Count)</span>
             </button>
           </div>
 
@@ -115,18 +117,7 @@ export function InteractiveSalesChart({
               Filter sales segment
             </label>
             <div className="custom-select-indicator">
-              <span
-                className="color-swatch"
-                style={{
-                  backgroundColor:
-                    selectedSliceId === 'paid'
-                      ? '#3b82f6'
-                      : selectedSliceId === 'credit'
-                        ? '#1d4ed8'
-                        : '#60a5fa',
-                }}
-                aria-hidden="true"
-              />
+             
               <select
                 id={selectId}
                 className="chart-segment-select"

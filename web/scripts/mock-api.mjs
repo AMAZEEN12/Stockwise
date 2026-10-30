@@ -29,8 +29,9 @@ contract.paths["/auth/sessions"].post.responses["201"].content[
 contract.paths["/me"].get.responses["200"].content["application/json"].example =
   user;
 
-const publicUrl = process.env.DEV_TUNNEL_URL || "https://wg7l5hc6-4710.uks1.devtunnels.ms";
+const publicUrl = (process.env.DEV_TUNNEL_URL || "https://wg7l5hc6-4710.uks1.devtunnels.ms").replace(/\/+$/, "").replace(/\/api\/v1$/, "");
 contract.servers = [
+  { url: `${publicUrl}/api/v1`, description: "Public Dev Tunnel API" },
   { url: publicUrl, description: "Public Dev Tunnel" },
   { url: "http://127.0.0.1:4710", description: "Localhost" },
   ...(contract.servers || []).filter((s) => s.url !== "http://127.0.0.1:4710"),
@@ -55,7 +56,7 @@ if (process.argv.includes("--prepare-only")) {
       : prismPackage.bin.prism,
   );
   console.log(
-    `Contract mock running on ${publicUrl} and http://127.0.0.1:4710. Fixed OWNER fixture; no real account is authenticated. Public example inputs are in .env.example.`,
+    `Starting contract mock on port 4710. Forward this port to ${publicUrl}; frontend API URL: ${publicUrl}/api/v1. Fixed OWNER fixture; no real account is authenticated. Public example inputs are in .env.example.`,
   );
   const child = spawn(
     process.execPath,

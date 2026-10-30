@@ -1,3 +1,4 @@
+import { createUuid } from '../../shared/utils/uuid';
 import { useRef, useState } from 'react';
 import { Dialog } from '../../components/ui/dialog';
 import { Button } from '../../components/ui/button';
@@ -71,7 +72,7 @@ export function ReverseSaleDialog({
 
     setErrorMsg(null);
     try {
-      const attempt = pending || {key:crypto.randomUUID(),body:{reason,note:note.trim() || undefined,authorizationCode:isAssistant ? cleanCode : undefined}};
+      const attempt = pending || {key:createUuid(),body:{reason,note:note.trim() || undefined,authorizationCode:isAssistant ? cleanCode : undefined}};
       if (!pending) {
         const snapshot = JSON.stringify(attempt);
         sessionStorage.setItem(storageKey, snapshot);
