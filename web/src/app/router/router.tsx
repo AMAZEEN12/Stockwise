@@ -56,6 +56,14 @@ export const router = createBrowserRouter([
               ).AddProductPage,
             }),
           },
+          {
+            path: ":productId/restock",
+            lazy: async () => ({
+              Component: (
+                await import("../../features/restocks/RestockProductPage")
+              ).RestockProductPage,
+            }),
+          },
         ],
       },
     ],

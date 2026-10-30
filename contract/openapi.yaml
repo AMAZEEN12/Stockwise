@@ -1,7 +1,7 @@
 openapi: 3.1.0
 info:
   title: Stockwise API
-  version: 0.2.0
+  version: 0.3.0
   summary: Stock and customer-credit ledger for one demonstration shop (TeSA Cohort 6, Team 3).
   description: |
     Contract v0.1 covers the **Monday 26 Oct MVP paths only** (EXECUTION.md step 2).
@@ -10,8 +10,11 @@ info:
     - specified customer search ordering and `asOf` on `CustomerPage` (proposal B);
     - safe integer bounds on money (`Kobo` maximum 9007199254740991) (proposal C);
     - `GET /product-categories` and optional `active` query filter on `GET /products` (proposal D).
+    v0.3.0 adds restock recording and history (R6):
+    - `POST /restocks`, OWNER-only and idempotent via a required `Idempotency-Key`;
+    - `GET /restocks`, with optional product filtering and stable newest-first pagination.
     A v0.1.0 client keeps working unchanged.
-    Remaining paths (restocks, repayments, reversals, ledger, dashboard, product edit/archive,
+    Remaining paths (repayments, reversals, ledger, dashboard, product edit/archive,
     movements) are added in later versions, each logged in `decisions.md` §3.
 
     Conventions:
@@ -20,7 +23,7 @@ info:
     - Every error is `application/problem+json` (RFC 9457) with a machine-readable `code`
       and the `requestId`.
     - Send `X-Request-Id` (UUID) on every request; the service echoes it (and generates one if absent).
-    - Recording writes (`POST /sales`) require an `Idempotency-Key` (UUID). Replaying the same key with
+    - Recording writes (`POST /sales`, `POST /restocks`) require an `Idempotency-Key` (UUID). Replaying the same key with
       the same body returns the original result; the same key with a different body returns 422.
       `POST /customers` accepts the same header optionally (v0.2.0).
     - All timestamps are UTC (RFC 3339). "Today" filters use the Africa/Lagos day.
@@ -43,6 +46,8 @@ tags:
     description: Customers who buy on credit
   - name: sales
     description: Paid and credit sales (the stock-protected rule)
+  - name: restocks
+    description: Stock received from suppliers
   - name: health
     description: Liveness
 
@@ -262,6 +267,130 @@ paths:
           $ref: '#/components/responses/BadRequest'
         '401':
           $ref: '#/components/responses/Unauthorized'
+
+  /restocks:
+    get:
+      tags: [restocks]
+      operationId: listRestocks
+      summary: List recorded restocks
+      description: Safe. Any authenticated role. Newest first, with UUID as the stable tie-breaker.
+      parameters:
+        - $ref: '#/components/parameters/RequestId'
+        - name: productId
+          in: query
+          description: Return restocks for one product only.
+          schema:
+            type: string
+            format: uuid
+        - $ref: '#/components/parameters/Page'
+        - $ref: '#/components/parameters/Size'
+      responses:
+        '200':
+          description: A page of restocks
+          headers:
+            X-Request-Id:
+              $ref: '#/components/headers/RequestId'
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/RestockPage'
+        '400':
+          $ref: '#/components/responses/BadRequest'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+    post:
+      tags: [restocks]
+      operationId: createRestock
+      summary: Record stock received
+      description: |
+        **Idempotent via `Idempotency-Key`** (required). OWNER only.
+
+        In one transaction the service claims the key, increases the product quantity, increments
+        its version, records the immutable restock and appends a `RESTOCK` stock movement. The
+        `receivedOn` date records when the stock arrived; `createdAt` records when Stockwise saved it.
+
+        Client's part: generate one UUID for the confirmed attempt and keep the same body and key
+        until a definitive response arrives. A replay by the same user with the same normalized body
+        returns the original 201 response without increasing stock again. A different body or user
+        with that key gets 422 `IDEMPOTENCY_KEY_REUSED`.
+      parameters:
+        - $ref: '#/components/parameters/RequestId'
+        - $ref: '#/components/parameters/IdempotencyKey'
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/RestockCreate'
+      responses:
+        '201':
+          description: Restock recorded (or the original result of a replayed key)
+          headers:
+            X-Request-Id:
+              $ref: '#/components/headers/RequestId'
+            Location:
+              description: URL of the restock
+              schema:
+                type: string
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Restock'
+        '400':
+          $ref: '#/components/responses/BadRequest'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '403':
+          $ref: '#/components/responses/Forbidden'
+        '404':
+          $ref: '#/components/responses/NotFound'
+        '409':
+          description: '`STOCK_LIMIT_EXCEEDED`: adding the quantity would exceed the supported 32-bit stock count; nothing was recorded.'
+          headers:
+            X-Request-Id:
+              $ref: '#/components/headers/RequestId'
+          content:
+            application/problem+json:
+              schema:
+                $ref: '#/components/schemas/Problem'
+        '422':
+          description: '`IDEMPOTENCY_KEY_REUSED`: this key was already used with a different request body or by another user.'
+          headers:
+            X-Request-Id:
+              $ref: '#/components/headers/RequestId'
+          content:
+            application/problem+json:
+              schema:
+                $ref: '#/components/schemas/Problem'
+
+  /restocks/{restockId}:
+    get:
+      tags: [restocks]
+      operationId: getRestock
+      summary: One recorded restock
+      description: Safe. Any authenticated role.
+      parameters:
+        - $ref: '#/components/parameters/RequestId'
+        - name: restockId
+          in: path
+          required: true
+          schema:
+            type: string
+            format: uuid
+      responses:
+        '200':
+          description: The restock
+          headers:
+            X-Request-Id:
+              $ref: '#/components/headers/RequestId'
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Restock'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '404':
+          $ref: '#/components/responses/NotFound'
 
   /customers:
     get:
@@ -682,6 +811,7 @@ components:
             - NOT_FOUND
             - DUPLICATE_REFERENCE
             - INSUFFICIENT_STOCK
+            - STOCK_LIMIT_EXCEEDED
             - IDEMPOTENCY_KEY_REUSED
             - DATABASE_UNAVAILABLE
             - INTERNAL_ERROR
@@ -831,6 +961,70 @@ components:
           type: array
           items:
             $ref: '#/components/schemas/Product'
+        page:
+          type: integer
+          format: int32
+        size:
+          type: integer
+          format: int32
+        totalItems:
+          type: integer
+          format: int64
+
+    RestockCreate:
+      type: object
+      required: [productId, quantity, receivedOn]
+      additionalProperties: false
+      properties:
+        productId:
+          type: string
+          format: uuid
+        quantity:
+          type: integer
+          format: int32
+          minimum: 1
+          maximum: 2147483647
+        receivedOn:
+          type: string
+          format: date
+        note:
+          type: string
+          maxLength: 500
+
+    Restock:
+      type: object
+      required: [id, productId, quantity, receivedOn, createdBy, createdAt]
+      properties:
+        id:
+          type: string
+          format: uuid
+        productId:
+          type: string
+          format: uuid
+        quantity:
+          type: integer
+          format: int32
+          minimum: 1
+        receivedOn:
+          type: string
+          format: date
+        note:
+          type: string
+        createdBy:
+          type: string
+          format: uuid
+        createdAt:
+          type: string
+          format: date-time
+
+    RestockPage:
+      type: object
+      required: [items, page, size, totalItems]
+      properties:
+        items:
+          type: array
+          items:
+            $ref: '#/components/schemas/Restock'
         page:
           type: integer
           format: int32

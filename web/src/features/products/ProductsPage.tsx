@@ -110,6 +110,7 @@ export function ProductsPage() {
               <span>Price</span>
               <span>Stock</span>
               <span>Quantity</span>
+              <span>Actions</span>
             </div>
             {data.items.map((product) => (
               <article className="product-row" key={product.id}>
@@ -148,6 +149,9 @@ export function ProductsPage() {
                   <span>Qty </span>
                   {product.quantity}
                 </span>
+                <span className="product-actions">
+                  {user.role === "OWNER" && product.active && <Link className="restock-link" to={`${product.id}/restock`}>Restock</Link>}
+                </span>
               </article>
             ))}
           </div>
@@ -180,6 +184,9 @@ export function ProductsPage() {
           onCreated: () => {
             toast({ variant: "success", title: "Product added" });
             setParams({});
+          },
+          onRestocked: (quantity: number, productName: string) => {
+            toast({ variant: "success", title: `${productName} restocked`, description: `${quantity} units added.` });
           },
         }}
       />

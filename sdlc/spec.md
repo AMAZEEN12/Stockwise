@@ -100,11 +100,13 @@ Resources are nouns. Everything is under `/api/v1`. Every error uses `applicatio
 | `GET /customers`, `POST /customers`, `GET /customers/{id}` | safe / neither / safe | OWNER, ASSISTANT (ADMIN read) | |
 | `GET /customers/{id}/ledger` | safe | any | Entries with running balance |
 | `POST /repayments` | idempotent via key | OWNER, ASSISTANT | 409 `REPAYMENT_EXCEEDS_BALANCE` |
-| `POST /reversals` | idempotent (one per entry, enforced by a unique constraint) | OWNER, ADMIN (DM10) | `{entryType: SALE\|REPAYMENT\|RESTOCK, entryId, reason}`. 409 `ALREADY_REVERSED` / `INSUFFICIENT_STOCK`. A partly repaid credit sale produces store credit (R12) |
+| `POST /sales/{saleId}/reversal` | proposed required `Idempotency-Key`; one reversal per sale | OWNER, ADMIN (DM10); assistant code access remains proposed | PR #31's sale-specific route. R11 stock and ledger reversal and R12 store-credit treatment are one atomic operation. Exact response and problem codes require contract agreement. Repayment/restock reversal routes remain to be agreed; this sale route does not replace them. |
 | `GET /dashboard` | safe | any | Includes `computedAt` and `isDemonstrationData: true` |
 | `GET /health` | safe | public | Liveness and database reachability |
 
 **Permission matrix** (DM10): OWNER can do everything. ASSISTANT can read, record sales, create customers and record repayments. ADMIN is read-only across the shop (the "demonstration administrator reviewing the shop") **except that it can also create reversals**. OWNER and ADMIN have full reversal access.
+
+Reversal route alignment (2026-10-29): Victor requests the sale-specific route used by PR #31. It remains a draft contract change until the API and data owners agree. The proposed assistant authorization code does not yet amend the DM10 permission matrix. A sale reversal is not complete if it restores only stock: the same transaction must apply R11 and, where applicable, R12, with append-only records and no partial success. See `docs/sales-reversal-authorization-proposal.md`.
 
 ### Data model
 All money columns are `BIGINT` (kobo). All timestamps are `timestamptz`, stored in UTC.
