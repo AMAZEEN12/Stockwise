@@ -121,9 +121,9 @@ Measured on 2026-10-28 from a GitHub Actions runner against the live free-tier s
 
 | Measure | Target (DM12) | Result |
 |----|----|----|
-| `POST /sales` p95, 3 tills, steady, sales spread across 20 products (warm) | ≤ 500 ms | **Not met: p95 656 ms** (median 605 ms, slowest 717 ms, 136 requests, no failures) |
-| `POST /sales` p95, ramp, every sale on one product | ≤ 500 ms | **Not met:** p95 1.45 to 1.69 s at 6 to 7 virtual users (9 runs) |
-| `POST /sales` p95, ramp, sales spread across 20 products | ≤ 500 ms | **Not met:** p95 660 to 667 ms at 4 virtual users (2 runs, about 55 requests each) |
+| `POST /sales` p95, 3 tills, steady, sales spread across 20 products (warm) | ≤ 500 ms | **Met after the sale change: p95 403 ms** (median 367 ms, slowest 479 ms, no failures). Before the change: 656 to 689 ms. |
+| `POST /sales` p95, ramp, sales spread across 20 products | ≤ 500 ms | Held to about 39 virtual users (28 requests/s; p95 502 ms where it stopped). Before the change it stopped at 4 to 5 users. |
+| `POST /sales` p95, ramp, every sale on one product (worst case) | ≤ 500 ms | **Not met: p95 596 ms** (median 372 ms) at the first check, about 7 users. Before the change: 1.46 to 1.70 s. |
 | Dashboard p95 (warm) | ≤ 800 ms | Read paths only (product and sales lists; no `GET /dashboard` yet). After tuning, held to 38 to 50 virtual users (29 to 41 requests/s); p95 800 to 832 ms where each run stopped |
 | Product catalogue p95 (warm) | 500 ms yardstick | After tuning, held to 30 to 47 virtual users (26 to 41 requests/s); p95 505 to 543 ms where each run stopped |
 | Saturation point | reported | Sales: 4 to 7 virtual users (about 2.5 sales/s). Reads: about 30 to 50 virtual users |
