@@ -6,11 +6,11 @@ Source document: `docs/oldest-outstanding-sale-allocation-proposal.md`, PR #40, 
 > Any agent opening this project: read this file first, then the "Conventions and guidelines" and "Decisions" sections, then the artifacts in this folder. Continue from "Resume here". Don't re-ask anything already answered below.
 
 ## Resume here
-- **Stage:** Build (Execution step 1: OpenAPI contract definition)
-- **Step:** SDLC artifact chain complete (intent, spec, plan, test-plan, release, EXECUTION all accepted). Ready to execute Step 1: contract additions in `contract/openapi.yaml`.
-- **In progress:** Beginning implementation of Step 1 (`contract/openapi.yaml`).
-- **Next action:** Update `contract/openapi.yaml` with `POST /sales/{saleId}/reversal` and `POST /reversals/authorizations`, run Redocly lint, and write `V6__sale_reversal_allocation.sql`.
-- **Waiting on:** Nothing (ready to code).
+- **Stage:** Complete (Implementation & Verification passed 100%)
+- **Step:** Ready for final review, commit, and PR creation.
+- **In progress:** Preparing git commit and pull request.
+- **Next action:** Commit implementation changes, push `feat/sale-reversal-allocation`, and open PR into `main`.
+- **Waiting on:** User review / PR review.
 
 ## How to continue without the sdlc skill
 1. Stages run in order: Plan (`intent.md`), Design (`spec.md`), Build (`plan.md` + repo `AGENTS.md`), Test (`test-plan.md`), Deploy (`release.md` + repo `REVIEW.md`), Maintain (`monitoring.md`), then `EXECUTION.md`.
@@ -69,3 +69,15 @@ Append-only, newest last.
 - 2026-10-30 11:59 · user · Answered Q1-Q5 (proceed with real sale reversal & allocation, full chain, PR #40 directions, reconcile merged sign-offs).
 - 2026-10-30 12:01 · agent · Reconciled two-engineer sign-off records in `decisions.md` §3 for restocks (PR #38), customer activity (PR #25), and dashboard/ledger (PR #33).
 - 2026-10-30 12:02 · agent · Created `sdlc/sale-reversal-allocation/WORKLOG.md` and initiated Stage 1 Plan (`intent.md`).
+- 2026-10-30 12:08 · agent · Completed SDLC artifact chain: `intent.md`, `spec.md`, `plan.md`, `test-plan.md`, `release.md`, `EXECUTION.md`. Committed as `dc734e9`.
+- 2026-10-30 12:12 · agent · Updated `contract/openapi.yaml` to v0.4.0 with `/sales/{saleId}/reversal` and `/reversals/authorizations`. Linted with Redocly CLI.
+- 2026-10-30 12:14 · agent · Regenerated web contract types in `web/src/api/schema.d.ts` via `npm run generate:api`.
+- 2026-10-30 12:15 · agent · Created Flyway migration `V6__sale_reversal_allocation.sql` and rollback `U6__sale_reversal_allocation.sql`.
+- 2026-10-30 12:23 · agent · Verified migration rollback up/down/up via `MigrationRollbackIT`.
+- 2026-10-30 12:26 · agent · Implemented `ReversalAuthorizationController`, `ReversalAuthorizationRepository`, `SaleReversalRequestHash`, `SaleReversalService`, `SaleReversalController`, and `ProblemHandler` mappings.
+- 2026-10-30 12:30 · agent · Implemented oldest-first debt repayment allocation engine in `CustomerRepository` (`RepaymentAllocation`).
+- 2026-10-30 12:34 · agent · Verified with `RepaymentAllocationIT` (3 tests) and `SaleReversalIT` (6 tests).
+- 2026-10-30 12:35 · agent · Verified schema rules via `SchemaRulesIT` (8 tests).
+- 2026-10-30 12:38 · agent · Ran full service verification (`mvnw verify`): 131 tests passed, 0 failures, 100% coverage thresholds met.
+- 2026-10-30 12:39 · agent · Ran full web verification: TypeScript typecheck passed (0 errors), Vitest suite passed (19 test files, 58 tests passed).
+- 2026-10-30 12:40 · agent · Updated `docs/rule-removal-log.md` and logged `v0.4.0` in `decisions.md` §3. Ready for commit and PR.
