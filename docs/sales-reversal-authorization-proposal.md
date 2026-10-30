@@ -49,6 +49,7 @@ In retail shops and supermarkets, inventory and cash shrinkage frequently occur 
 - **Method & Path:** `POST /api/v1/sales/{saleId}/reversal`
 - **Authorized Roles:** `OWNER`, `ADMIN`, `ASSISTANT`
 - **Headers:** `Idempotency-Key: <UUID>` (Required)
+- **Route alignment:** PR #31's frontend already uses this sale-specific route. Use this route for the future sale reversal contract and service; do not implement a competing generic sale reversal endpoint. The routes for reversing restocks and repayments are separate and remain to be agreed.
 - **Request Body (`SaleReversalRequest`):**
   ```json
   {
@@ -58,6 +59,9 @@ In retail shops and supermarkets, inventory and cash shrinkage frequently occur 
   }
   ```
   - `authorizationCode`: String (6 digits). Required for role `ASSISTANT`; optional/ignored for `OWNER` or `ADMIN`.
+- **Required combined outcome (R11 and R12):** A successful reversal restores every sold product's stock and appends the corresponding reversing stock movements. For a credit sale it also corrects the customer's debt and writes the corresponding ledger entries. If repayments mean the reversed amount exceeds the debt still attributable under the agreed ledger rules, the excess becomes store credit without making debt negative. These effects, the unique reversal record, and any code redemption must commit together or all roll back. Both original and reversal must remain visible; nothing is edited or deleted in the movement or ledger history. Existing customer debt or prior store-credit use must be handled from actual ledger history rather than assuming all balance belongs to this sale; the allocation details need data-owner agreement.
+- **Acceptance example:** A ₦10,000 credit sale, followed by a ₦6,000 repayment and then this one reversal, restores stock, leaves the relevant debt at ₦0, and records ₦6,000 store credit. A subsequent ₦4,000 sale consumes ₦4,000 atomically and leaves ₦2,000. Concurrent sales cannot spend the same credit twice.
+- **Retry and uniqueness:** An identical retry with the same key must return the original result without repeating stock, ledger, credit or authorization effects. A different key targeting an already reversed sale must be rejected, including concurrent requests. Reuse of a key with a different request or user must be rejected. Final status codes and response shape require agreement; the table below describes PR #31's proposal rather than an accepted contract.
 - **Validation & Business Rules (Database Guarded):**
   | Scenario | HTTP Status | Problem Code | Message |
   |---|---|---|---|
@@ -71,7 +75,9 @@ In retail shops and supermarkets, inventory and cash shrinkage frequently occur 
 
 ## 3. Database Schema & Concurrency Guard
 
-### 3.1 Migration `V5__reversal_authorizations.sql` (Proposed)
+### 3.1 Reversal authorization migration (Proposed)
+
+Choose the next available Flyway version after merging prerequisite work; `feat/restocks` currently proposes V5, so do not reuse V5 if it lands first. Provide the matching undo script and rollback test.
 ```sql
 CREATE TABLE reversal_authorization (
     id UUID PRIMARY KEY DEFAULT gen_random_uuid(),

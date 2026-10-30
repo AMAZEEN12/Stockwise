@@ -15,6 +15,7 @@ public enum ErrorCode {
     NOT_FOUND(HttpStatus.NOT_FOUND, "not-found", "Not found"),
     DUPLICATE_REFERENCE(HttpStatus.CONFLICT, "duplicate-reference", "Reference already in use"),
     INSUFFICIENT_STOCK(HttpStatus.CONFLICT, "insufficient-stock", "Not enough stock"),
+    STOCK_LIMIT_EXCEEDED(HttpStatus.CONFLICT, "stock-limit-exceeded", "Stock limit exceeded"),
     IDEMPOTENCY_KEY_REUSED(HttpStatus.UNPROCESSABLE_CONTENT, "idempotency-key-reused", "Idempotency-Key already used"),
     DATABASE_UNAVAILABLE(HttpStatus.SERVICE_UNAVAILABLE, "database-unavailable", "Database unavailable"),
     INTERNAL_ERROR(HttpStatus.INTERNAL_SERVER_ERROR, "internal-error", "Something went wrong");
