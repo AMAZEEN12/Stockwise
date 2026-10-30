@@ -61,7 +61,8 @@ export function ProductMovementsPage() {
         <>
           <header className="product-movements-header">
             <div className="product-movements-title-group">
-              <h1>{product.name}’s Stock Movements</h1>
+              <h1 className="product-movements-page-title">Stock Movements</h1>
+              <h2 className="product-movements-product-name">{product.name}</h2>
               <p className="micro product-movements-subtitle">
                 {product.reference} · {product.category}
               </p>
@@ -69,21 +70,14 @@ export function ProductMovementsPage() {
             <div className="product-movements-actions">
               {user?.role === 'OWNER' && (
                 <Button
-                  variant="secondary"
+                  variant="primary"
                   size="md"
                   className="product-restock-btn"
                   onClick={() => void navigate(`/app/products/${productId}/restock`)}
                 >
-                  + Restock
+                  Restock
                 </Button>
               )}
-              <Link
-                to="/app/products"
-                className="icon-button product-close-btn"
-                aria-label="Close stock movements"
-              >
-                <span aria-hidden="true">×</span>
-              </Link>
             </div>
           </header>
 

@@ -482,45 +482,32 @@
   gap: 16px;
   flex-wrap: wrap;
 }
-.product-movements-title-group h1 {
+.product-movements-title-group {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+.product-movements-page-title {
   font: 700 28px/1.2 var(--font-sans);
-  margin: 0 0 6px;
+  margin: 0;
   color: var(--color-text);
+}
+.product-movements-product-name {
+  font: 600 20px/1.3 var(--font-sans);
+  margin: 0;
+  color: var(--color-text-muted);
 }
 .product-movements-subtitle {
   color: var(--color-text-muted);
+  margin: 0;
 }
 .product-movements-actions {
   display: flex;
   align-items: center;
   gap: 12px;
 }
-.product-close-btn {
-  display: inline-flex;
-  align-items: center;
-  justify-content: center;
-  width: 44px;
-  height: 44px;
-  min-width: 44px;
-  border: 1px solid var(--color-border-input);
-  border-radius: var(--radius-md);
-  color: var(--color-text);
-  font-size: 28px;
-  line-height: 1;
-  text-decoration: none;
-  cursor: pointer;
-  background: var(--color-surface);
-  transition: border-color 0.15s ease, background-color 0.15s ease, color 0.15s ease;
-}
-.product-close-btn:hover {
-  border-color: var(--color-primary);
-  background: var(--color-surface-hover);
-  text-decoration: none;
-  color: var(--color-primary);
-}
-.product-close-btn:focus-visible {
-  outline: 2px solid var(--color-primary);
-  outline-offset: -2px;
+.product-restock-btn {
+  font-weight: 600;
 }
 .product-movements-summary-cards {
   display: grid;
@@ -535,6 +522,19 @@
   display: flex;
   flex-direction: column;
   gap: 8px;
+  transition: border-color 0.15s ease, background-color 0.15s ease;
+}
+.product-movements-summary-card:hover {
+  border-color: var(--color-primary);
+  background-color: color-mix(in srgb, var(--color-primary) 5%, var(--color-surface));
+}
+.product-movements-summary-card:hover .product-card-label {
+  color: var(--color-primary);
+  transition: color 0.15s ease;
+}
+.product-movements-summary-card:hover .product-card-value {
+  color: var(--color-primary);
+  transition: color 0.15s ease;
 }
 .product-card-label {
   color: var(--color-text-muted);
@@ -666,6 +666,11 @@
   .product-movements-page {
     padding: 16px 0 48px;
     gap: 16px;
+  }
+  .product-movements-actions {
+    width: 100%;
+    display: flex;
+    justify-content: flex-end;
   }
   .product-statement-table {
     display: none;

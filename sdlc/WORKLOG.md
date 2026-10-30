@@ -8,10 +8,13 @@ Source document: `Tesa cohort 6 software engineering capstone project.pdf` (TeSA
 ## Resume here
 Product stock movements dedicated page (PR 2), 2026-10-30 (Victor Oyeleke; logged by Antigravity):
 Branch `feat/product-movements-ui` implements the stock movements history dedicated page for products (`GET /api/v1/products/{id}/movements`, `R17`).
-1. Frontend implementation:
+1. Frontend implementation & refinements:
    - Dedicated page: Added `ProductMovementsPage.tsx` mounted at dedicated route `/app/products/:productId/movements` (sibling to `/app/products` in `router.tsx`).
-   - Clean header controls: Removed the bottom "Close" button; the header `"×"` close link is visible and functional on both mobile and desktop (WCAG compliant 44px touch target) for returning to `/app/products`, alongside breadcrumb navigation and an optional `+ Restock` button for the Owner.
-   - Page surfaces product details, current stock badge, selling price, total movements, and a dual responsive view: comprehensive table on desktop and compact feed cards on mobile, with Africa/Lagos (WAT) timestamps, quantity delta badges, and running balance (`quantityAfter`), plus loading skeletons, error state with retry, and empty state.
+   - Clean header hierarchy: `Stock Movements` is the top `<h1>` heading, `{product.name}` is a subordinate `<h2>` subheading, followed by product reference and category.
+   - Restock action: Green button (`variant="primary"`) on both desktop and mobile, right-aligned on mobile (`justify-content: flex-end`).
+   - Summary cards interaction: Hovering over current stock, selling price, and recorded movements cards highlights border, background, labels, and values in brand green (`var(--color-primary)`).
+   - Navigation: Removed redundant bottom "Close" button and unneeded "×" icon; return navigation is handled cleanly via the `← Back to products` breadcrumb link.
+   - Dual responsive view: Comprehensive statement table on desktop and compact feed cards on mobile, with Africa/Lagos (WAT) timestamps, quantity delta badges, and running balance (`quantityAfter`), plus loading skeletons, error state with retry, and empty state.
    - Products catalogue rows in `ProductsPage.tsx` are clickable and keyboard accessible (`tabIndex={0}`, Enter/Space), styled with brand highlight (`color-mix(in srgb, var(--color-primary) 8%, var(--color-surface))`) without text underlines, preserving active search parameters and keeping restock action buttons isolated.
    - Added pure validators and formatters in `product-movements.ts`.
    - Updated development API simulation (`development-api.mjs`) to record and return stock movements for product creation, restocks, sales, and reversals.

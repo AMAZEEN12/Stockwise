@@ -80,7 +80,11 @@ test('stock movement history dedicated page opens on product row click and shows
 
   // Dedicated page opens
   await expect(page).toHaveURL(new RegExp(`/app/products/${targetProduct.id}/movements`));
-  await expect(page.getByRole('heading', { name: "Indomie Chicken 70g’s Stock Movements" })).toBeVisible();
+  await expect(page.getByRole('heading', { level: 1, name: 'Stock Movements' })).toBeVisible();
+  await expect(page.getByRole('heading', { level: 2, name: targetProduct.name })).toBeVisible();
+
+  // Restock button is visible and primary
+  await expect(page.getByRole('button', { name: 'Restock' })).toBeVisible();
 
   // Displays product details
   await expect(page.getByText(new RegExp(targetProduct.category))).toBeVisible();
@@ -93,8 +97,9 @@ test('stock movement history dedicated page opens on product row click and shows
   await expect(page.getByText('Opening stock', { exact: true }).filter({ visible: true })).toBeVisible();
   await expect(page.getByText(`+${targetProduct.quantity + 1}`, { exact: true }).filter({ visible: true })).toBeVisible();
 
-  // Verify there is no "Close" button (the "x" is enough)
+  // Verify there is no "Close" button and no 'x' icon
   await expect(page.getByRole('button', { name: 'Close', exact: true })).toHaveCount(0);
+  await expect(page.getByRole('link', { name: 'Close stock movements' })).toHaveCount(0);
 
   // Accessibility audit
   const axe = await new AxeBuilder({ page }).analyze();
@@ -102,9 +107,9 @@ test('stock movement history dedicated page opens on product row click and shows
 
   await page.screenshot({ path: info.outputPath('product-movements-page.png'), fullPage: true });
 
-  // Close via 'x' link
-  const closeBtn = page.getByRole('link', { name: 'Close stock movements' });
-  await expect(closeBtn).toBeVisible();
-  await closeBtn.click();
+  // Return to products via breadcrumb
+  const backLink = page.getByRole('link', { name: /Back to products/i });
+  await expect(backLink).toBeVisible();
+  await backLink.click();
   await expect(page).toHaveURL(/\/app\/products$/);
 });
