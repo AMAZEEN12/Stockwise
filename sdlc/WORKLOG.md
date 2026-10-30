@@ -6,6 +6,8 @@ Source document: `Tesa cohort 6 software engineering capstone project.pdf` (TeSA
 > Any agent opening this project: read this file first, then the "Conventions and guidelines" and "Decisions" sections, then the artifacts in this folder. Continue from "Resume here". Don't re-ask anything already answered below.
 
 ## Resume here
+PR #38 conflict resolution, 2026-10-30: merged `origin/main` at `d464911` into `feat/restocks`, preserving restock additions alongside the newer movement, ledger and dashboard contract, the mock reversal and restock state, and both branches' decision and handover history. Regenerated web API types from the combined contract. Contract lint, web lint and typecheck, 58 web unit tests, service verification (10 unit and 122 integration tests, including migration rollback; coverage checks met), and all 4 focused desktop/mobile restock browser tests passed. The restock contract remains a draft pending the recorded two-engineer agreement; merging main is not a PR approval.
+
 Restocks Docker verification, 2026-10-30: Docker Desktop was started and PostgreSQL 17 Testcontainers ran. After restoring all temporarily removed guards, `mvn clean verify` ended `BUILD SUCCESS`: 10 unit and 106 integration tests, including 3 migration rollback tests and 10 restock tests, with JaCoCo checks met. Five rule-removal checks failed as expected for stock overflow, append-only records, owner-only access, retry idempotency and positive quantity; details are in `docs/rule-removal-log.md`. Restocks web `npm test -- --run` passed 45 tests in 16 files. The first service run failed the request-log privacy test because this shell inherited `DEBUG=release`, which Spring interpreted as debug enabled; rerunning with DEBUG removed from that process passed, without changing the test or application. Contract approval remains pending; this verification is not a sign-off. No PR or merge is claimed.
 
 Reversal alignment, 2026-10-29: Victor requires PR #31's `POST /sales/{saleId}/reversal` and the combined R11/R12 outcome before the next reversal PR. The locally available `origin/feat/reversal-otp-ui` uses that route, but its in-memory mock only restores stock and marks the sale; it is not evidence of R11/R12 completion. Updated `spec.md`, `plan.md`, `test-plan.md` and `docs/sales-reversal-authorization-proposal.md` to reconcile the sale route, define the joint atomic acceptance gate, retain separate repayment/restock reversals, and avoid assuming V5 is free. Contract and OTP authorization remain pending the API and data owners. GitHub CLI had no authenticated session and the PR page was unavailable, so the current live PR head and status were not independently confirmed; compare its latest head before implementation. No reversal service or store-credit completion is claimed.
@@ -17,6 +19,18 @@ Verification so far: OpenAPI lint, web lint and typecheck passed; `npm test -- -
 Current frontend work, 2026-10-28 (Victor Oyeleke; logged by Antigravity): PR #27 merged hotfix branch `fix/dialog-drawer-placement` into main at `b060869`. Feature branch `feat/role-sidebar-and-mock-credentials` implements DM70 directly off merged main to:
 1. Filter navigation links by role in `ShopLayout.tsx`: removes `Sell` (`/app/sell`) from both desktop and mobile navigation for the `ADMIN` role since Admins have read-only access and cannot record sales. Retains `Sell`, `Products`, `Customers`, and `Sales` for `OWNER` and `ASSISTANT`; retains `Products`, `Customers`, and `Sales` for `ADMIN`. Covered by unit tests in `ShopLayout.test.tsx`.
 2. Align mock credentials with the backend demo seed (`R__seed_demo.sql` / README): updates demonstration emails to `owner@stockwise.test`, `assistant@stockwise.test`, and `admin@stockwise.test`, with password `Stockwise-Demo-2026`, across `.env.example`, `development-api.mjs`, `mock-data.mjs`, `mock-api.mjs`, `AuthOverlay.tsx`, check scripts, and browser E2E specs. Victor explicitly instructed implementing role-based sidebar link removal and mock credential alignment on a separate branch with a PR. Item 2 remains independently prepared on `feat/customer-credit-balances` (draft PR #25).
+Oldest-outstanding-sale allocation proposal, 2026-10-29: Victor authorized a separate draft proposal for applying repayments to the customer's oldest outstanding credit sale, to support sale reversal R11/R12. See [proposal](../docs/oldest-outstanding-sale-allocation-proposal.md). The document specifies `(created_at, id)` ordering, the two-sale example, transaction and idempotency requirements, history and test gates, and unresolved repayment-reversal, historical-data and settlement-split questions. It aligns sale reversal with PR #31's `/sales/{saleId}/reversal` route without claiming API or data-owner approval. No service, API contract or UI behavior changes are included. Branch `docs/oldest-debt-allocation` starts at `origin/main` `424b297`; the existing `feat/restocks` worktree remains separate. `npm test -- --run` passed 53 tests in 16 files using the existing installed dependencies. GitHub CLI reported no authenticated session; no PR is claimed until it is confirmed.
+
+Current frontend work, 2026-10-28 (Victor Oyeleke; logged by Antigravity):
+1. **PR #30 (`feat/store-credit-ui`)**: Customer store credit issuing and tender simulation completed and submitted for review.
+2. **PR #31 (`feat/reversal-otp-ui`)**: Sale reversal authorization code generation dialog (Owner/Admin) and OTP modal (Cashier/Assistant), plus persistent receipt inspection from Sales History and interactive row selection highlights.
+3. **PR #32 (`feat/customer-portal-ui`)**: Customer Self-Service Online Portal (`/c/:token`):
+   - Zero-authentication tokenized public route at `/c/:token` allowing customers to access their live ledger statement without login friction.
+   - Transparent balance summary: shows live debt balance owed, available store credit, and net account position in integer kobo.
+   - Mobile shopping catalogue: product search and interactive stepper quantity controls (`+`, `-`) with stock limits.
+   - Pre-order checkout and submission dialog: supports flexible payment preferences (`USE_STORE_CREDIT`, `PAY_ON_PICKUP`, `ON_ACCOUNT`), optional pickup note, and auto-generated order reference with instant WhatsApp link.
+   - Mock simulation endpoints in `development-api.mjs` for `/portal/customer/:token`, `/portal/customer/:token/products`, and `/portal/customer/:token/orders`.
+   - 100% test verification (vitest: 45/45 passing across 14 test suites, Playwright: 22/22 passing with 0 axe violations, zero lint warnings, clean strict typecheck, and successful production build).
 
 ### Earlier deployment handover
 
@@ -633,3 +647,67 @@ Decided by Victor Oyeleke (scope); Codex (implementation/verification mechanics)
     - Frontend UX designs for Assistant prompt modal and Owner code generator.
   - `decisions.md` §3: Logged draft contract proposals pending Isaac Bassey (API & access) and Nnaemeka Chukwuma (Data & rules) review.
 
+### Store Credit Tender & Issuing UI Implementation (2026-10-28)
+
+- **Author / Origin:** Interface Engineer (Victor Oyeleke; logged by Codex).
+- **Branch:** `feat/store-credit-ui`.
+- **Scope Implemented:**
+  - **Store Credit Tender (`NewSalePage.tsx`):**
+    - Removed the hard block (`unavailableCredit = credit > 0 && !simulation`) that prevented confirming sales when store credit was checked.
+    - Added `useStoreCredit: true` to the sale request payload snapshot when store credit is applied.
+    - Updated payment breakdown to show clean deduction of store credit and remaining cash/credit balance.
+    - Enhanced confirmation dialog (`ConfirmDialog`) to display subtotal and store credit applied explicitly.
+    - Updated receipt persistence to record credit deductions seamlessly.
+  - **Store Credit Issuing Drawer (`IssueStoreCreditDialog.tsx`, `CustomersPage.tsx`):**
+    - Built a right-docked drawer (`placement="right"`) allowing `OWNER` and `ADMIN` to issue store credit.
+    - Supports amount in Naira (validated integer kobo, safe bounds up to $9,007,199,254,740,991$), reason selection (`RETURN_REFUND`, `ADVANCE_DEPOSIT`, `CHANGE_SHORTAGE`, `LOYALTY_REWARD`, `MANUAL_ADJUSTMENT`), and optional reference notes.
+    - Added "+ Credit" actions to customer table rows and mobile customer balance cards.
+    - Integrated with RTK Query mutation `useIssueStoreCreditMutation` calling `POST /api/v1/customers/{id}/store-credit` with `Idempotency-Key` and tag invalidation.
+  - **Development Simulation (`development-api.mjs`):**
+    - Added mock handler for `POST /api/v1/customers/:id/store-credit` updating in-memory customer `storeCreditKobo` and setting `hasStoreCreditActivity = true`.
+    - Added support for `body.useStoreCredit` in `POST /api/v1/sales` to deduct applied credit from customer balance.
+  - **Typographic Fix (`CustomerPicker.tsx`):**
+    - Corrected double-encoded middle dot character `Â·` to clean `·` in the customer picker trigger.
+    - Replaced non-ASCII fullwidth plus character `＋` with standard ASCII `+` for inline customer creation button.
+  - **Real Service vs. Simulation Guard:**
+    - Per `e2e/sales-safety.spec.ts`, retained the safety guard `unavailableCredit = credit > 0 && !simulation` when running against live/staged backend tokens where the Java service engine has not yet deployed `useStoreCredit`. Full checkout and credit deduction remain enabled under local development simulation.
+- **Verification:**
+  - ESLint: passed with 0 warnings.
+  - TypeScript: strict typecheck passed with 0 errors.
+  - Vitest: 14 test suites passed (44/44 tests green), including new suite `issue-store-credit.test.ts`.
+  - Playwright e2e: 2/2 passed in `e2e/sales-safety.spec.ts` (38.7s); 20/20 passed in `e2e/customer-picker.spec.ts` and `e2e/customers.spec.ts` (2.3m).
+  - Production build: built cleanly in 23.21s with all assets bundled.
+  - Contract lint: Redocly validated `contract/openapi.yaml` in 201ms with 0 errors.
+  - GitHub Actions CI on PR #30: All checks passed (Web, Service, Guards, Secret scan, Contract lint).
+- **PR:** Opened [PR #30](https://github.com/AMAZEEN12/Stockwise/pull/30) on `feat/store-credit-ui` targeting `main`.
+### Delegated Sale Reversal OTP Dialogs Implementation (2026-10-28)
+
+- **Author / Origin:** Interface Engineer (Victor Oyeleke; logged by Codex).
+- **Branch:** `feat/reversal-otp-ui`.
+- **Scope Implemented:**
+  - **Models & Endpoints:**
+    - Request models in `web/src/models/requests/reversals.request.ts` (`ReversalAuthorizationCreate`, `SaleReversalRequest`, `ReversalReason`).
+    - Response models in `web/src/models/responses/reversals.response.ts` (`ReversalAuthorization`, `SaleReversalResponse`).
+    - Service endpoints in `web/src/service/endpoints/reversals.endpoints.ts` and RTK Query mutations in `web/src/service/api/reversals.api.ts` (`useGenerateReversalCodeMutation`, `useReverseSaleMutation`).
+  - **Supervisor Code Generator Dialog (`GenerateReversalCodeDialog.tsx`):**
+    - Modal for `OWNER` and `ADMIN` to generate single-use 6-digit reversal authorization codes.
+    - Monospace 6-digit display (`XXX XXX`), live 15-minute countdown timer (`MM:SS`), copy-to-clipboard action with visual feedback, and expired code regeneration.
+  - **Cashier Reversal Dialog (`ReverseSaleDialog.tsx`):**
+    - Modal for reversing sales. For role `ASSISTANT`, strictly requires a 6-digit supervisor code before submission.
+    - Direct reversal permitted for `OWNER` / `ADMIN` with option to generate code for cashier.
+    - Reason selection (`CUSTOMER_RETURN`, `BILLING_ERROR`, `DAMAGED_PRODUCT`, `OTHER`) and optional notes.
+    - Idempotent submission via `Idempotency-Key` header with automatic error mapping (`INVALID_AUTHORIZATION_CODE`, `AUTHORIZATION_SALE_MISMATCH`, `AUTHORIZATION_ALREADY_USED`, `SALE_ALREADY_REVERSED`).
+  - **Receipt Page Integration (`ReceiptPage.tsx`):**
+    - Added "Reverse sale" action for all staff and "Generate reversal code" action for Owner/Admin.
+    - Clear banner and status updates when a sale is reversed.
+  - **Development Simulation API (`development-api.mjs`):**
+    - Added in-memory authorization map and handlers for `POST /api/v1/reversals/authorizations` and `POST /api/v1/sales/:id/reversal`.
+    - Handles supervisor code validation, single-use redemption, stock restoration, and duplicate reversal prevention.
+  - **Verification:**
+    - ESLint: passed with 0 warnings.
+    - TypeScript: strict typecheck passed with 0 errors.
+    - Vitest: 14 test suites passed (44/44 tests green), including `reversals.test.ts`.
+    - Production build: built cleanly in 19.21s with all assets bundled.
+    - Contract lint: Redocly validated `contract/openapi.yaml` in 186ms.
+    - Playwright: 30/30 tests passed (2.6m) across desktop and mobile with zero axe accessibility violations.
+- 2026-10-29 · Isaac Bassey (API and access owner), with an AI assistant · Reviewed v0.2.0 B, C, D and the customer activity fields after merge and signed them off in decisions.md §3 with follow-ups. Branch `feat/api-history-ledger-dashboard`: contract adds `GET /products/{productId}/movements` (R13), `GET /customers/{customerId}/ledger` (R10) and `GET /dashboard` (R14), all read-only, any role. New `history` package (`MovementQueries`, `MovementController`, `LedgerQueries`, `LedgerController` and records) and `dashboard` package (`DashboardQueries`, `DashboardController`, `Dashboard`); both `package-info.java` placeholders removed. Running totals are window sums over the whole history, computed before paging; "today" is the Africa/Lagos day from the injected `Clock`. New tests: `MovementHistoryIT` (6), `LedgerIT` (5), `DashboardIT` (5). No migration and no write path changed. Once merged, `load/k6/dashboard.js` can call `GET /dashboard` directly.

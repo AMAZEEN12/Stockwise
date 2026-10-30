@@ -108,6 +108,29 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/products/{productId}/movements": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /**
+         * A product's stock movement history
+         * @description Safe. Any role. Every change to the product's stock (opening stock, sales, restocks and their
+         *     reversals), newest first. Each entry carries `quantityAfter`, the running total right after it,
+         *     computed over the whole history before paging, so the newest entry's `quantityAfter` equals
+         *     `currentQuantity` (spec R13). Archived products have a history too.
+         */
+        get: operations["listProductMovements"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/product-categories": {
         parameters: {
             query?: never;
@@ -211,6 +234,54 @@ export interface paths {
          *     share a name; the UUID is the identity.
          */
         post: operations["createCustomer"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/customers/{customerId}/ledger": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /**
+         * A customer's ledger with the balance after each entry
+         * @description Safe. Any role. Credit sales, repayments, reversals and store-credit changes, newest first
+         *     (spec R10). `balanceAfterKobo` is what the customer owed right after the entry;
+         *     `storeCreditAfterKobo` is the store credit they held right after it. A `STORE_CREDIT` entry
+         *     changes store credit only. The newest entry's `balanceAfterKobo` equals `balanceKobo`. Paid
+         *     sales are not ledger entries.
+         */
+        get: operations["getCustomerLedger"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/dashboard": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /**
+         * Today's sales, low stock and credit owed
+         * @description Safe. Any role. Every figure is computed from the records when read, never stored (spec R14),
+         *     and the response says when (`computedAt`) and that it is demonstration data. "Today" is the
+         *     Africa/Lagos calendar day (DM14): a sale at 00:30 WAT counts as today. `lowStock` lists up to
+         *     10 active products at or below their threshold, lowest first; `lowStockCount` counts them all.
+         *     `recentSales` lists the 5 newest sales.
+         */
+        get: operations["getDashboard"];
+        put?: never;
+        post?: never;
         delete?: never;
         options?: never;
         head?: never;
@@ -418,6 +489,130 @@ export interface components {
             /** Format: int64 */
             totalItems: number;
         };
+        /**
+         * @description What caused the movement. Reversal types arrive with reversals (R11).
+         * @enum {string}
+         */
+        MovementSourceType: "OPENING" | "SALE" | "SALE_REVERSAL" | "RESTOCK" | "RESTOCK_REVERSAL";
+        Movement: {
+            /** Format: uuid */
+            id: string;
+            /**
+             * Format: int32
+             * @description Units added (positive) or removed (negative). Never 0.
+             */
+            delta: number;
+            sourceType: components["schemas"]["MovementSourceType"];
+            /**
+             * Format: uuid
+             * @description The sale, restock or reversal that caused it. Absent for OPENING.
+             */
+            sourceId?: string;
+            /**
+             * Format: int32
+             * @description The product's quantity right after this movement.
+             */
+            quantityAfter: number;
+            /** Format: date-time */
+            createdAt: string;
+        };
+        MovementPage: {
+            /** Format: uuid */
+            productId: string;
+            /** Format: int32 */
+            currentQuantity: number;
+            items: components["schemas"]["Movement"][];
+            /** Format: int32 */
+            page: number;
+            /** Format: int32 */
+            size: number;
+            /** Format: int64 */
+            totalItems: number;
+        };
+        /**
+         * @description What caused the ledger entry. REPAYMENT and REVERSAL arrive with those features (R9, R11).
+         * @enum {string}
+         */
+        LedgerSourceType: "CREDIT_SALE" | "REPAYMENT" | "REVERSAL" | "STORE_CREDIT";
+        LedgerEntry: {
+            /** Format: uuid */
+            id: string;
+            sourceType: components["schemas"]["LedgerSourceType"];
+            /**
+             * Format: uuid
+             * @description The sale, repayment or reversal behind the entry, when there is one.
+             */
+            sourceId?: string;
+            /**
+             * Format: int64
+             * @description Change to the balance owed, or to store credit for a STORE_CREDIT entry. Never 0; may be negative.
+             */
+            deltaKobo: number;
+            balanceAfterKobo: components["schemas"]["Kobo"];
+            storeCreditAfterKobo: components["schemas"]["Kobo"];
+            /** Format: date-time */
+            createdAt: string;
+        };
+        LedgerPage: {
+            /** Format: uuid */
+            customerId: string;
+            balanceKobo: components["schemas"]["Kobo"];
+            storeCreditKobo: components["schemas"]["Kobo"];
+            items: components["schemas"]["LedgerEntry"][];
+            /** Format: int32 */
+            page: number;
+            /** Format: int32 */
+            size: number;
+            /** Format: int64 */
+            totalItems: number;
+        };
+        Dashboard: {
+            /** Format: date-time */
+            computedAt: string;
+            /** @constant */
+            isDemonstrationData: true;
+            /**
+             * Format: date
+             * @description The Africa/Lagos calendar day the "today" figures cover.
+             */
+            today: string;
+            todaySales: {
+                /** Format: int32 */
+                count: number;
+                totalKobo: components["schemas"]["Kobo"];
+                /** Format: int32 */
+                paidCount: number;
+                paidKobo: components["schemas"]["Kobo"];
+                /** Format: int32 */
+                creditCount: number;
+                creditKobo: components["schemas"]["Kobo"];
+            };
+            outstandingCreditKobo: components["schemas"]["Kobo"];
+            /** Format: int32 */
+            customersOwing: number;
+            storeCreditHeldKobo: components["schemas"]["Kobo"];
+            /** Format: int32 */
+            lowStockCount: number;
+            lowStock: {
+                /** Format: uuid */
+                id: string;
+                reference: string;
+                name: string;
+                /** Format: int32 */
+                quantity: number;
+                /** Format: int32 */
+                lowStockThreshold: number;
+            }[];
+            recentSales: {
+                /** Format: uuid */
+                id: string;
+                reference: string;
+                paymentType: components["schemas"]["PaymentType"];
+                totalKobo: components["schemas"]["Kobo"];
+                /** Format: date-time */
+                createdAt: string;
+            }[];
+        };
         CustomerCreate: {
             displayName: string;
             /** @description Fictional contact text only (demonstration data). */
@@ -568,6 +763,7 @@ export interface components {
         /** @description Optional client-generated UUID, one per user attempt; reuse it on retry to make the call safe to repeat. */
         IdempotencyKeyOptional: string;
         ProductId: string;
+        CustomerId: string;
         /** @description Zero-based page number. */
         Page: number;
         Size: number;
@@ -768,6 +964,39 @@ export interface operations {
                     "application/json": components["schemas"]["Product"];
                 };
             };
+            401: components["responses"]["Unauthorized"];
+            404: components["responses"]["NotFound"];
+        };
+    };
+    listProductMovements: {
+        parameters: {
+            query?: {
+                /** @description Zero-based page number. */
+                page?: components["parameters"]["Page"];
+                size?: components["parameters"]["Size"];
+            };
+            header?: {
+                /** @description Client-generated UUID used to trace one action across both tiers. */
+                "X-Request-Id"?: components["parameters"]["RequestId"];
+            };
+            path: {
+                productId: components["parameters"]["ProductId"];
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description A page of the product's movements */
+            200: {
+                headers: {
+                    "X-Request-Id": components["headers"]["RequestId"];
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["MovementPage"];
+                };
+            };
+            400: components["responses"]["BadRequest"];
             401: components["responses"]["Unauthorized"];
             404: components["responses"]["NotFound"];
         };
@@ -987,6 +1216,64 @@ export interface operations {
                     "application/problem+json": components["schemas"]["Problem"];
                 };
             };
+        };
+    };
+    getCustomerLedger: {
+        parameters: {
+            query?: {
+                /** @description Zero-based page number. */
+                page?: components["parameters"]["Page"];
+                size?: components["parameters"]["Size"];
+            };
+            header?: {
+                /** @description Client-generated UUID used to trace one action across both tiers. */
+                "X-Request-Id"?: components["parameters"]["RequestId"];
+            };
+            path: {
+                customerId: components["parameters"]["CustomerId"];
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description A page of the customer's ledger */
+            200: {
+                headers: {
+                    "X-Request-Id": components["headers"]["RequestId"];
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["LedgerPage"];
+                };
+            };
+            400: components["responses"]["BadRequest"];
+            401: components["responses"]["Unauthorized"];
+            404: components["responses"]["NotFound"];
+        };
+    };
+    getDashboard: {
+        parameters: {
+            query?: never;
+            header?: {
+                /** @description Client-generated UUID used to trace one action across both tiers. */
+                "X-Request-Id"?: components["parameters"]["RequestId"];
+            };
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description The dashboard */
+            200: {
+                headers: {
+                    "X-Request-Id": components["headers"]["RequestId"];
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["Dashboard"];
+                };
+            };
+            401: components["responses"]["Unauthorized"];
         };
     };
     listSales: {
