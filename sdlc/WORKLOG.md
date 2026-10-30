@@ -15,7 +15,11 @@ Branch `feat/product-movements-ui` implements the stock movements history dedica
    - Summary cards interaction: Hovering over current stock, selling price, and recorded movements cards highlights border, background, labels, and values in brand green (`var(--color-primary)`).
    - Navigation: Removed redundant bottom "Close" button and unneeded "×" icon; return navigation is handled cleanly via the `← Back to products` breadcrumb link.
    - Filter chips: Styled `.filter-chips` on mobile to display horizontally on a single line with smooth horizontal scrolling (`flex-wrap: nowrap; overflow-x: auto; scrollbar-width: none`).
-   - Responsive typography & hierarchy: Enhanced quantity and low-threshold number sizing across viewports (13-14px on mobile, 15-18px on desktop, 16-20px bold mono on 1440px+ displays) while preserving the removal of status badge icons on products and the plus sign on the Add customer button per user direction.
+   - Responsive typography, alignment & badge layout:
+     - Left-aligned Quantity column header and values (`text-align: left`) on desktop/tablet catalogue table so numbers line up directly under `QUANTITY`.
+     - Fixed stock badge pills (`Low (...)`, `Out of stock`): Added `white-space: nowrap; width: max-content;` and resolved medium breakpoint (`@media (min-width: 769px) and (max-width: 1150px)`) to 4 explicit grid tracks (`minmax(160px, 2fr) minmax(90px, 1fr) minmax(190px, max-content) 80px`), allocating sufficient width so badges never wrap or distort into oval bubbles.
+     - Refined desktop typography & weight: Reduced table font to 14px, product names to 15px (500 weight), price to 14px (500 weight), `.stock-badge` and `.stock-count` to 13px (500 weight), and `.product-quantity` to 14px (500 weight). Scoped row hover to `.product-name strong` so numbers do not turn neon green on hover. Removed `@media (min-width: 1440px)` scaling that inflated numbers to 20px.
+     - Preserved user-removed decorative badge icons and the customer add button `+` sign.
    - Dual responsive view: Comprehensive statement table on desktop (5 columns: Name, Category, Price, Stock, Quantity) and compact feed cards on mobile, with Africa/Lagos (WAT) timestamps, quantity delta badges, and running balance (`quantityAfter`), plus loading skeletons, error state with retry, and empty state.
    - Products catalogue rows in `ProductsPage.tsx` are clickable and keyboard accessible (`tabIndex={0}`, Enter/Space), styled with brand highlight (`color-mix(in srgb, var(--color-primary) 8%, var(--color-surface))`) without text underlines, preserving active search parameters.
    - Added pure validators and formatters in `product-movements.ts`.
@@ -24,7 +28,7 @@ Branch `feat/product-movements-ui` implements the stock movements history dedica
    - Vitest: 20 test files, 67 tests passing (`product-movements.test.ts` 9/9).
    - Strict TypeScript (`tsc --noEmit`): 0 errors.
    - ESLint: 0 errors, 0 warnings (`--max-warnings 0`).
-   - Vite production build: SUCCESS (`dist/` generated cleanly).
+   - Vite production build: SUCCESS (`dist/` generated cleanly in 16.53s).
    - Playwright: 4/4 passing on `products.spec.ts` and 4/4 passing on `restocks.spec.ts` across desktop and mobile with 0 axe accessibility violations.
 
 PR #39 conflict resolution, 2026-10-30: merged `origin/main` at `a1e7918` into `feat/sale-reversal-simulation`. Preserved both the simulated reversal settlement/idempotency state and the restock mock state, as well as both work-log histories. Web lint and typecheck passed; `npm test -- --run` passed 58 tests in 19 files; `npm run check:reversal-simulation` passed; focused reversal, restock and picker Playwright checks passed 18/18 across desktop and mobile. The reversal remains a simulation and does not implement the real service or imply contract approval.
