@@ -45,16 +45,16 @@ Parent chain: the main Stockwise artifacts in [sdlc/](../) (intent, spec, plan, 
 ## The proposals, labelled
 From intake. The proposal files are the source; these labels are only for this log.
 
-| # | Proposal | Touches | In scope (D1) |
+| # | Proposal | Touches | In scope / Status |
 |---|---|---|---|
-| A (**done**) | `POST /customers` takes an `Idempotency-Key` (same key and body give the original 201; a different body gives 422 `IDEMPOTENCY_KEY_REUSED`) | contract, new migration V4 with its undo U4 (key and hash on `customer`), `CustomerRepository`, `CustomerController`, tests | **yes** |
-| B | Customer search and order defined (trimmed, case-insensitive, stable order with UUID tie-break); `asOf` on `CustomerPage`; duplicate names allowed; validation rules and field names documented | contract wording; `asOf` in the response | **yes** |
-| C | Money bounded to 0..9007199254740991 kobo (JavaScript's safe integer range) in requests and responses, including totals | contract (`maximum` on `Kobo`), request validation | **yes** |
-| D | `GET /product-categories` (complete sorted list); optional `active` filter on `GET /products` | contract, `ProductRepository`, `ProductController`, tests | **yes** |
-| E | `SaleLineCreate.expectedUnitPriceKobo` checked inside the guarded `UPDATE`; 409 `PRODUCT_CHANGED`; `Problem.conflicts` | contract, sale transaction (high-risk) | no: after Monday |
-| F | Sale settlement: subtotal, store credit applied (`min(credit, subtotal)` atomically), amount due (DM5, spec R12) | sale transaction, store-credit guard (plan step 16) | no: after Monday |
-| G | `POST /sale-quotes` | new resource and table | no: after Monday |
-| H | `GET /sale-submissions/{idempotencyKey}` | new read endpoint | no: after Monday |
+| A (**done**) | `POST /customers` takes an `Idempotency-Key` (same key and body give the original 201; a different body gives 422 `IDEMPOTENCY_KEY_REUSED`) | contract, new migration V4 with its undo U4 (key and hash on `customer`), `CustomerRepository`, `CustomerController`, tests | **Merged in main** (PR #17) |
+| B (**done**) | Customer search and order defined (trimmed, case-insensitive, stable order with UUID tie-break); `asOf` on `CustomerPage`; duplicate names allowed; validation rules and field names documented | contract wording; `asOf` in the response | **Merged in main** (PR #26) |
+| C (**done**) | Money bounded to 0..9007199254740991 kobo (JavaScript's safe integer range) in requests and responses, including totals | contract (`maximum` on `Kobo`), request validation | **Merged in main** (PR #26) |
+| D (**done**) | `GET /product-categories` (complete sorted list); optional `active` filter on `GET /products` | contract, `ProductRepository`, `ProductController`, tests | **Merged in main** (PR #26) |
+| E | `SaleLineCreate.expectedUnitPriceKobo` checked inside the guarded `UPDATE`; 409 `PRODUCT_CHANGED`; `Problem.conflicts` | contract, sale transaction (high-risk) | **Approved** (DM71, 2026-10-30); pending API sign-off; **no code written** |
+| F | Sale settlement: subtotal, store credit applied (`min(credit, subtotal)` atomically), amount due (DM5, spec R12) | sale transaction, store-credit guard (plan step 16) | **Approved** (DM71, 2026-10-30); pending API sign-off; **no code written** |
+| G | `POST /sale-quotes` | new resource and table | **Approved** (DM71, 2026-10-30); pending API sign-off; **no code written** |
+| H | `GET /sale-submissions/{idempotencyKey}` | new read endpoint | **Approved** (DM71, 2026-10-30); pending API sign-off; **no code written** |
 
 ## Conventions and guidelines
 - **Everything in the main log's Conventions applies** ([sdlc/WORKLOG.md](../WORKLOG.md)): Java 25, Spring Boot 4.1.2, JdbcClient with plain SQL, Flyway with an undo script per migration, integer kobo, rules in the database, one test per rule that fails when the rule is removed, Testcontainers Postgres 17.
@@ -122,4 +122,6 @@ Append-only, newest last.
   - Regenerated web types: `npm run generate:api`. `npm run typecheck` clean, `npm run lint` clean, `npm test -- --run` 35/35 passing tests across all 11 suites.
   - Updated `decisions.md` §3 (signed off proposals B, C, D by Nnaemeka Chukwuma, pending Isaac Bassey; confirmed prior documentation line).
   - Formally accepted `intent.md`, `plan.md`, `test-plan.md`, and generated `EXECUTION.md`.
+- 2026-10-30 · user · "aprove the proposal but dont write any code"
+- 2026-10-30 · agent (for Nnaemeka Chukwuma) · Formally approved the Products and Sales proposal (Proposals E, F, G, H and client recovery boundaries) in `docs/products-sales-contract-proposal.md` and `decisions.md` (DM71) from the Data and rules perspective. No code written (no Java or TypeScript changes, no database migrations, no OpenAPI edits). Awaiting Isaac Bassey's API sign-off before implementation.
 - **Lesson for stacked PRs:** after the lower PR merges, change the upper PR's base to `main` **before** merging it. GitHub does this automatically only when the lower branch is deleted.

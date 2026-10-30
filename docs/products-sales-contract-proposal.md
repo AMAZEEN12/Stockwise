@@ -1,6 +1,12 @@
 # Products and sales: implementation boundary and proposed contract
 
-Date: 2026-10-24. Scope decided by Victor Oyeleke; proposals by Codex; logged by Codex. API proposals are **pending Isaac Bassey and Nnaemeka Chukwuma**, not approved changes to OpenAPI.
+Date: 2026-10-24 · Updated: 2026-10-30. Scope decided by Victor Oyeleke; proposals by Codex; logged by Codex. **Approved from Data and rules perspective by Nnaemeka Chukwuma on 2026-10-30 (DM71)**. API and access sign-off remains **pending Isaac Bassey** before OpenAPI contract merge and service implementation.
+
+## Approval status (2026-10-30)
+
+- **Data and rules approval:** **APPROVED** by Nnaemeka Chukwuma on 2026-10-30 (recorded as DM71 in `decisions.md`). The transactional price verification, integer kobo arithmetic, DM5 store credit formula $\min(\text{credit}, \text{subtotal})$, quote lock semantics, and idempotency recovery guarantees satisfy all backend data integrity requirements.
+- **API and access sign-off:** **PENDING** review and sign-off by Isaac Bassey (Team lead & API/access owner) for formal inclusion in `contract/openapi.yaml`.
+- **Implementation status:** **NOT STARTED (NO CODE WRITTEN)**. Approval is recorded in the SDLC artifacts and documentation. No code or migration changes will be written until formal two-engineer sign-off and implementation kickoff.
 
 ## Implemented contract boundary
 
@@ -12,18 +18,18 @@ Product category is a free-text string in the current contract. Use a combobox b
 
 The store-credit reference is corrected to 615000 subtotal - 600000 credit = 15000 remaining kobo. DM5 remains the business rule. In development simulation the credit allocation is explicitly simulated. Real credit-bearing submissions are blocked until the API returns an authoritative allocation. Ordinary paid/credit sales use exactly SaleCreate. Preview prices are estimates until the server returns Sale; preflight reads cannot prevent a later price race.
 
-## Proposed additions (do not call yet)
+## Proposed additions status
 
-| Addition | Proposed behavior |
-|---|---|
-| GET /product-categories | Complete sorted category options, separate from paginated product results; category creation policy to be agreed. Current combobox remains usable. |
-| GET /products active filter | Optional boolean active, omit for all. Specify All/ARCHIVED semantics and deterministic ordering; avoid unsupported query parameters today. |
-| SaleLineCreate.expectedUnitPriceKobo | Required confirmed price, checked atomically with stock/active predicates; mismatch returns 409 PRODUCT_CHANGED before any write. Merely re-reading a product is insufficient. |
-| Structured stock/price conflicts | Problem.conflicts: [{productId, availableQuantity, currentUnitPriceKobo, active}]. Keep errors for field validation. Today re-fetch product details after 409 rather than parse prose. |
-| Sale settlement | Return subtotalKobo (gross), storeCreditAppliedKobo, amountDueKobo, storeCreditRemainingKobo and customer display-name snapshot. Credit applied = min(available credit, subtotal), enforced atomically in the service/database. Keep totalKobo semantics explicit. |
-| POST /sale-quotes | Same selected lines/customer/payment type; returns current lines, settlement and expiry/quote ID; confirmation references the quote and rejects stale prices/credit. UI adapter keeps existing confirmation layout. |
-| GET /sale-submissions/{idempotencyKey} | Authenticated original user's lookup: 200 RECORDED with Sale; 202 PROCESSING; 404 unknown. A missing result does not authorize a new key; retry original body/key. Specify retention and ownership; never silently replay expired keys as new sales. |
-| Safe money range | Bound every money request/response to 0..9007199254740991 integer kobo, with line and order sums inside the bound. Alternatively agree lossless int64 decoding end to end. Current client refuses unsafe values; decimal input is parsed with BigInt and never rounded. |
+| Addition | Proposed behavior | Status (2026-10-30) |
+|---|---|---|
+| GET /product-categories | Complete sorted category options, separate from paginated product results; category creation policy to be agreed. Current combobox remains usable. | **Merged in v0.2.0** (PR #26; proposal D) |
+| GET /products active filter | Optional boolean active, omit for all. Specify All/ARCHIVED semantics and deterministic ordering; avoid unsupported query parameters today. | **Merged in v0.2.0** (PR #26; proposal D) |
+| Safe money range | Bound every money request/response to 0..9007199254740991 integer kobo, with line and order sums inside the bound. Alternatively agree lossless int64 decoding end to end. Current client refuses unsafe values; decimal input is parsed with BigInt and never rounded. | **Merged in v0.2.0** (PR #26; proposal C) |
+| SaleLineCreate.expectedUnitPriceKobo | Required confirmed price, checked atomically with stock/active predicates; mismatch returns 409 PRODUCT_CHANGED before any write. Merely re-reading a product is insufficient. | **Approved by Nnaemeka Chukwuma** (Proposal E; pending Isaac Bassey) |
+| Structured stock/price conflicts | Problem.conflicts: [{productId, availableQuantity, currentUnitPriceKobo, active}]. Keep errors for field validation. Today re-fetch product details after 409 rather than parse prose. | **Approved by Nnaemeka Chukwuma** (Proposal E; pending Isaac Bassey) |
+| Sale settlement | Return subtotalKobo (gross), storeCreditAppliedKobo, amountDueKobo, storeCreditRemainingKobo and customer display-name snapshot. Credit applied = min(available credit, subtotal), enforced atomically in the service/database. Keep totalKobo semantics explicit. | **Approved by Nnaemeka Chukwuma** (Proposal F; pending Isaac Bassey) |
+| POST /sale-quotes | Same selected lines/customer/payment type; returns current lines, settlement and expiry/quote ID; confirmation references the quote and rejects stale prices/credit. UI adapter keeps existing confirmation layout. | **Approved by Nnaemeka Chukwuma** (Proposal G; pending Isaac Bassey) |
+| GET /sale-submissions/{idempotencyKey} | Authenticated original user's lookup: 200 RECORDED with Sale; 202 PROCESSING; 404 unknown. A missing result does not authorize a new key; retry original body/key. Specify retention and ownership; never silently replay expired keys as new sales. | **Approved by Nnaemeka Chukwuma** (Proposal H; pending Isaac Bassey) |
 
 ## Client recovery proposal used for the demonstration
 
