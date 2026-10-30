@@ -4,7 +4,7 @@ import java.util.ArrayList;
 import java.util.Comparator;
 import java.util.HashSet;
 import java.util.List;
-import java.util.OptionalLong;
+import java.util.ArrayList;
 import java.util.Set;
 import java.util.UUID;
 import java.util.stream.IntStream;
@@ -61,23 +61,27 @@ public class SaleService {
                 .sorted(Comparator.comparing(i -> request.lines().get(i).productId()))
                 .toList();
         long total = 0;
+        List<Sale.Line> soldLines = new ArrayList<>(request.lines().size());
         for (int index : lockOrder) {
             NewSale.Line line = request.lines().get(index);
-            OptionalLong price = sales.takeStock(line.productId(), line.quantity());
-            if (price.isEmpty()) {
+            // One statement per line: guarded stock update + line + stock movement (R4 unchanged).
+            var sold = sales.sellLine(saleId, line.productId(), line.quantity());
+            if (sold.isEmpty()) {
                 throw refusal(index, line);
             }
-            long lineTotal = Math.multiplyExact(price.getAsLong(), line.quantity());
-            sales.insertLine(saleId, line.productId(), line.quantity(), price.getAsLong(), lineTotal);
-            total = Math.addExact(total, lineTotal);
+            SaleRepository.SoldLine done = sold.get();
+            total = Math.addExact(total, done.lineTotalKobo());
+            soldLines.add(new Sale.Line(line.productId(), done.productName(), line.quantity(),
+                    done.unitPriceKobo(), done.lineTotalKobo()));
         }
-        sales.setTotal(saleId, total);
+        // Writes the total and returns the finished sale in one statement (no re-read).
+        Sale sale = sales.finishSale(saleId, total, soldLines);
 
         // A zero total has no ledger entry: ledger deltas are never zero (ledger_entry_delta_non_zero).
         if (request.paymentType() == PaymentType.CREDIT && total > 0) {
             sales.chargeCredit(request.customerId(), saleId, total);
         }
-        return new RecordedSale(sales.findSale(saleId).orElseThrow(), false);
+        return new RecordedSale(sale, false);
     }
 
     /** R5: the key already recorded a sale. Same body: return it. Different body: refuse. */
