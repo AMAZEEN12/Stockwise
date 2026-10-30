@@ -6,6 +6,23 @@ Source document: `Tesa cohort 6 software engineering capstone project.pdf` (TeSA
 > Any agent opening this project: read this file first, then the "Conventions and guidelines" and "Decisions" sections, then the artifacts in this folder. Continue from "Resume here". Don't re-ask anything already answered below.
 
 ## Resume here
+Customer Ledger Dedicated Page (PR 1), 2026-10-30: Per Victor's design direction to eliminate repetitive row buttons when the customer list grows large, evolved the customer ledger feature from an overlay drawer into a clean, dedicated statement page (`/app/customers/:customerId`) on branch `feat/customer-ledger-ui`.
+1. **Dedicated Page & Routing (`CustomerDetailPage.tsx`, `router.tsx`, `role-landing.ts`)**:
+   - Registered `/app/customers/:customerId` under `ShopLayout` and permitted in `role-landing.ts` for deep-linking.
+   - Breadcrumb navigation (`← Back to customers`) returning to directory list with cached RTK Query state.
+   - Header with customer display name, optional fictional contact details, customer ID preview, and `+ Issue store credit` button (for `OWNER` and `ADMIN`).
+   - Summary cards displaying current debt balance and available store credit in integer kobo (`formatMoney`).
+   - Full-width transaction statement table on desktop and responsive statement feed on mobile with all 5 screen states (loading skeletons, error with retry, empty state, success data, and balance summaries).
+2. **Directory Cleanliness (`CustomersPage.tsx`)**:
+   - Removed repetitive "Ledger" buttons from every table row and card.
+   - Made table rows and mobile cards directly clickable (`customer-row-clickable`, keyboard accessible on Enter/Space, matching `SalesHistoryPage`).
+   - Directory table only displays `Name`, `Balance owed`, `Store credit`, and a clean `+ Credit` button when permitted.
+3. **Verification**:
+   - Vitest: 20 test files passed (67 tests, 0 failures), including all 9 ledger unit tests.
+   - TypeScript: `tsc --noEmit` clean (0 errors).
+   - ESLint: `eslint . --max-warnings 0` clean (0 errors, 0 warnings).
+   - Vite Build: `npm run build` succeeded.
+   - Playwright E2E: 14/14 tests in `customers.spec.ts` passed across desktop and mobile projects, verifying clickable row navigation to `/app/customers/:id`, statement presentation, axe-core 0 violations, and back-link navigation.
 PR #40 conflict resolution, 2026-10-30: merged `origin/main` at `da60dfcf` into the proposal branch, keeping both the proposal-publication and simulation handover entries. The merged branch passed `npm test -- --run` (58 tests in 19 files). This documentation merge does not supply API or data-owner approval.
 
 Proposal publication follow-up, 2026-10-30: Victor requested committing and pushing the previously local allocation-proposal edit. It records his three financial-policy directions without claiming data-owner or API-owner sign-off. PR #37 was already merged before this follow-up; the new edit needs separate review and integration into main. No service implementation is implied.
