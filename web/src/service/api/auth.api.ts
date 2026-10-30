@@ -6,7 +6,7 @@ import type { Session, User } from '../../models/responses/auth.response';
 
 export const authApi = createApi({
   reducerPath: 'stockwiseApi', baseQuery: axiosBaseQuery,
-  tagTypes: ['Products', 'Customers', 'Sales'],
+  tagTypes: ['Products', 'Customers', 'Sales', 'Restocks'],
   endpoints: (builder) => ({
     createSession: builder.mutation<Session, LoginRequest>({ query: (data) => ({ url: authEndpoints.sessions, method: 'POST', data }) }),
     currentUser: builder.query<User, void>({ query: () => ({ url: authEndpoints.me }) }),
