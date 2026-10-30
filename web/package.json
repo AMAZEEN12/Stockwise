@@ -4,7 +4,7 @@
   "version": "0.1.0",
   "type": "module",
   "scripts": {
-    "dev": "vite --host 127.0.0.1",
+    "dev": "vite --host",
     "mock": "node scripts/development-api.mjs",
     "mock:prism": "node scripts/mock-api.mjs",
     "mock:prepare": "node scripts/mock-api.mjs --prepare-only",

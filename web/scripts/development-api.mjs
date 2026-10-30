@@ -212,10 +212,15 @@ const isUuid = (text) => typeof text === 'string' && /^[0-9a-f]{8}-[0-9a-f]{4}-[
 const isDate = (value) => typeof value === 'string' && /^\d{4}-\d{2}-\d{2}$/.test(value) && Number.isFinite(Date.parse(value)) && new Date(value).toISOString().slice(0,10) === value;
 const server = createServer(async (request,response) => {
   const origin = request.headers.origin;
-  if (origin && !/^http:\/\/(127\.0\.0\.1|localhost):\d+$/.test(origin)) {response.writeHead(403); response.end(); return;}
-  response.setHeader('Access-Control-Allow-Origin', origin || 'http://127.0.0.1:5173');
+  const isAllowedOrigin =
+    !origin ||
+    /^http:\/\/(127\.0\.0\.1|localhost):\d+$/.test(origin) ||
+    origin.includes("devtunnels.ms") ||
+    origin === "https://wg7l5hc6-4710.uks1.devtunnels.ms";
+  if (origin && !isAllowedOrigin) {response.writeHead(403); response.end(); return;}
+  response.setHeader('Access-Control-Allow-Origin', origin || '*');
   response.setHeader('Vary','Origin');
-  response.setHeader('Access-Control-Allow-Headers','Content-Type, Authorization, Idempotency-Key, X-Request-Id');
+  response.setHeader('Access-Control-Allow-Headers','Content-Type, Authorization, Idempotency-Key, X-Request-Id, If-Match, Accept');
   response.setHeader('Access-Control-Allow-Methods','GET, POST, OPTIONS');
   response.setHeader('Access-Control-Expose-Headers','X-Request-Id, Location');
   const requestId = isUuid(request.headers['x-request-id']) ? request.headers['x-request-id'] : randomUUID();
@@ -798,4 +803,4 @@ const server = createServer(async (request,response) => {
 });
 const port=Number(process.env.DEVELOPMENT_API_PORT || 4710);
 if(!Number.isInteger(port) || port<1024 || port>65535)throw new Error('Invalid DEVELOPMENT_API_PORT');
-server.listen(port,'127.0.0.1',() => console.log(`Development simulation listening on http://127.0.0.1:${port} (${forcedRole || 'per-account demo roles'}). In-memory demonstration data only; no credential or backend-rule proof.`));
+server.listen(port,'0.0.0.0',() => console.log(`Development simulation listening on http://127.0.0.1:${port} and https://wg7l5hc6-4710.uks1.devtunnels.ms (${forcedRole || 'per-account demo roles'}). In-memory demonstration data only; no credential or backend-rule proof.`));
