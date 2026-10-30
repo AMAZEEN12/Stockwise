@@ -15,6 +15,7 @@
     "check:shop:browser": "node scripts/check-shop-browser.mjs",
     "check:customers": "node scripts/check-customers.mjs",
     "check:sales-history": "node scripts/check-sales-history.mjs",
+    "check:reversal-simulation": "node scripts/check-reversal-simulation.mjs",
     "check:ui": "node scripts/check-ui.mjs",
     "build": "tsc -b && vite build",
     "lint": "eslint . --max-warnings 0",

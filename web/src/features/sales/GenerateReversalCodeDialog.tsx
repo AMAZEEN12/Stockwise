@@ -3,6 +3,7 @@ import { Dialog } from '../../components/ui/dialog';
 import { Button } from '../../components/ui/button';
 import { useGenerateReversalCodeMutation } from '../../service/api/reversals.api';
 import type { ReversalAuthorization } from '../../models/responses/reversals.response';
+import { isReversalSimulation } from './reversal-simulation';
 import '../../styles/sales.css';
 
 interface Props {
@@ -23,6 +24,7 @@ export function GenerateReversalCodeDialog({
   const [copied, setCopied] = useState(false);
   const [errorMsg, setErrorMsg] = useState<string | null>(null);
   const [secondsRemaining, setSecondsRemaining] = useState<number>(0);
+  const simulation = isReversalSimulation();
 
   const handleGenerate = async () => {
     setErrorMsg(null);
@@ -87,6 +89,7 @@ export function GenerateReversalCodeDialog({
       className="reversal-code-dialog rounded-md max-w-md w-full font-sans"
     >
       <div className="flex flex-col gap-4 py-2">
+        <p className="text-sm" role="status">{simulation ? 'Simulation only: this code cannot authorize a real sale reversal.' : 'Code generation is unavailable until the service contract is approved.'}</p>
         <p className="text-sm text-[var(--color-text-muted)]">
           Give this 6-digit authorization code to the cashier to authorize reversing sale{' '}
           <strong className="text-[var(--color-text)]">{saleReference}</strong>. The code is single-use and expires in 15 minutes.
@@ -108,6 +111,7 @@ export function GenerateReversalCodeDialog({
               variant="primary"
               size="md"
               loading={isLoading}
+              disabled={!simulation}
               loadingLabel="Generating code…"
               onClick={() => void handleGenerate()}
             >

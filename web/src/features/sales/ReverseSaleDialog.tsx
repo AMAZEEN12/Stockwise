@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useRef, useState } from 'react';
 import { Dialog } from '../../components/ui/dialog';
 import { Button } from '../../components/ui/button';
 import { FormField } from '../../components/ui/form-field';
@@ -10,6 +10,10 @@ import { useReverseSaleMutation } from '../../service/api/reversals.api';
 import type { ReversalReason } from '../../models/requests/reversals.request';
 import type { Role } from '../../models/responses/auth.response';
 import type { HttpError } from '../../service/http-client';
+import { readSession } from '../../auth/session';
+import type { SaleReversalRequest } from '../../models/requests/reversals.request';
+import type { SaleReversalResponse } from '../../models/responses/reversals.response';
+import { isReversalSimulation } from './reversal-simulation';
 import '../../styles/sales.css';
 
 interface Props {
@@ -19,7 +23,7 @@ interface Props {
   saleReference: string;
   totalKobo: number;
   userRole: Role;
-  onSuccess?: () => void;
+  onSuccess?: (result: SaleReversalResponse) => void;
   onRequestCodeClick?: () => void;
 }
 
@@ -43,54 +47,81 @@ export function ReverseSaleDialog({
   const [reverseSale, { isLoading }] = useReverseSaleMutation();
   const { toast } = useToast();
 
-  const [code, setCode] = useState('');
-  const [reason, setReason] = useState<ReversalReason>('CUSTOMER_RETURN');
-  const [note, setNote] = useState('');
   const [errorMsg, setErrorMsg] = useState<string | null>(null);
+  const sending = useRef(false);
+  const simulation = isReversalSimulation();
+  const storageKey = `stockwise.simulated-reversal.${readSession()?.user.id}.${saleId}`;
+  const [pending, setPending] = useState<{key:string;body:SaleReversalRequest} | null>(() => {
+    try { const saved = JSON.parse(sessionStorage.getItem(storageKey) || 'null');
+      return saved && typeof saved.key === 'string' && typeof saved.body?.reason === 'string' ? saved : null;
+    } catch { return null; }
+  });
+  const [code, setCode] = useState(pending?.body.authorizationCode || '');
+  const [reason, setReason] = useState<ReversalReason>(pending?.body.reason || 'CUSTOMER_RETURN');
+  const [note, setNote] = useState(pending?.body.note || '');
 
   const isAssistant = userRole === 'ASSISTANT';
   const cleanCode = code.replace(/\D/g, '').slice(0, 6);
-  const canSubmit = !isAssistant || cleanCode.length === 6;
+  const canSubmit = simulation && (!!pending || !isAssistant || cleanCode.length === 6);
 
   const handleSubmit = async (event: React.FormEvent) => {
     event.preventDefault();
-    if (!canSubmit || isLoading) return;
+    if (!canSubmit || isLoading || sending.current) return;
+    sending.current = true;
 
     setErrorMsg(null);
     try {
-      const key = crypto.randomUUID();
-      await reverseSale({
+      const attempt = pending || {key:crypto.randomUUID(),body:{reason,note:note.trim() || undefined,authorizationCode:isAssistant ? cleanCode : undefined}};
+      if (!pending) {
+        const snapshot = JSON.stringify(attempt);
+        sessionStorage.setItem(storageKey, snapshot);
+        if (sessionStorage.getItem(storageKey) !== snapshot) throw new Error('Recovery unavailable');
+        setPending(attempt);
+      }
+      const result = await reverseSale({
         saleId,
-        body: {
-          reason,
-          note: note.trim() || undefined,
-          authorizationCode: isAssistant ? cleanCode : undefined,
-        },
-        key,
+        body: attempt.body,
+        key: attempt.key,
       }).unwrap();
+      sessionStorage.removeItem(storageKey);
+      setPending(null);
 
       toast({
         variant: 'success',
-        title: `Sale ${saleReference} reversed. Stock restored.`,
+        title: `Simulated sale ${saleReference} reversed. Stock restored.`,
       });
       onOpenChange(false);
-      onSuccess?.();
+      onSuccess?.(result);
     } catch (err) {
       const httpError = err as HttpError;
       const code = httpError.code;
-      if (code === 'INVALID_AUTHORIZATION_CODE') {
+      if (!httpError.status) {
+        setErrorMsg('Unable to save recovery data. Nothing was sent.');
+      } else if (typeof httpError.status !== 'number' || httpError.status >= 500) {
+        setErrorMsg('This simulated reversal is not confirmed. Retry the same request to check its result.');
+      } else if (pending) {
+        setErrorMsg('This simulated reversal remains unconfirmed. Check the sale before taking further action.');
+      } else if (code === 'INVALID_AUTHORIZATION_CODE') {
+        sessionStorage.removeItem(storageKey); setPending(null);
         setErrorMsg('The authorization code is invalid or has expired.');
       } else if (code === 'AUTHORIZATION_SALE_MISMATCH') {
+        sessionStorage.removeItem(storageKey); setPending(null);
         setErrorMsg('This authorization code was not issued for this sale.');
       } else if (code === 'AUTHORIZATION_ALREADY_USED') {
+        sessionStorage.removeItem(storageKey); setPending(null);
         setErrorMsg('This authorization code has already been redeemed.');
       } else if (code === 'SALE_ALREADY_REVERSED') {
+        sessionStorage.removeItem(storageKey); setPending(null);
         setErrorMsg('This sale has already been reversed.');
       } else if (code === 'SUPERVISOR_CODE_REQUIRED') {
+        sessionStorage.removeItem(storageKey); setPending(null);
         setErrorMsg('Supervisor authorization code is required for assistants.');
       } else {
-        setErrorMsg('Could not reverse sale. Please try again.');
+        sessionStorage.removeItem(storageKey); setPending(null);
+        setErrorMsg('Could not reverse the simulated sale. Check the sale and try again.');
       }
+    } finally {
+      sending.current = false;
     }
   };
 
@@ -106,9 +137,12 @@ export function ReverseSaleDialog({
       onOpenChange={onOpenChange}
       title="Reverse sale"
       description={`Reverse sale ${saleReference} of ${formatMoney(totalKobo)}. Items will return to inventory.`}
+      dismissible={!isLoading}
       className="reverse-sale-dialog rounded-md max-w-lg w-full font-sans"
     >
       <form onSubmit={(e) => void handleSubmit(e)} className="flex flex-col gap-4 py-2">
+        <p className="text-sm" role="status">{simulation ? 'Simulation only: inventory and customer balances shown here are demonstration data.' : 'Sale reversal is unavailable until the service contract is approved.'}</p>
+        {pending && <p className="text-sm" role="status">A previous simulated reversal is unconfirmed. Retry the same request.</p>}
         <div className="p-3 bg-[var(--color-surface-hover)] border border-[var(--color-border)] rounded-md text-sm">
           <div className="flex justify-between items-center">
             <span>Sale reference</span>
@@ -141,6 +175,7 @@ export function ReverseSaleDialog({
                   pattern="[0-9]*"
                   maxLength={6}
                   value={cleanCode}
+                  disabled={!!pending || isLoading}
                   onChange={(e) => handleCodeChange(e.target.value)}
                   placeholder="000 000"
                   className="font-mono text-center tracking-widest text-lg h-11"
@@ -150,13 +185,14 @@ export function ReverseSaleDialog({
             </FormField>
             <div className="flex items-center justify-between text-xs text-[var(--color-text-muted)] pt-1">
               <span>Admin / Owner in charge of code generation</span>
-              <button
+              {simulation && <button
                 type="button"
+                disabled={!!pending || isLoading}
                 className="text-[var(--color-primary)] hover:underline cursor-pointer"
                 onClick={() => setCode('839201')}
               >
                 Demo: Fill supervisor code (839 201)
-              </button>
+              </button>}
             </div>
           </div>
         ) : (
@@ -180,6 +216,7 @@ export function ReverseSaleDialog({
             <Select
               {...field}
               value={reason}
+              disabled={!!pending || isLoading}
               onValueChange={(val) => {
                 if (val) setReason(val as ReversalReason);
               }}
@@ -194,6 +231,7 @@ export function ReverseSaleDialog({
               {...field}
               type="text"
               value={note}
+              disabled={!!pending || isLoading}
               onChange={(e) => setNote(e.target.value)}
               placeholder="e.g. Customer brought back unopened item"
               maxLength={250}
@@ -202,7 +240,7 @@ export function ReverseSaleDialog({
         </FormField>
 
         {errorMsg && (
-          <div className="p-3 bg-[var(--color-danger-subtle)] border border-[var(--color-danger)] rounded-md text-sm text-[var(--color-danger)]">
+          <div role="alert" className="p-3 bg-[var(--color-danger-subtle)] border border-[var(--color-danger)] rounded-md text-sm text-[var(--color-danger)]">
             {errorMsg}
           </div>
         )}
@@ -225,7 +263,7 @@ export function ReverseSaleDialog({
             loading={isLoading}
             loadingLabel="Reversing sale…"
           >
-            Confirm reversal
+            {pending ? 'Retry same reversal' : 'Confirm reversal'}
           </Button>
         </div>
       </form>
