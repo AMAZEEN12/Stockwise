@@ -6,7 +6,9 @@ Source document: `Tesa cohort 6 software engineering capstone project.pdf` (TeSA
 > Any agent opening this project: read this file first, then the "Conventions and guidelines" and "Decisions" sections, then the artifacts in this folder. Continue from "Resume here". Don't re-ask anything already answered below.
 
 ## Resume here
-Product stock movements dedicated page (PR 2), 2026-10-30 (Victor Oyeleke; logged by Antigravity):
+PR #44 conflict resolution, 2026-10-30: merged `origin/main` at `250a7b85` into `feat/product-movements-ui`. Preserved both the product stock movements dedicated page implementation and the customer ledger dedicated page implementation from PR #42, along with all recent main branch commits and worklog entries. Preserved user-requested removals (no decorative icons on product status badges, no plus sign on the Add customer button).
+
+Product stock movements dedicated page (PR 2 / PR #44), 2026-10-30 (Victor Oyeleke; logged by Antigravity):
 Branch `feat/product-movements-ui` implements the stock movements history dedicated page for products (`GET /api/v1/products/{id}/movements`, `R17`).
 1. Frontend implementation & refinements:
    - Dedicated page: Added `ProductMovementsPage.tsx` mounted at dedicated route `/app/products/:productId/movements` (sibling to `/app/products` in `router.tsx`).
@@ -30,6 +32,27 @@ Branch `feat/product-movements-ui` implements the stock movements history dedica
    - ESLint: 0 errors, 0 warnings (`--max-warnings 0`).
    - Vite production build: SUCCESS (`dist/` generated cleanly in 16.53s).
    - Playwright: 4/4 passing on `products.spec.ts` and 4/4 passing on `restocks.spec.ts` across desktop and mobile with 0 axe accessibility violations.
+
+Customer Ledger Dedicated Page (PR 1), 2026-10-30: Per Victor's design direction to eliminate repetitive row buttons when the customer list grows large, evolved the customer ledger feature from an overlay drawer into a clean, dedicated statement page (`/app/customers/:customerId`) on branch `feat/customer-ledger-ui`.
+1. **Dedicated Page & Routing (`CustomerDetailPage.tsx`, `router.tsx`, `role-landing.ts`)**:
+   - Registered `/app/customers/:customerId` under `ShopLayout` and permitted in `role-landing.ts` for deep-linking.
+   - Breadcrumb navigation (`← Back to customers`) returning to directory list with cached RTK Query state.
+   - Header with customer display name, optional fictional contact details, customer ID preview, and `+ Issue store credit` button (for `OWNER` and `ADMIN`).
+   - Summary cards displaying current debt balance and available store credit in integer kobo (`formatMoney`).
+   - Full-width transaction statement table on desktop and responsive statement feed on mobile with all 5 screen states (loading skeletons, error with retry, empty state, success data, and balance summaries).
+2. **Directory Cleanliness (`CustomersPage.tsx`)**:
+   - Removed repetitive "Ledger" buttons from every table row and card.
+   - Made table rows and mobile cards directly clickable (`customer-row-clickable`, keyboard accessible on Enter/Space, matching `SalesHistoryPage`).
+   - Directory table only displays `Name`, `Balance owed`, `Store credit`, and a clean `+ Credit` button when permitted.
+3. **Verification**:
+   - Vitest: 20 test files passed (67 tests, 0 failures), including all 9 ledger unit tests.
+   - TypeScript: `tsc --noEmit` clean (0 errors).
+   - ESLint: `eslint . --max-warnings 0` clean (0 errors, 0 warnings).
+   - Vite Build: `npm run build` succeeded.
+   - Playwright E2E: 14/14 tests in `customers.spec.ts` passed across desktop and mobile projects, verifying clickable row navigation to `/app/customers/:id`, statement presentation, axe-core 0 violations, and back-link navigation.
+PR #40 conflict resolution, 2026-10-30: merged `origin/main` at `da60dfcf` into the proposal branch, keeping both the proposal-publication and simulation handover entries. The merged branch passed `npm test -- --run` (58 tests in 19 files). This documentation merge does not supply API or data-owner approval.
+
+Proposal publication follow-up, 2026-10-30: Victor requested committing and pushing the previously local allocation-proposal edit. It records his three financial-policy directions without claiming data-owner or API-owner sign-off. PR #37 was already merged before this follow-up; the new edit needs separate review and integration into main. No service implementation is implied.
 
 PR #39 conflict resolution, 2026-10-30: merged `origin/main` at `a1e7918` into `feat/sale-reversal-simulation`. Preserved both the simulated reversal settlement/idempotency state and the restock mock state, as well as both work-log histories. Web lint and typecheck passed; `npm test -- --run` passed 58 tests in 19 files; `npm run check:reversal-simulation` passed; focused reversal, restock and picker Playwright checks passed 18/18 across desktop and mobile. The reversal remains a simulation and does not implement the real service or imply contract approval.
 
@@ -747,3 +770,4 @@ Decided by Victor Oyeleke (scope); Codex (implementation/verification mechanics)
     - Contract lint: Redocly validated `contract/openapi.yaml` in 186ms.
     - Playwright: 30/30 tests passed (2.6m) across desktop and mobile with zero axe accessibility violations.
 - 2026-10-29 · Isaac Bassey (API and access owner), with an AI assistant · Reviewed v0.2.0 B, C, D and the customer activity fields after merge and signed them off in decisions.md §3 with follow-ups. Branch `feat/api-history-ledger-dashboard`: contract adds `GET /products/{productId}/movements` (R13), `GET /customers/{customerId}/ledger` (R10) and `GET /dashboard` (R14), all read-only, any role. New `history` package (`MovementQueries`, `MovementController`, `LedgerQueries`, `LedgerController` and records) and `dashboard` package (`DashboardQueries`, `DashboardController`, `Dashboard`); both `package-info.java` placeholders removed. Running totals are window sums over the whole history, computed before paging; "today" is the Africa/Lagos day from the injected `Clock`. New tests: `MovementHistoryIT` (6), `LedgerIT` (5), `DashboardIT` (5). No migration and no write path changed. Once merged, `load/k6/dashboard.js` can call `GET /dashboard` directly.
+- 2026-10-30 · Blessing Nwafor (with an AI assistant) · Ran the Cold start workflow after 20 minutes idle: first 200 after 62.3 s, warm /health 161 to 330 ms (one run). Recorded in docs/evidence/cold-start-2026-10-30/ and the README performance table; known-limitations line updated. 2026-10-30 · Blessing Nwafor (with an AI assistant) · Ran the Lighthouse workflow on the deployed web address (mobile: performance 90, accessibility 100, LCP 2.4 s, CLS 0, TBT 180 ms; desktop: 100, 100, 0.5 s, 0.001, 0 ms) and measured INP with web-vitals (40 ms early, 216 ms worst by the end). LCP met, INP missed by 16 ms. Reports and write-up in docs/evidence/web-vitals-2026-10-30/; README updated with the figures and a known-limitation entry.

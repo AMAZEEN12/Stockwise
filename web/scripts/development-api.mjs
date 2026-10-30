@@ -88,6 +88,86 @@ const submissions = new Map();
 const saleSettlements = new Map([
   ['33333333-3333-4333-8333-000000000002', { debt: 340000, repaid: 55000, creditUsed: 0 }],
 ]);
+const customerLedgers = new Map([
+  [
+    '22222222-2222-4222-8222-222222222221',
+    [
+      {
+        id: '44444444-4444-4444-8444-000000000002',
+        sourceType: 'CREDIT_SALE',
+        sourceId: '33333333-3333-4333-8333-000000000002',
+        deltaKobo: 395000,
+        balanceAfterKobo: 450000,
+        storeCreditAfterKobo: 0,
+        createdAt: new Date(Date.now() - 2 * 3600 * 1000).toISOString(),
+      },
+      {
+        id: '44444444-4444-4444-8444-000000000001',
+        sourceType: 'CREDIT_SALE',
+        sourceId: null,
+        deltaKobo: 55000,
+        balanceAfterKobo: 55000,
+        storeCreditAfterKobo: 0,
+        createdAt: new Date(Date.now() - 24 * 3600 * 1000).toISOString(),
+      },
+    ],
+  ],
+  [
+    '22222222-2222-4222-8222-222222222222',
+    [
+      {
+        id: '44444444-4444-4444-8444-000000000005',
+        sourceType: 'STORE_CREDIT',
+        sourceId: null,
+        deltaKobo: 600000,
+        balanceAfterKobo: 0,
+        storeCreditAfterKobo: 600000,
+        createdAt: new Date(Date.now() - 24 * 3600 * 1000).toISOString(),
+      },
+      {
+        id: '44444444-4444-4444-8444-000000000004',
+        sourceType: 'REVERSAL',
+        sourceId: null,
+        deltaKobo: -1000000,
+        balanceAfterKobo: 0,
+        storeCreditAfterKobo: 0,
+        createdAt: new Date(Date.now() - 24 * 3600 * 1000).toISOString(),
+      },
+      {
+        id: '44444444-4444-4444-8444-000000000003',
+        sourceType: 'REPAYMENT',
+        sourceId: null,
+        deltaKobo: -600000,
+        balanceAfterKobo: 400000,
+        storeCreditAfterKobo: 0,
+        createdAt: new Date(Date.now() - 48 * 3600 * 1000).toISOString(),
+      },
+      {
+        id: '44444444-4444-4444-8444-000000000002',
+        sourceType: 'CREDIT_SALE',
+        sourceId: null,
+        deltaKobo: 1000000,
+        balanceAfterKobo: 1000000,
+        storeCreditAfterKobo: 0,
+        createdAt: new Date(Date.now() - 72 * 3600 * 1000).toISOString(),
+      },
+    ],
+  ],
+  [
+    '22222222-2222-4222-8222-222222222223',
+    [
+      {
+        id: '44444444-4444-4444-8444-000000000006',
+        sourceType: 'CREDIT_SALE',
+        sourceId: null,
+        deltaKobo: 85000,
+        balanceAfterKobo: 85000,
+        storeCreditAfterKobo: 0,
+        createdAt: new Date(Date.now() - 48 * 3600 * 1000).toISOString(),
+      },
+    ],
+  ],
+]);
 const reversalSubmissions = new Map();
 const restocks = [];
 const restockSubmissions = new Map();
@@ -393,6 +473,29 @@ const server = createServer(async (request,response) => {
     if (!restock) {problem(404,'NOT_FOUND','Restock not found.'); return;}
     send(200,restock); return;
   }
+  const customerLedgerMatch = url.pathname.match(/^\/customers\/([^/]+)\/ledger$/);
+  if (customerLedgerMatch && request.method === 'GET') {
+    const customerId = customerLedgerMatch[1];
+    const customer = customers.find((c) => c.id === customerId);
+    if (!customer) { problem(404, 'NOT_FOUND', 'Customer not found.'); return; }
+    const page = Number(url.searchParams.get('page') || 0);
+    const size = Number(url.searchParams.get('size') || 20);
+    if (!Number.isInteger(page) || page < 0 || !Number.isInteger(size) || size < 1 || size > 100) {
+      problem(400, 'VALIDATION_FAILED', 'Invalid pagination.');
+      return;
+    }
+    const entries = customerLedgers.get(customerId) || [];
+    send(200, {
+      customerId: customer.id,
+      balanceKobo: customer.balanceKobo,
+      storeCreditKobo: customer.storeCreditKobo,
+      items: entries.slice(page * size, (page + 1) * size),
+      page,
+      size,
+      totalItems: entries.length,
+    });
+    return;
+  }
   if (url.pathname === '/customers' && request.method === 'GET') {
     const page = Number(url.searchParams.get('page') || 0); const size = Number(url.searchParams.get('size') || 20);
     if (!Number.isInteger(page) || page < 0 || !Number.isInteger(size) || size < 1 || size > 100) {problem(400,'VALIDATION_FAILED','Invalid pagination.'); return;}
@@ -421,6 +524,17 @@ const server = createServer(async (request,response) => {
     }
     customer.storeCreditKobo += amountKobo;
     customer.hasStoreCreditActivity = true;
+    const history = customerLedgers.get(customer.id) || [];
+    history.unshift({
+      id: randomUUID(),
+      sourceType: 'STORE_CREDIT',
+      sourceId: null,
+      deltaKobo: amountKobo,
+      balanceAfterKobo: customer.balanceKobo,
+      storeCreditAfterKobo: customer.storeCreditKobo,
+      createdAt: new Date().toISOString(),
+    });
+    customerLedgers.set(customer.id, history);
     send(201, customer);
     return;
   }
@@ -464,8 +578,38 @@ const server = createServer(async (request,response) => {
     const totalKobo = Number(total); const applied = customer && (body.useStoreCredit || body.useStoreCredit === undefined) ? Math.min(customer.storeCreditKobo,totalKobo) : 0;
     if (customer && body.paymentType === 'CREDIT' && BigInt(customer.balanceKobo)+total-BigInt(applied) > BigInt(Number.MAX_SAFE_INTEGER)) {problem(400,'VALIDATION_FAILED','Customer balance would exceed the supported amount.'); return;}
     for (const line of lines) {const product = products.find((item) => item.id === line.productId); product.quantity -= line.quantity; product.version++; product.updatedAt = new Date().toISOString();}
-    if (customer) {customer.storeCreditKobo -= applied; if (body.paymentType === 'CREDIT') {customer.balanceKobo += totalKobo-applied; if (totalKobo-applied > 0) customer.hasDebtActivity=true;}}
     const sale = {id:randomUUID(),reference:`S-${String(sales.length+1).padStart(6,'0')}`,paymentType:body.paymentType,...(body.customerId ? {customerId:body.customerId} : {}),...(body.dueDate ? {dueDate:body.dueDate} : {}),totalKobo,lines,createdBy:user.id,createdAt:new Date().toISOString()};
+    if (customer) {
+      customer.storeCreditKobo -= applied;
+      if (applied > 0) {
+        const history = customerLedgers.get(customer.id) || [];
+        history.unshift({
+          id: randomUUID(),
+          sourceType: 'STORE_CREDIT',
+          sourceId: sale.id,
+          deltaKobo: -applied,
+          balanceAfterKobo: customer.balanceKobo,
+          storeCreditAfterKobo: customer.storeCreditKobo,
+          createdAt: sale.createdAt,
+        });
+        customerLedgers.set(customer.id, history);
+      }
+      if (body.paymentType === 'CREDIT') {
+        customer.balanceKobo += totalKobo-applied;
+        if (totalKobo-applied > 0) customer.hasDebtActivity=true;
+        const history = customerLedgers.get(customer.id) || [];
+        history.unshift({
+          id: randomUUID(),
+          sourceType: 'CREDIT_SALE',
+          sourceId: sale.id,
+          deltaKobo: totalKobo-applied,
+          balanceAfterKobo: customer.balanceKobo,
+          storeCreditAfterKobo: customer.storeCreditKobo,
+          createdAt: sale.createdAt,
+        });
+        customerLedgers.set(customer.id, history);
+      }
+    }
     saleSettlements.set(sale.id,{debt:body.paymentType === 'CREDIT' ? totalKobo-applied : 0,repaid:0,creditUsed:applied});
     sales.unshift(sale); for (const line of lines) stockMovements.push({ id: randomUUID(), productId: line.productId, delta: -line.quantity, sourceType: 'SALE', sourceId: sale.id, createdAt: sale.createdAt }); submissions.set(submissionKey,{body:serialized,sale}); response.setHeader('Location',`/sales/${sale.id}`); send(201,sale); return;
   }

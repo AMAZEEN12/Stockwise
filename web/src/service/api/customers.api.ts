@@ -1,6 +1,6 @@
 import {authApi} from './auth.api';
 import {customersEndpoints} from '../endpoints/customers.endpoints';
-import type {Customer, CustomerPage} from '../../models/responses/customers.response';
+import type {Customer, CustomerPage, LedgerPage} from '../../models/responses/customers.response';
 import type {CustomerCreate, StoreCreditGrantRequest} from '../../models/requests/customers.request';
 
 export function validCustomer(value:unknown):value is Customer {
@@ -12,6 +12,32 @@ export function validCustomer(value:unknown):value is Customer {
     && typeof item.hasDebtActivity === 'boolean' && typeof item.hasStoreCreditActivity === 'boolean'
     && (item.contactPlaceholder === undefined || typeof item.contactPlaceholder === 'string');
 }
+
+export function validLedgerPage(value: unknown): value is LedgerPage {
+  if (!value || typeof value !== 'object') return false;
+  const page = value as Partial<LedgerPage>;
+  return (
+    typeof page.customerId === 'string' &&
+    Number.isSafeInteger(page.balanceKobo) &&
+    Number.isSafeInteger(page.storeCreditKobo) &&
+    Number.isSafeInteger(page.page) &&
+    Number.isSafeInteger(page.size) &&
+    Number.isSafeInteger(page.totalItems) &&
+    Array.isArray(page.items) &&
+    page.items.every(
+      (item) =>
+        item &&
+        typeof item.id === 'string' &&
+        ['CREDIT_SALE', 'REPAYMENT', 'REVERSAL', 'STORE_CREDIT'].includes(item.sourceType) &&
+        Number.isSafeInteger(item.deltaKobo) &&
+        Number.isSafeInteger(item.balanceAfterKobo) &&
+        Number.isSafeInteger(item.storeCreditAfterKobo) &&
+        typeof item.createdAt === 'string' &&
+        Number.isFinite(Date.parse(item.createdAt))
+    )
+  );
+}
+
 export const customersApi = authApi.injectEndpoints({endpoints:(builder) => ({
   customers:builder.query<Customer[],void>({
     async queryFn(_argument,_api,_options,baseQuery) {
@@ -30,6 +56,20 @@ export const customersApi = authApi.injectEndpoints({endpoints:(builder) => ({
       }
     }, providesTags:['Customers'],
   }),
+  customerLedger: builder.query<LedgerPage, { customerId: string; page?: number; size?: number }>({
+    async queryFn({ customerId, page = 0, size = 50 }, _api, _options, baseQuery) {
+      const result = await baseQuery({
+        url: customersEndpoints.ledger(customerId),
+        params: { page, size },
+      });
+      if (result.error) return { error: result.error };
+      if (!validLedgerPage(result.data)) {
+        return { error: { status: 'NETWORK', fields: {}, code: 'INVALID_LEDGER_RESPONSE' } };
+      }
+      return { data: result.data };
+    },
+    providesTags: (_result, _error, { customerId }) => [{ type: 'Customers', id: `${customerId}-ledger` }],
+  }),
   createCustomer:builder.mutation<Customer,CustomerCreate>({
     query:(data) => ({url:customersEndpoints.list,method:'POST',data}),
     invalidatesTags:(_result,error) => error ? [] : ['Customers'],
@@ -44,4 +84,4 @@ export const customersApi = authApi.injectEndpoints({endpoints:(builder) => ({
     invalidatesTags:(_result,error) => error ? [] : ['Customers'],
   }),
 })});
-export const {useCustomersQuery,useCreateCustomerMutation,useIssueStoreCreditMutation} = customersApi;
+export const {useCustomersQuery,useCustomerLedgerQuery,useCreateCustomerMutation,useIssueStoreCreditMutation} = customersApi;

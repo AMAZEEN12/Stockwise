@@ -13,6 +13,7 @@ export function postLoginDestination(role:User['role'],returnTo:string|null) {
   const allowed=['/app/products','/app/customers','/app/sales'].includes(path)
     || (path==='/app/sell' && role!=='ADMIN')
     || (path==='/app/products/new' && role==='OWNER')
-    || /^\/app\/receipts\/[0-9a-f-]{36}$/i.test(path);
+    || /^\/app\/receipts\/[0-9a-f-]{36}$/i.test(path)
+    || /^\/app\/customers\/[0-9a-f-]{36}$/i.test(path);
   return allowed ? path+destination.search+destination.hash : fallback;
 }

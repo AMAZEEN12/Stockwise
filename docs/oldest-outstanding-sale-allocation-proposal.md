@@ -31,6 +31,8 @@ The reversal restores A's stock; removes only A's outstanding ₦4,000 debt; and
 
 ## Decisions required before implementation
 
+**Victor's direction, 2026-10-30 (logged by Codex):** Block an affected sale reversal for manual review when existing balances cannot be reliably allocated to individual historical sales. Block a repayment reversal for manual review after its sale has already been reversed, including where resulting store credit may have been spent. When reversing a sale that used store credit, return the original store credit spent in addition to credit arising from allocated repayments. These directions resolve Victor's preferred treatment of those cases; they do not constitute data-owner or API-owner approval, an approved wire contract, or approval of the remaining settlement and history details below.
+
 1. **Repayment reversal after sale reversal:** decide whether to reject it, compensate with a new debt or recover the issued store credit, especially if that credit has already been spent. Do not silently rewrite allocations or make store credit negative.
 2. **Existing data and opening balances:** agree whether sufficiently complete historical records can be deterministically replayed into allocations; reconcile totals first. Where they cannot, choose an explicit opening-balance or manual-review policy instead of inventing allocations.
 3. **Settlement splits and other adjustments:** agree how to restore store credit originally used for a reversed sale, how refunds or other adjustments interact with allocation, and how the ledger distinguishes debt and credit activity. Do not assume PR #30's simulated settlement fields are an approved service contract.
