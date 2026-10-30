@@ -6,6 +6,8 @@ Source document: `Tesa cohort 6 software engineering capstone project.pdf` (TeSA
 > Any agent opening this project: read this file first, then the "Conventions and guidelines" and "Decisions" sections, then the artifacts in this folder. Continue from "Resume here". Don't re-ask anything already answered below.
 
 ## Resume here
+Mobile customer-picker fix, 2026-10-30: on `fix/mobile-customer-picker`, the shared right-drawer selector overrode the mobile picker positioning. The picker-specific mobile rule now has sufficient specificity to center the dialog without changing other drawers. The unchanged mobile picker suite passed 4/4 on the warmed server, including its viewport and axe checks; the complete mobile browser suite passed 47/47. Web lint and typecheck passed, 45 unit tests passed, and contract lint passed. The first cold browser run had a 30-second navigation timeout before opening the picker; the warmed rerun passed. Service verification could not start Maven in this environment. Desktop browser verification was not run. No push was made.
+
 Current frontend work, 2026-10-28 (Victor Oyeleke; logged by Antigravity):
 1. **PR #30 (`feat/store-credit-ui`)**: Customer store credit issuing and tender simulation completed and submitted for review.
 2. **PR #31 (`feat/reversal-otp-ui`)**: Sale reversal authorization code generation dialog (Owner/Admin) and OTP modal (Cashier/Assistant), plus persistent receipt inspection from Sales History and interactive row selection highlights.
