@@ -122,13 +122,13 @@ export function ProductsPage() {
                 aria-label={`${product.name}, ${product.reference}, ${product.category}. View stock movements.`}
                 onClick={(e) => {
                   if ((e.target as HTMLElement).closest("a, button")) return;
-                  void navigate(`${product.id}/movements${location.search}`);
+                  void navigate(`/app/products/${product.id}/movements${location.search}`);
                 }}
                 onKeyDown={(e) => {
                   if (e.key === "Enter" || e.key === " ") {
                     if ((e.target as HTMLElement).closest("a, button")) return;
                     e.preventDefault();
-                    void navigate(`${product.id}/movements${location.search}`);
+                    void navigate(`/app/products/${product.id}/movements${location.search}`);
                   }
                 }}
               >

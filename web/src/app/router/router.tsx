@@ -64,17 +64,15 @@ export const router = createBrowserRouter([
               ).RestockProductPage,
             }),
           },
-          {
-            path: ":productId/movements",
-            lazy: async () => ({
-              Component: (
-                await import(
-                  "../../features/products/ProductMovementsDrawer"
-                )
-              ).ProductMovementsDrawer,
-            }),
-          },
         ],
+      },
+      {
+        path: "products/:productId/movements",
+        lazy: async () => ({
+          Component: (
+            await import("../../features/products/ProductMovementsPage")
+          ).ProductMovementsPage,
+        }),
       },
     ],
   },

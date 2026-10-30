@@ -6,11 +6,12 @@ Source document: `Tesa cohort 6 software engineering capstone project.pdf` (TeSA
 > Any agent opening this project: read this file first, then the "Conventions and guidelines" and "Decisions" sections, then the artifacts in this folder. Continue from "Resume here". Don't re-ask anything already answered below.
 
 ## Resume here
-Product stock movements drawer (PR 2), 2026-10-30 (Victor Oyeleke; logged by Antigravity):
-Branch `feat/product-movements-ui` implements the stock movements history drawer for products (`GET /api/v1/products/{id}/movements`, `R17`).
+Product stock movements dedicated page (PR 2), 2026-10-30 (Victor Oyeleke; logged by Antigravity):
+Branch `feat/product-movements-ui` implements the stock movements history dedicated page for products (`GET /api/v1/products/{id}/movements`, `R17`).
 1. Frontend implementation:
-   - Added `ProductMovementsDrawer.tsx` mounted at child route `/app/products/:productId/movements` via React Router.
-   - Drawer surfaces product name, current quantity badge, movement timeline with directional tags (`RESTOCK`, `SALE`, `INITIAL`, `REVERSAL`), Africa/Lagos (WAT) timestamps, quantity delta badges, and running balance (`quantityAfter`), plus loading skeletons, error state with retry, and empty state.
+   - Dedicated page: Added `ProductMovementsPage.tsx` mounted at dedicated route `/app/products/:productId/movements` (sibling to `/app/products` in `router.tsx`).
+   - Clean header controls: Removed the bottom "Close" button; the header `"×"` close link is visible and functional on both mobile and desktop (WCAG compliant 44px touch target) for returning to `/app/products`, alongside breadcrumb navigation and an optional `+ Restock` button for the Owner.
+   - Page surfaces product details, current stock badge, selling price, total movements, and a dual responsive view: comprehensive table on desktop and compact feed cards on mobile, with Africa/Lagos (WAT) timestamps, quantity delta badges, and running balance (`quantityAfter`), plus loading skeletons, error state with retry, and empty state.
    - Products catalogue rows in `ProductsPage.tsx` are clickable and keyboard accessible (`tabIndex={0}`, Enter/Space), styled with brand highlight (`color-mix(in srgb, var(--color-primary) 8%, var(--color-surface))`) without text underlines, preserving active search parameters and keeping restock action buttons isolated.
    - Added pure validators and formatters in `product-movements.ts`.
    - Updated development API simulation (`development-api.mjs`) to record and return stock movements for product creation, restocks, sales, and reversals.
@@ -18,7 +19,7 @@ Branch `feat/product-movements-ui` implements the stock movements history drawer
    - Vitest: 20 test files, 67 tests passing (`product-movements.test.ts` 9/9).
    - Strict TypeScript (`tsc --noEmit`): 0 errors.
    - ESLint: 0 errors, 0 warnings (`--max-warnings 0`).
-   - Vite production build: SUCCESS (`dist/` generated cleanly).
+   - Vite production build: SUCCESS (`dist/assets/ProductMovementsPage-*.js` generated cleanly).
    - Playwright: 4/4 passing on `products.spec.ts` and 4/4 passing on `restocks.spec.ts` across desktop and mobile with 0 axe accessibility violations.
 
 PR #39 conflict resolution, 2026-10-30: merged `origin/main` at `a1e7918` into `feat/sale-reversal-simulation`. Preserved both the simulated reversal settlement/idempotency state and the restock mock state, as well as both work-log histories. Web lint and typecheck passed; `npm test -- --run` passed 58 tests in 19 files; `npm run check:reversal-simulation` passed; focused reversal, restock and picker Playwright checks passed 18/18 across desktop and mobile. The reversal remains a simulation and does not implement the real service or imply contract approval.

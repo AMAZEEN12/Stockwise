@@ -38,7 +38,7 @@ test('catalogue, filter, add product, exact kobo and duplicate response', async 
   await expect(page.getByLabel('Reference',{exact:true})).toHaveValue('IND-070');
 });
 
-test('stock movement history drawer opens on product row click and shows movement timeline', async ({page}, info) => {
+test('stock movement history dedicated page opens on product row click and shows movement timeline', async ({page}, info) => {
   const targetProduct = products[0]; // Indomie Chicken 70g
   await page.route(`**/products/${targetProduct.id}`, (route) => route.fulfill({json: targetProduct}));
   await page.route(`**/products/${targetProduct.id}/movements*`, (route) => {
@@ -78,29 +78,33 @@ test('stock movement history drawer opens on product row click and shows movemen
   await expect(row).toBeVisible();
   await row.click();
 
-  // Drawer dialog opens
-  const dialog = page.getByRole('dialog', { name: 'Stock movements' });
-  await expect(dialog).toBeVisible();
+  // Dedicated page opens
+  await expect(page).toHaveURL(new RegExp(`/app/products/${targetProduct.id}/movements`));
+  await expect(page.getByRole('heading', { name: "Indomie Chicken 70g’s Stock Movements" })).toBeVisible();
 
   // Displays product details
-  await expect(dialog.getByText('Indomie Chicken 70g', { exact: true })).toBeVisible();
-  await expect(dialog.getByText(/In stock/i)).toBeVisible();
-  await expect(dialog.getByText(/2 movements recorded/i)).toBeVisible();
+  await expect(page.getByText(new RegExp(targetProduct.category))).toBeVisible();
+  await expect(page.getByText(/In stock/i).first()).toBeVisible();
+  await expect(page.getByText(/2 records/i)).toBeVisible();
 
   // Displays movements
-  await expect(dialog.getByText('Sale', { exact: true })).toBeVisible();
-  await expect(dialog.getByText('-1', { exact: true })).toBeVisible();
-  await expect(dialog.getByText('Opening stock', { exact: true })).toBeVisible();
-  await expect(dialog.getByText(`+${targetProduct.quantity + 1}`, { exact: true })).toBeVisible();
+  await expect(page.getByText('Sale', { exact: true }).filter({ visible: true })).toBeVisible();
+  await expect(page.getByText('-1', { exact: true }).filter({ visible: true })).toBeVisible();
+  await expect(page.getByText('Opening stock', { exact: true }).filter({ visible: true })).toBeVisible();
+  await expect(page.getByText(`+${targetProduct.quantity + 1}`, { exact: true }).filter({ visible: true })).toBeVisible();
+
+  // Verify there is no "Close" button (the "x" is enough)
+  await expect(page.getByRole('button', { name: 'Close', exact: true })).toHaveCount(0);
 
   // Accessibility audit
   const axe = await new AxeBuilder({ page }).analyze();
   expect(axe.violations.filter((v) => ['serious', 'critical'].includes(v.impact || ''))).toEqual([]);
 
-  await page.screenshot({ path: info.outputPath('product-movements-drawer.png'), fullPage: true });
+  await page.screenshot({ path: info.outputPath('product-movements-page.png'), fullPage: true });
 
-  // Close drawer
-  await dialog.getByRole('button', { name: 'Close', exact: true }).click();
-  await expect(dialog).not.toBeVisible();
+  // Close via 'x' link
+  const closeBtn = page.getByRole('link', { name: 'Close stock movements' });
+  await expect(closeBtn).toBeVisible();
+  await closeBtn.click();
   await expect(page).toHaveURL(/\/app\/products$/);
 });
