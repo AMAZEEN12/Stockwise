@@ -37,6 +37,7 @@ import ng.tesa.stockwise.auth.UserRepository;
  *   <tr><th>Request</th><th>Roles</th></tr>
  *   <tr><td>{@code GET /}, {@code GET /api/v1/health}, {@code POST /api/v1/auth/sessions}</td><td>public</td></tr>
  *   <tr><td>{@code POST /api/v1/products}</td><td>OWNER</td></tr>
+ *   <tr><td>{@code POST /api/v1/restocks}</td><td>OWNER</td></tr>
  *   <tr><td>{@code POST /api/v1/customers}, {@code POST /api/v1/sales}</td><td>OWNER, ASSISTANT</td></tr>
  *   <tr><td>any other request</td><td>any logged-in role</td></tr>
  * </table>
@@ -59,6 +60,7 @@ public class SecurityConfig {
                         .requestMatchers(HttpMethod.POST, "/api/v1/auth/sessions").permitAll()
                         .requestMatchers("/error").permitAll()
                         .requestMatchers(HttpMethod.POST, "/api/v1/products").hasRole("OWNER")
+                        .requestMatchers(HttpMethod.POST, "/api/v1/restocks").hasRole("OWNER")
                         .requestMatchers(HttpMethod.POST, "/api/v1/customers").hasAnyRole("OWNER", "ASSISTANT")
                         .requestMatchers(HttpMethod.POST, "/api/v1/sales").hasAnyRole("OWNER", "ASSISTANT")
                         .anyRequest().authenticated())

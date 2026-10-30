@@ -144,6 +144,8 @@ The calendar below is the original planned schedule from Fri 23 Oct, Day 3. Curr
 **After Monday (days 6-14)**
 15. Restock, repayments (guarded), the customer ledger with running balance. (Covers R6, R7, R9, R10)
 16. Reversals and store credit (`ReversalIT`, `StoreCreditIT`, `RepaymentConcurrencyIT`). ADR-003. (Covers R11, R12)
+
+Sale reversal alignment (Victor, 2026-10-29): use PR #31's proposed `POST /sales/{saleId}/reversal` for the sale operation, subject to the contract owners' agreement. R11 and R12 are a single delivery and verification gate: the same committed reversal restores inventory and, for a credit sale, handles debt and any eligible repaid excess as store credit. Include replay, duplicate/concurrent reversal, atomic rollback and later guarded credit consumption tests. Repayment and restock reversal endpoints still need agreement. The OTP permission change remains a proposal; choose migration numbers after prerequisite branches merge.
 17. Movement history, dashboard, `ReconciliationIT`, `DashboardIT`. (Covers R13, R14)
 18. Optimistic archive with rollback, slow-network and offline behaviour. (Covers R18, N11)
 19. Contract complete, plus `ContractIT` against the deployed service in `deploy.yml`. (Covers N5)

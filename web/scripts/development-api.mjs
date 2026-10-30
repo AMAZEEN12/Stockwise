@@ -89,6 +89,8 @@ const saleSettlements = new Map([
   ['33333333-3333-4333-8333-000000000002', { debt: 340000, repaid: 55000, creditUsed: 0 }],
 ]);
 const reversalSubmissions = new Map();
+const restocks = [];
+const restockSubmissions = new Map();
 const reversalAuthorizations = new Map([
   [
     '839201',
@@ -104,6 +106,7 @@ const reversalAuthorizations = new Map([
   ],
 ]);
 const isUuid = (text) => typeof text === 'string' && /^[0-9a-f]{8}-[0-9a-f]{4}-[1-5][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i.test(text);
+const isDate = (value) => typeof value === 'string' && /^\d{4}-\d{2}-\d{2}$/.test(value) && Number.isFinite(Date.parse(value)) && new Date(value).toISOString().slice(0,10) === value;
 const server = createServer(async (request,response) => {
   const origin = request.headers.origin;
   if (origin && !/^http:\/\/(127\.0\.0\.1|localhost):\d+$/.test(origin)) {response.writeHead(403); response.end(); return;}
@@ -285,6 +288,45 @@ const server = createServer(async (request,response) => {
     const product = products.find((item) => item.id === url.pathname.split('/')[2]);
     if (!product) {problem(404,'NOT_FOUND','Product not found.'); return;}
     send(200,{...product,stockState:stockState(product)}); return;
+  }
+  if (url.pathname === '/restocks' && request.method === 'GET') {
+    const page = Number(url.searchParams.get('page') || 0); const size = Number(url.searchParams.get('size') || 20);
+    const productId = url.searchParams.get('productId');
+    if (!Number.isInteger(page) || page < 0 || !Number.isInteger(size) || size < 1 || size > 100 || (productId && !isUuid(productId))) {problem(400,'VALIDATION_FAILED','Invalid restock filters.'); return;}
+    const items = restocks.filter((restock) => !productId || restock.productId === productId)
+      .sort((a,b) => b.createdAt.localeCompare(a.createdAt) || b.id.localeCompare(a.id));
+    send(200,{items:items.slice(page*size,(page+1)*size),page,size,totalItems:items.length}); return;
+  }
+  if (url.pathname === '/restocks' && request.method === 'POST') {
+    if (user.role !== 'OWNER') {problem(403,'FORBIDDEN','Only the owner can record restocks.'); return;}
+    const key = request.headers['idempotency-key'];
+    if (!isUuid(key)) {problem(400,'VALIDATION_FAILED','A UUID Idempotency-Key is required.'); return;}
+    const errors = [];
+    if (!isUuid(body.productId)) errors.push({field:'productId',message:'Choose a valid product.'});
+    if (!Number.isInteger(body.quantity) || body.quantity < 1 || body.quantity > 2147483647) errors.push({field:'quantity',message:'Enter a supported positive whole number.'});
+    if (!isDate(body.receivedOn)) errors.push({field:'receivedOn',message:'Choose a valid date.'});
+    if (body.note !== undefined && (typeof body.note !== 'string' || [...body.note].length > 500)) errors.push({field:'note',message:'Use at most 500 characters.'});
+    if (Object.keys(body).some((property) => !['productId','quantity','receivedOn','note'].includes(property))) errors.push({field:'body',message:'Unexpected property.'});
+    if (errors.length) {problem(400,'VALIDATION_FAILED','Check restock fields.',errors); return;}
+    const canonical = JSON.stringify({productId:body.productId,quantity:body.quantity,receivedOn:body.receivedOn,note:typeof body.note === 'string' && body.note.trim() ? body.note.trim() : null});
+    const submissionKey = key;
+    if (restockSubmissions.has(submissionKey)) {
+      const saved = restockSubmissions.get(submissionKey);
+      if (saved.userId !== user.id || saved.body !== canonical) {problem(422,'IDEMPOTENCY_KEY_REUSED','This key was already used with a different request.'); return;}
+      send(201,saved.restock); return;
+    }
+    const product = products.find((item) => item.id === body.productId);
+    if (!product) {problem(404,'NOT_FOUND','Product not found.'); return;}
+    if (body.quantity > 2147483647 - product.quantity) {problem(409,'STOCK_LIMIT_EXCEEDED','The resulting stock quantity is too large.',[{field:'quantity',message:'Choose a smaller quantity.'}]); return;}
+    const createdAt = new Date().toISOString();
+    const restock = {id:randomUUID(),productId:product.id,quantity:body.quantity,receivedOn:body.receivedOn,...(body.note?.trim() ? {note:body.note.trim()} : {}),createdBy:user.id,createdAt};
+    product.quantity += body.quantity; product.version++; product.updatedAt = createdAt; product.stockState = stockState(product);
+    restocks.unshift(restock); restockSubmissions.set(submissionKey,{userId:user.id,body:canonical,restock}); response.setHeader('Location',`/restocks/${restock.id}`); send(201,restock); return;
+  }
+  if (/^\/restocks\/[^/]+$/.test(url.pathname) && request.method === 'GET') {
+    const restock = restocks.find((item) => item.id === url.pathname.split('/')[2]);
+    if (!restock) {problem(404,'NOT_FOUND','Restock not found.'); return;}
+    send(200,restock); return;
   }
   if (url.pathname === '/customers' && request.method === 'GET') {
     const page = Number(url.searchParams.get('page') || 0); const size = Number(url.searchParams.get('size') || 20);
