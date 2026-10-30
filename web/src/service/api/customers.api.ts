@@ -1,7 +1,7 @@
 import {authApi} from './auth.api';
 import {customersEndpoints} from '../endpoints/customers.endpoints';
 import type {Customer, CustomerPage} from '../../models/responses/customers.response';
-import type {CustomerCreate} from '../../models/requests/customers.request';
+import type {CustomerCreate, StoreCreditGrantRequest} from '../../models/requests/customers.request';
 
 export function validCustomer(value:unknown):value is Customer {
   if (!value || typeof value !== 'object') return false;
@@ -34,5 +34,14 @@ export const customersApi = authApi.injectEndpoints({endpoints:(builder) => ({
     query:(data) => ({url:customersEndpoints.list,method:'POST',data}),
     invalidatesTags:(_result,error) => error ? [] : ['Customers'],
   }),
+  issueStoreCredit:builder.mutation<Customer,{customerId:string;body:StoreCreditGrantRequest}>({
+    query:({customerId,body}) => ({
+      url:customersEndpoints.storeCredit(customerId),
+      method:'POST',
+      headers:{'Idempotency-Key':crypto.randomUUID()},
+      data:body,
+    }),
+    invalidatesTags:(_result,error) => error ? [] : ['Customers'],
+  }),
 })});
-export const {useCustomersQuery,useCreateCustomerMutation} = customersApi;
+export const {useCustomersQuery,useCreateCustomerMutation,useIssueStoreCreditMutation} = customersApi;

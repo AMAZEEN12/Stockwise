@@ -20,8 +20,83 @@ const customers = [
   {id:'22222222-2222-4222-8222-222222222223',displayName:'Ngozi Okoro',balanceKobo:85000,storeCreditKobo:0,hasDebtActivity:true,hasStoreCreditActivity:false,createdAt:'2026-10-24T08:41:00Z'},
   {id:'22222222-2222-4222-8222-222222222224',displayName:'Tunde Bakare',balanceKobo:0,storeCreditKobo:0,hasDebtActivity:false,hasStoreCreditActivity:false,createdAt:'2026-10-24T08:41:00Z'},
 ];
-const sales = [];
+const sales = [
+  {
+    id: '33333333-3333-4333-8333-000000000003',
+    reference: 'S-000003',
+    paymentType: 'PAID',
+    totalKobo: 196000,
+    lines: [
+      {
+        productId: '11111111-1111-4111-8111-000000000004',
+        productName: 'Golden Penny Spaghetti 500g',
+        quantity: 2,
+        unitPriceKobo: 98000,
+        lineTotalKobo: 196000,
+      },
+    ],
+    createdBy: 'a2222222-2222-4222-8222-222222222223',
+    createdAt: new Date(Date.now() - 3600 * 1000).toISOString(),
+  },
+  {
+    id: '33333333-3333-4333-8333-000000000002',
+    reference: 'S-000002',
+    paymentType: 'CREDIT',
+    customerId: '22222222-2222-4222-8222-222222222221',
+    dueDate: new Date(Date.now() + 7 * 86400000).toISOString().slice(0, 10),
+    totalKobo: 395000,
+    lines: [
+      {
+        productId: '11111111-1111-4111-8111-000000000005',
+        productName: 'Cadbury Bournvita Chocolate Malt Drink Refill Pouch 900g',
+        quantity: 1,
+        unitPriceKobo: 395000,
+        lineTotalKobo: 395000,
+      },
+    ],
+    createdBy: 'a2222222-2222-4222-8222-222222222223',
+    createdAt: new Date(Date.now() - 2 * 3600 * 1000).toISOString(),
+  },
+  {
+    id: '33333333-3333-4333-8333-000000000001',
+    reference: 'S-000001',
+    paymentType: 'PAID',
+    totalKobo: 225000,
+    lines: [
+      {
+        productId: '11111111-1111-4111-8111-000000000001',
+        productName: 'Indomie Chicken 70g',
+        quantity: 1,
+        unitPriceKobo: 45000,
+        lineTotalKobo: 45000,
+      },
+      {
+        productId: '11111111-1111-4111-8111-000000000003',
+        productName: 'Dettol 250ml',
+        quantity: 1,
+        unitPriceKobo: 180000,
+        lineTotalKobo: 180000,
+      },
+    ],
+    createdBy: 'a2222222-2222-4222-8222-222222222222',
+    createdAt: new Date(Date.now() - 3 * 3600 * 1000).toISOString(),
+  },
+];
 const submissions = new Map();
+const reversalAuthorizations = new Map([
+  [
+    '839201',
+    {
+      code: '839201',
+      saleId: '33333333-3333-4333-8333-000000000002',
+      expiresAt: new Date(Date.now() + 24 * 3600 * 1000).toISOString(),
+      generatedBy: 'Demo Owner',
+      generatedByRole: 'OWNER',
+      redeemedAt: null,
+      createdAt: new Date().toISOString(),
+    },
+  ],
+]);
 const isUuid = (text) => typeof text === 'string' && /^[0-9a-f]{8}-[0-9a-f]{4}-[1-5][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i.test(text);
 const server = createServer(async (request,response) => {
   const origin = request.headers.origin;
@@ -221,6 +296,21 @@ const server = createServer(async (request,response) => {
     const customer = {...body,displayName:body.displayName.trim(),id:randomUUID(),balanceKobo:0,storeCreditKobo:0,hasDebtActivity:false,hasStoreCreditActivity:false,createdAt:new Date().toISOString()};
     customers.push(customer);send(201,customer);return;
   }
+  if (url.pathname.startsWith('/customers/') && url.pathname.endsWith('/store-credit') && request.method === 'POST') {
+    if (!['OWNER','ADMIN'].includes(user.role)) {problem(403,'FORBIDDEN','Only Owner and Admin can issue store credit.'); return;}
+    const customerId = url.pathname.split('/')[2];
+    const customer = customers.find((c) => c.id === customerId);
+    if (!customer) {problem(404,'NOT_FOUND','Customer not found.'); return;}
+    const amountKobo = Number(body.amountKobo);
+    if (!Number.isSafeInteger(amountKobo) || amountKobo <= 0) {
+      problem(400,'VALIDATION_FAILED','Check fields.',[{field:'amountKobo',message:'Amount must be a positive integer.'}]);
+      return;
+    }
+    customer.storeCreditKobo += amountKobo;
+    customer.hasStoreCreditActivity = true;
+    send(201, customer);
+    return;
+  }
   if (url.pathname === '/sales' && request.method === 'GET') {
     const page=Number(url.searchParams.get('page') || 0);const size=Number(url.searchParams.get('size') || 20);
     const from=url.searchParams.get('from');const to=url.searchParams.get('to');const paymentType=url.searchParams.get('paymentType');const customerId=url.searchParams.get('customerId');
@@ -242,7 +332,7 @@ const server = createServer(async (request,response) => {
       if (saved.body !== serialized) {problem(422,'IDEMPOTENCY_KEY_REUSED','This key was already used with a different request.'); return;}
       send(201,saved.sale); return;
     }
-    if (!['PAID','CREDIT'].includes(body.paymentType) || !Array.isArray(body.lines) || body.lines.length < 1 || body.lines.length > 50 || body.lines.some((line) => !line || typeof line !== 'object' || !isUuid(line.productId) || !Number.isInteger(line.quantity) || line.quantity < 1 || line.quantity > 10000 || Object.keys(line).some((key) => !['productId','quantity'].includes(key))) || Object.keys(body).some((key) => !['paymentType','lines','customerId','dueDate'].includes(key)) || (body.paymentType === 'CREDIT' && !body.customerId) || (body.dueDate && (body.paymentType !== 'CREDIT' || !/^\d{4}-\d{2}-\d{2}$/.test(body.dueDate) || Number.isNaN(Date.parse(body.dueDate))))) {problem(400,'VALIDATION_FAILED','Check sale quantities, payment type and customer.'); return;}
+    if (!['PAID','CREDIT'].includes(body.paymentType) || !Array.isArray(body.lines) || body.lines.length < 1 || body.lines.length > 50 || body.lines.some((line) => !line || typeof line !== 'object' || !isUuid(line.productId) || !Number.isInteger(line.quantity) || line.quantity < 1 || line.quantity > 10000 || Object.keys(line).some((key) => !['productId','quantity'].includes(key))) || Object.keys(body).some((key) => !['paymentType','lines','customerId','dueDate','useStoreCredit'].includes(key)) || (body.paymentType === 'CREDIT' && !body.customerId) || (body.dueDate && (body.paymentType !== 'CREDIT' || !/^\d{4}-\d{2}-\d{2}$/.test(body.dueDate) || Number.isNaN(Date.parse(body.dueDate))))) {problem(400,'VALIDATION_FAILED','Check sale quantities, payment type and customer.'); return;}
     const customer = customers.find((person) => person.id === body.customerId);
     if (body.customerId && !customer) {problem(404,'NOT_FOUND','Customer not found.'); return;}
     const grouped = new Map();
@@ -258,7 +348,7 @@ const server = createServer(async (request,response) => {
     }
     const total = lines.reduce((sum,line) => sum+BigInt(line.lineTotalKobo),0n);
     if (total > BigInt(Number.MAX_SAFE_INTEGER)) {problem(400,'VALIDATION_FAILED','Amount is too large.'); return;}
-    const totalKobo = Number(total); const applied = customer ? Math.min(customer.storeCreditKobo,totalKobo) : 0;
+    const totalKobo = Number(total); const applied = customer && (body.useStoreCredit || body.useStoreCredit === undefined) ? Math.min(customer.storeCreditKobo,totalKobo) : 0;
     if (customer && body.paymentType === 'CREDIT' && BigInt(customer.balanceKobo)+total-BigInt(applied) > BigInt(Number.MAX_SAFE_INTEGER)) {problem(400,'VALIDATION_FAILED','Customer balance would exceed the supported amount.'); return;}
     for (const line of lines) {const product = products.find((item) => item.id === line.productId); product.quantity -= line.quantity; product.version++; product.updatedAt = new Date().toISOString();}
     if (customer) {customer.storeCreditKobo -= applied; if (body.paymentType === 'CREDIT') {customer.balanceKobo += totalKobo-applied; if (totalKobo-applied > 0) customer.hasDebtActivity=true;}}
@@ -267,6 +357,101 @@ const server = createServer(async (request,response) => {
   }
   if (/^\/sales\/[^/]+$/.test(url.pathname) && request.method === 'GET') {
     const sale = sales.find((item) => item.id === url.pathname.split('/')[2]); if (!sale) {problem(404,'NOT_FOUND','Sale not found.'); return;} send(200,sale); return;
+  }
+  if (url.pathname === '/reversals/authorizations' && request.method === 'POST') {
+    if (!['OWNER', 'ADMIN'].includes(user.role)) {
+      problem(403, 'FORBIDDEN', 'Only Owners and Admins can generate reversal codes.');
+      return;
+    }
+    if (!body || !isUuid(body.saleId)) {
+      problem(400, 'VALIDATION_FAILED', 'A valid saleId is required.');
+      return;
+    }
+    const sale = sales.find((item) => item.id === body.saleId);
+    if (!sale) {
+      problem(404, 'NOT_FOUND', 'Sale not found.');
+      return;
+    }
+    if (sale.reversed) {
+      problem(409, 'SALE_ALREADY_REVERSED', 'This sale has already been reversed.');
+      return;
+    }
+    const code = String(Math.floor(100000 + Math.random() * 900000));
+    const validMinutes = typeof body.validMinutes === 'number' && body.validMinutes > 0 && body.validMinutes <= 60 ? body.validMinutes : 15;
+    const expiresAt = new Date(Date.now() + validMinutes * 60 * 1000).toISOString();
+    const auth = {
+      code,
+      saleId: body.saleId,
+      expiresAt,
+      generatedBy: user.displayName,
+      generatedByRole: user.role,
+      redeemedAt: null,
+      createdAt: new Date().toISOString(),
+    };
+    reversalAuthorizations.set(code, auth);
+    send(201, auth);
+    return;
+  }
+  if (/^\/sales\/[^/]+\/reversal$/.test(url.pathname) && request.method === 'POST') {
+    const saleId = url.pathname.split('/')[2];
+    const key = request.headers['idempotency-key'];
+    if (!isUuid(key)) {
+      problem(400, 'VALIDATION_FAILED', 'A UUID Idempotency-Key is required.');
+      return;
+    }
+    const sale = sales.find((item) => item.id === saleId);
+    if (!sale) {
+      problem(404, 'NOT_FOUND', 'Sale not found.');
+      return;
+    }
+    if (sale.reversed) {
+      problem(409, 'SALE_ALREADY_REVERSED', 'This sale has already been reversed.');
+      return;
+    }
+    if (user.role === 'ASSISTANT') {
+      if (!body?.authorizationCode || typeof body.authorizationCode !== 'string') {
+        problem(403, 'SUPERVISOR_CODE_REQUIRED', 'Supervisor authorization code is required for assistants to reverse sales.');
+        return;
+      }
+      const auth = reversalAuthorizations.get(body.authorizationCode.trim());
+      if (!auth || Date.parse(auth.expiresAt) <= Date.now()) {
+        problem(422, 'INVALID_AUTHORIZATION_CODE', 'The authorization code is invalid or has expired.');
+        return;
+      }
+      if (auth.saleId !== sale.id) {
+        problem(422, 'AUTHORIZATION_SALE_MISMATCH', 'This authorization code was not issued for this sale.');
+        return;
+      }
+      if (auth.redeemedAt) {
+        problem(409, 'AUTHORIZATION_ALREADY_USED', 'This authorization code has already been redeemed.');
+        return;
+      }
+      auth.redeemedAt = new Date().toISOString();
+      auth.redeemedBy = user.displayName;
+    }
+    sale.reversed = true;
+    sale.reversedAt = new Date().toISOString();
+    sale.reversedBy = user.displayName;
+    sale.reversalReason = body?.reason || 'CUSTOMER_RETURN';
+    sale.reversalNote = body?.note;
+    for (const line of sale.lines) {
+      const product = products.find((item) => item.id === line.productId);
+      if (product) {
+        product.quantity += line.quantity;
+        product.version++;
+        product.updatedAt = new Date().toISOString();
+      }
+    }
+    send(200, {
+      reversalId: randomUUID(),
+      saleId: sale.id,
+      reversedAt: sale.reversedAt,
+      reversedBy: user.displayName,
+      reason: sale.reversalReason,
+      note: sale.reversalNote,
+      stockRestored: true,
+    });
+    return;
   }
   problem(404,'NOT_FOUND','This operation is not available in this simulation.');
 });

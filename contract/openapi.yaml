@@ -43,6 +43,8 @@ tags:
     description: Customers who buy on credit
   - name: sales
     description: Paid and credit sales (the stock-protected rule)
+  - name: dashboard
+    description: Today's figures, computed when read
   - name: health
     description: Liveness
 
@@ -238,6 +240,38 @@ paths:
         '404':
           $ref: '#/components/responses/NotFound'
 
+  /products/{productId}/movements:
+    get:
+      tags: [products]
+      operationId: listProductMovements
+      summary: A product's stock movement history
+      description: |
+        Safe. Any role. Every change to the product's stock (opening stock, sales, restocks and their
+        reversals), newest first. Each entry carries `quantityAfter`, the running total right after it,
+        computed over the whole history before paging, so the newest entry's `quantityAfter` equals
+        `currentQuantity` (spec R13). Archived products have a history too.
+      parameters:
+        - $ref: '#/components/parameters/RequestId'
+        - $ref: '#/components/parameters/ProductId'
+        - $ref: '#/components/parameters/Page'
+        - $ref: '#/components/parameters/Size'
+      responses:
+        '200':
+          description: A page of the product's movements
+          headers:
+            X-Request-Id:
+              $ref: '#/components/headers/RequestId'
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/MovementPage'
+        '400':
+          $ref: '#/components/responses/BadRequest'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '404':
+          $ref: '#/components/responses/NotFound'
+
   /product-categories:
     get:
       tags: [products]
@@ -346,6 +380,65 @@ paths:
             application/problem+json:
               schema:
                 $ref: '#/components/schemas/Problem'
+
+  /customers/{customerId}/ledger:
+    get:
+      tags: [customers]
+      operationId: getCustomerLedger
+      summary: A customer's ledger with the balance after each entry
+      description: |
+        Safe. Any role. Credit sales, repayments, reversals and store-credit changes, newest first
+        (spec R10). `balanceAfterKobo` is what the customer owed right after the entry;
+        `storeCreditAfterKobo` is the store credit they held right after it. A `STORE_CREDIT` entry
+        changes store credit only. The newest entry's `balanceAfterKobo` equals `balanceKobo`. Paid
+        sales are not ledger entries.
+      parameters:
+        - $ref: '#/components/parameters/RequestId'
+        - $ref: '#/components/parameters/CustomerId'
+        - $ref: '#/components/parameters/Page'
+        - $ref: '#/components/parameters/Size'
+      responses:
+        '200':
+          description: A page of the customer's ledger
+          headers:
+            X-Request-Id:
+              $ref: '#/components/headers/RequestId'
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/LedgerPage'
+        '400':
+          $ref: '#/components/responses/BadRequest'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '404':
+          $ref: '#/components/responses/NotFound'
+
+  /dashboard:
+    get:
+      tags: [dashboard]
+      operationId: getDashboard
+      summary: Today's sales, low stock and credit owed
+      description: |
+        Safe. Any role. Every figure is computed from the records when read, never stored (spec R14),
+        and the response says when (`computedAt`) and that it is demonstration data. "Today" is the
+        Africa/Lagos calendar day (DM14): a sale at 00:30 WAT counts as today. `lowStock` lists up to
+        10 active products at or below their threshold, lowest first; `lowStockCount` counts them all.
+        `recentSales` lists the 5 newest sales.
+      parameters:
+        - $ref: '#/components/parameters/RequestId'
+      responses:
+        '200':
+          description: The dashboard
+          headers:
+            X-Request-Id:
+              $ref: '#/components/headers/RequestId'
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Dashboard'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
 
   /sales:
     get:
@@ -562,6 +655,13 @@ components:
         format: uuid
     ProductId:
       name: productId
+      in: path
+      required: true
+      schema:
+        type: string
+        format: uuid
+    CustomerId:
+      name: customerId
       in: path
       required: true
       schema:
@@ -840,6 +940,200 @@ components:
         totalItems:
           type: integer
           format: int64
+
+    MovementSourceType:
+      description: What caused the movement. Reversal types arrive with reversals (R11).
+      type: string
+      enum: [OPENING, SALE, SALE_REVERSAL, RESTOCK, RESTOCK_REVERSAL]
+
+    Movement:
+      type: object
+      required: [id, delta, sourceType, quantityAfter, createdAt]
+      properties:
+        id:
+          type: string
+          format: uuid
+        delta:
+          type: integer
+          format: int32
+          description: Units added (positive) or removed (negative). Never 0.
+        sourceType:
+          $ref: '#/components/schemas/MovementSourceType'
+        sourceId:
+          type: string
+          format: uuid
+          description: The sale, restock or reversal that caused it. Absent for OPENING.
+        quantityAfter:
+          type: integer
+          format: int32
+          description: The product's quantity right after this movement.
+        createdAt:
+          type: string
+          format: date-time
+
+    MovementPage:
+      type: object
+      required: [productId, currentQuantity, items, page, size, totalItems]
+      properties:
+        productId:
+          type: string
+          format: uuid
+        currentQuantity:
+          type: integer
+          format: int32
+        items:
+          type: array
+          items:
+            $ref: '#/components/schemas/Movement'
+        page:
+          type: integer
+          format: int32
+        size:
+          type: integer
+          format: int32
+        totalItems:
+          type: integer
+          format: int64
+
+    LedgerSourceType:
+      description: What caused the ledger entry. REPAYMENT and REVERSAL arrive with those features (R9, R11).
+      type: string
+      enum: [CREDIT_SALE, REPAYMENT, REVERSAL, STORE_CREDIT]
+
+    LedgerEntry:
+      type: object
+      required: [id, sourceType, deltaKobo, balanceAfterKobo, storeCreditAfterKobo, createdAt]
+      properties:
+        id:
+          type: string
+          format: uuid
+        sourceType:
+          $ref: '#/components/schemas/LedgerSourceType'
+        sourceId:
+          type: string
+          format: uuid
+          description: The sale, repayment or reversal behind the entry, when there is one.
+        deltaKobo:
+          type: integer
+          format: int64
+          x-unit: kobo
+          description: Change to the balance owed, or to store credit for a STORE_CREDIT entry. Never 0; may be negative.
+        balanceAfterKobo:
+          $ref: '#/components/schemas/Kobo'
+        storeCreditAfterKobo:
+          $ref: '#/components/schemas/Kobo'
+        createdAt:
+          type: string
+          format: date-time
+
+    LedgerPage:
+      type: object
+      required: [customerId, balanceKobo, storeCreditKobo, items, page, size, totalItems]
+      properties:
+        customerId:
+          type: string
+          format: uuid
+        balanceKobo:
+          $ref: '#/components/schemas/Kobo'
+        storeCreditKobo:
+          $ref: '#/components/schemas/Kobo'
+        items:
+          type: array
+          items:
+            $ref: '#/components/schemas/LedgerEntry'
+        page:
+          type: integer
+          format: int32
+        size:
+          type: integer
+          format: int32
+        totalItems:
+          type: integer
+          format: int64
+
+    Dashboard:
+      type: object
+      required: [computedAt, isDemonstrationData, today, todaySales, outstandingCreditKobo, customersOwing,
+                 storeCreditHeldKobo, lowStockCount, lowStock, recentSales]
+      properties:
+        computedAt:
+          type: string
+          format: date-time
+        isDemonstrationData:
+          type: boolean
+          const: true
+        today:
+          type: string
+          format: date
+          description: The Africa/Lagos calendar day the "today" figures cover.
+        todaySales:
+          type: object
+          required: [count, totalKobo, paidCount, paidKobo, creditCount, creditKobo]
+          properties:
+            count:
+              type: integer
+              format: int32
+            totalKobo:
+              $ref: '#/components/schemas/Kobo'
+            paidCount:
+              type: integer
+              format: int32
+            paidKobo:
+              $ref: '#/components/schemas/Kobo'
+            creditCount:
+              type: integer
+              format: int32
+            creditKobo:
+              $ref: '#/components/schemas/Kobo'
+        outstandingCreditKobo:
+          $ref: '#/components/schemas/Kobo'
+        customersOwing:
+          type: integer
+          format: int32
+        storeCreditHeldKobo:
+          $ref: '#/components/schemas/Kobo'
+        lowStockCount:
+          type: integer
+          format: int32
+        lowStock:
+          type: array
+          maxItems: 10
+          items:
+            type: object
+            required: [id, reference, name, quantity, lowStockThreshold]
+            properties:
+              id:
+                type: string
+                format: uuid
+              reference:
+                type: string
+              name:
+                type: string
+              quantity:
+                type: integer
+                format: int32
+              lowStockThreshold:
+                type: integer
+                format: int32
+        recentSales:
+          type: array
+          maxItems: 5
+          items:
+            type: object
+            required: [id, reference, paymentType, totalKobo, createdAt]
+            properties:
+              id:
+                type: string
+                format: uuid
+              reference:
+                type: string
+              paymentType:
+                $ref: '#/components/schemas/PaymentType'
+              totalKobo:
+                $ref: '#/components/schemas/Kobo'
+              createdAt:
+                type: string
+                format: date-time
 
     CustomerCreate:
       type: object

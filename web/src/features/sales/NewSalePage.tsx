@@ -88,9 +88,10 @@ export function NewSalePage() {
     pending?.customer ||
     customers.data?.find((item) => item.id === customerId) ||
     (selectedCustomer?.id === customerId ? selectedCustomer : undefined);
+  const sessionToken = readSession()?.accessToken;
   const simulation =
-    import.meta.env.DEV &&
-    readSession()?.accessToken === "stockwise-contract-mock-token";
+    sessionToken === "stockwise-contract-mock-token" ||
+    Boolean(sessionToken?.startsWith("stockwise-simulation-"));
   const busy = ["checking", "sending", "retrying"].includes(state);
   const frozen = busy || pending !== null;
   const invalidRecovery = typeof initial === "string";
@@ -286,7 +287,7 @@ export function NewSalePage() {
         return;
       }
       const simulatedCredit =
-        snapshot.simulated && snapshot.customer
+        (snapshot.simulated || snapshot.body.useStoreCredit) && snapshot.customer
           ? Math.min(sale.totalKobo, snapshot.customer.storeCreditKobo)
           : 0;
       persistReceipt(
@@ -407,6 +408,7 @@ export function NewSalePage() {
         paymentType,
         ...(customerId ? { customerId } : {}),
         ...(paymentType === "CREDIT" && dueDate ? { dueDate } : {}),
+        ...(applyStoreCredit && credit > 0 ? { useStoreCredit: true } : {}),
         lines: cart.map((line) => ({
           productId: line.product.id,
           quantity: line.quantity,
@@ -604,12 +606,18 @@ export function NewSalePage() {
                         {displayMoney(customer.storeCreditKobo)})
                       </span>
                     </label>
-                    {unavailableCredit && (
+                    {unavailableCredit ? (
                       <p className="micro text-[var(--color-danger)]">
                         Store-credit recording is awaiting service support.
                         Uncheck above to complete this sale without credit
                         deduction.
                       </p>
+                    ) : (
+                      applyStoreCredit && credit > 0 && (
+                        <p className="micro text-[var(--color-primary)]">
+                          {displayMoney(credit)} will be deducted from customer’s store credit.
+                        </p>
+                      )
                     )}
                   </div>
                 )}
@@ -738,6 +746,18 @@ export function NewSalePage() {
             </div>
           ))}
         </div>
+        {credit > 0 && total !== null && (
+          <div className="credit-breakdown">
+            <p>
+              <span>Subtotal</span>
+              <span>{formatMoney(total)}</span>
+            </p>
+            <p>
+              <span>Store credit applied</span>
+              <span>−{formatMoney(credit)}</span>
+            </p>
+          </div>
+        )}
         <div className="receipt-total">
           <strong>Total</strong>
           <strong>{total === null ? "—" : formatMoney(total - credit)}</strong>
