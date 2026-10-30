@@ -83,6 +83,12 @@ const sales = [
   },
 ];
 const submissions = new Map();
+// Demonstration-only allocations: the seeded credit sale has received ₦550 and the
+// remaining ₦1,100 of this customer's debt is an unrelated opening balance.
+const saleSettlements = new Map([
+  ['33333333-3333-4333-8333-000000000002', { debt: 340000, repaid: 55000, creditUsed: 0 }],
+]);
+const reversalSubmissions = new Map();
 const restocks = [];
 const restockSubmissions = new Map();
 const reversalAuthorizations = new Map([
@@ -395,6 +401,7 @@ const server = createServer(async (request,response) => {
     for (const line of lines) {const product = products.find((item) => item.id === line.productId); product.quantity -= line.quantity; product.version++; product.updatedAt = new Date().toISOString();}
     if (customer) {customer.storeCreditKobo -= applied; if (body.paymentType === 'CREDIT') {customer.balanceKobo += totalKobo-applied; if (totalKobo-applied > 0) customer.hasDebtActivity=true;}}
     const sale = {id:randomUUID(),reference:`S-${String(sales.length+1).padStart(6,'0')}`,paymentType:body.paymentType,...(body.customerId ? {customerId:body.customerId} : {}),...(body.dueDate ? {dueDate:body.dueDate} : {}),totalKobo,lines,createdBy:user.id,createdAt:new Date().toISOString()};
+    saleSettlements.set(sale.id,{debt:body.paymentType === 'CREDIT' ? totalKobo-applied : 0,repaid:0,creditUsed:applied});
     sales.unshift(sale); submissions.set(submissionKey,{body:serialized,sale}); response.setHeader('Location',`/sales/${sale.id}`); send(201,sale); return;
   }
   if (/^\/sales\/[^/]+$/.test(url.pathname) && request.method === 'GET') {
@@ -441,6 +448,12 @@ const server = createServer(async (request,response) => {
       problem(400, 'VALIDATION_FAILED', 'A UUID Idempotency-Key is required.');
       return;
     }
+    const serialized = JSON.stringify({saleId,reason:body.reason,note:body.note || null,authorizationCode:body.authorizationCode || null});
+    const prior = reversalSubmissions.get(key);
+    if (prior) {
+      if (prior.userId !== user.id || prior.body !== serialized) {problem(422,'IDEMPOTENCY_KEY_REUSED','This key was already used for a different request.'); return;}
+      send(200,prior.result); return;
+    }
     const sale = sales.find((item) => item.id === saleId);
     if (!sale) {
       problem(404, 'NOT_FOUND', 'Sale not found.');
@@ -450,6 +463,15 @@ const server = createServer(async (request,response) => {
       problem(409, 'SALE_ALREADY_REVERSED', 'This sale has already been reversed.');
       return;
     }
+    const settlement = saleSettlements.get(sale.id);
+    const customer = sale.customerId ? customers.find((item) => item.id === sale.customerId) : null;
+    if (sale.paymentType === 'CREDIT' && (!settlement || !customer || customer.balanceKobo < settlement.debt)) {
+      problem(409,'SIMULATION_DATA_UNAVAILABLE','This demonstration sale has no reconciled settlement details.'); return;
+    }
+    if (settlement?.creditUsed && !customer) {problem(409,'SIMULATION_DATA_UNAVAILABLE','Customer settlement details are unavailable.'); return;}
+    const creditReturned = (settlement?.repaid || 0) + (settlement?.creditUsed || 0);
+    if (customer && !Number.isSafeInteger(customer.storeCreditKobo + creditReturned)) {problem(409,'SIMULATION_DATA_UNAVAILABLE','Store credit exceeds the supported amount.'); return;}
+    if (sale.lines.some((line) => {const product = products.find((item) => item.id === line.productId); return !product || product.quantity > 2147483647 - line.quantity;})) {problem(409,'SIMULATION_DATA_UNAVAILABLE','Stock cannot be restored for this demonstration sale.'); return;}
     if (user.role === 'ASSISTANT') {
       if (!body?.authorizationCode || typeof body.authorizationCode !== 'string') {
         problem(403, 'SUPERVISOR_CODE_REQUIRED', 'Supervisor authorization code is required for assistants to reverse sales.');
@@ -476,6 +498,12 @@ const server = createServer(async (request,response) => {
     sale.reversedBy = user.displayName;
     sale.reversalReason = body?.reason || 'CUSTOMER_RETURN';
     sale.reversalNote = body?.note;
+    if (customer && settlement) {
+      customer.balanceKobo -= settlement.debt;
+      customer.storeCreditKobo += creditReturned;
+      if (settlement.debt) customer.hasDebtActivity = true;
+      if (creditReturned) customer.hasStoreCreditActivity = true;
+    }
     for (const line of sale.lines) {
       const product = products.find((item) => item.id === line.productId);
       if (product) {
@@ -484,7 +512,7 @@ const server = createServer(async (request,response) => {
         product.updatedAt = new Date().toISOString();
       }
     }
-    send(200, {
+    const result = {
       reversalId: randomUUID(),
       saleId: sale.id,
       reversedAt: sale.reversedAt,
@@ -492,7 +520,11 @@ const server = createServer(async (request,response) => {
       reason: sale.reversalReason,
       note: sale.reversalNote,
       stockRestored: true,
-    });
+      debtRemovedKobo: settlement?.debt || 0,
+      storeCreditAddedKobo: creditReturned,
+    };
+    reversalSubmissions.set(key,{userId:user.id,body:serialized,result});
+    send(200, result);
     return;
   }
   problem(404,'NOT_FOUND','This operation is not available in this simulation.');
