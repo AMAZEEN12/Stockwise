@@ -81,3 +81,5 @@ Append-only, newest last.
 - 2026-10-30 12:38 · agent · Ran full service verification (`mvnw verify`): 131 tests passed, 0 failures, 100% coverage thresholds met.
 - 2026-10-30 12:39 · agent · Ran full web verification: TypeScript typecheck passed (0 errors), Vitest suite passed (19 test files, 58 tests passed).
 - 2026-10-30 12:40 · agent · Updated `docs/rule-removal-log.md` and logged `v0.4.0` in `decisions.md` §3. Ready for commit and PR.
+- 2026-10-30 12:41 · agent · Committed implementation changes (`ba68f77`) as `feat(reversals): implement real sale reversal, oldest-first repayment allocation, and supervisor authorization`.
+- 2026-10-30 12:43 · agent · Pushed branch `feat/sale-reversal-allocation` and opened [PR #41](https://github.com/AMAZEEN12/Stockwise/pull/41) into `main`.
