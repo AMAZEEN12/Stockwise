@@ -152,19 +152,22 @@ export function ProductsPage() {
                   appearance="outline"
                   tone={product.stockState === "IN_STOCK" ? "success" : product.stockState === "LOW" ? "warning" : product.stockState === "OUT" ? "danger" : "neutral"}
                   className={`stock-badge stock-${product.stockState.toLowerCase()}`}
-                  icon={product.stockState !== "ARCHIVED" ? <span>{product.stockState === "IN_STOCK" ? "✓" : product.stockState === "LOW" ? "▲" : "⊘"}</span> : undefined}
                 >
                   {product.stockState === "IN_STOCK"
                     ? "In stock"
                     : product.stockState === "LOW"
-                      ? `Low (${product.quantity} left, threshold ${product.lowStockThreshold})`
+                      ? (
+                        <>
+                          Low (<strong className="stock-count">{product.quantity}</strong> left, threshold <strong className="stock-count">{product.lowStockThreshold}</strong>)
+                        </>
+                      )
                       : product.stockState === "OUT"
                         ? "Out of stock"
                         : "Archived"}
                 </StatusBadge>
-                <span className="product-quantity micro">
+                <span className="product-quantity">
                   <span>Qty </span>
-                  {product.quantity}
+                  <strong className="product-quantity-value">{product.quantity}</strong>
                 </span>
               </article>
             ))}
