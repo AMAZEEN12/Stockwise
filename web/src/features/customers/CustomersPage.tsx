@@ -15,6 +15,7 @@ import type {CustomerFormHandle} from './CustomerForm';
 import {CustomerIcon,CustomerLoading,CustomerLoadError} from './CustomerStates';
 import {debtDisplay,storeCreditDisplay} from './customer-balance';
 import {IssueStoreCreditDialog} from './IssueStoreCreditDialog';
+import {CustomerLedgerDrawer} from './CustomerLedgerDrawer';
 import '../../styles/customers.css';
 
 export function CustomersPage() {
@@ -23,6 +24,7 @@ export function CustomersPage() {
   const [query,setQuery]=useState('');
   const [open,setOpen]=useState(false);
   const [creditCustomer,setCreditCustomer]=useState<Customer | null>(null);
+  const [ledgerCustomer,setLedgerCustomer]=useState<Customer | null>(null);
   const [busy,setBusy]=useState(false);
   const {toast}=useToast();
   const form=useRef<CustomerFormHandle>(null);
@@ -49,8 +51,8 @@ export function CustomersPage() {
         description={query.trim() ? 'Try a different name.' : canCreate ? 'Add your first customer to start selling on credit.' : 'Customers added by the shop will appear here.'}
         action={query.trim() ? {label:'Clear search',onClick:()=>setQuery('')} : canCreate ? {label:'Add your first customer',onClick:()=>setOpen(true)} : undefined}
         actionProps={{size:"lg",variant:query.trim() ? "secondary" : "primary"}}/> : customers.data && <>
-        <table className="customers-table"><caption className="sr-only">Customer balances owed and store credit{customers.isError ? ' (previously loaded; may be out of date)' : ''}</caption><thead><tr><th scope="col">Name</th><th scope="col">Balance owed</th><th scope="col">Store credit</th>{canIssueCredit && <th scope="col"><span className="sr-only">Actions</span></th>}</tr></thead><tbody>{list.map((person)=><tr key={person.id}><th scope="row">{person.displayName}{customers.data?.some((other)=>other.id!==person.id && other.displayName===person.displayName) && <small className="customer-micro">{person.contactPlaceholder || `ID ${person.id.slice(-8)}`}</small>}</th><td className={!person.hasDebtActivity?'customer-unused-balance':undefined}>{debtDisplay(person)}</td><td className={!person.hasStoreCreditActivity?'customer-unused-balance':undefined}>{storeCreditDisplay(person)}</td>{canIssueCredit && <td><Button variant="ghost" size="sm" className="issue-credit-btn" onClick={()=>setCreditCustomer(person)}>+ Credit</Button></td>}</tr>)}</tbody></table>
-        <ul className="customers-cards" aria-label="Customer balances">{list.map((person)=><li key={person.id}><Card className="customer-balance-card" bodyClassName="customer-balance-card-body"><CardBody><strong>{person.displayName}</strong>{customers.data?.some((other)=>other.id!==person.id && other.displayName===person.displayName) && <small className="customer-micro">{person.contactPlaceholder || `ID ${person.id.slice(-8)}`}</small>}<dl className="customer-balance-summary"><div><dt>Balance owed</dt><dd className={!person.hasDebtActivity?'customer-unused-balance':undefined}>{debtDisplay(person)}</dd></div><div><dt>Store credit</dt><dd className={!person.hasStoreCreditActivity?'customer-unused-balance':undefined}>{storeCreditDisplay(person)}</dd></div></dl>{canIssueCredit && <Button variant="secondary" size="sm" className="mt-3 w-full" onClick={()=>setCreditCustomer(person)}>+ Issue store credit</Button>}</CardBody></Card></li>)}</ul>
+        <table className="customers-table"><caption className="sr-only">Customer balances owed and store credit{customers.isError ? ' (previously loaded; may be out of date)' : ''}</caption><thead><tr><th scope="col">Name</th><th scope="col">Balance owed</th><th scope="col">Store credit</th><th scope="col"><span className="sr-only">Actions</span></th></tr></thead><tbody>{list.map((person)=><tr key={person.id}><th scope="row">{person.displayName}{customers.data?.some((other)=>other.id!==person.id && other.displayName===person.displayName) && <small className="customer-micro">{person.contactPlaceholder || `ID ${person.id.slice(-8)}`}</small>}</th><td className={!person.hasDebtActivity?'customer-unused-balance':undefined}>{debtDisplay(person)}</td><td className={!person.hasStoreCreditActivity?'customer-unused-balance':undefined}>{storeCreditDisplay(person)}</td><td><div className="customer-actions-cell"><Button variant="ghost" size="sm" className="view-ledger-btn" onClick={()=>setLedgerCustomer(person)}>Ledger</Button>{canIssueCredit && <Button variant="ghost" size="sm" className="issue-credit-btn" onClick={()=>setCreditCustomer(person)}>+ Credit</Button>}</div></td></tr>)}</tbody></table>
+        <ul className="customers-cards" aria-label="Customer balances">{list.map((person)=><li key={person.id}><Card className="customer-balance-card" bodyClassName="customer-balance-card-body"><CardBody><strong>{person.displayName}</strong>{customers.data?.some((other)=>other.id!==person.id && other.displayName===person.displayName) && <small className="customer-micro">{person.contactPlaceholder || `ID ${person.id.slice(-8)}`}</small>}<dl className="customer-balance-summary"><div><dt>Balance owed</dt><dd className={!person.hasDebtActivity?'customer-unused-balance':undefined}>{debtDisplay(person)}</dd></div><div><dt>Store credit</dt><dd className={!person.hasStoreCreditActivity?'customer-unused-balance':undefined}>{storeCreditDisplay(person)}</dd></div></dl><div className="customer-card-actions"><Button variant="secondary" size="sm" className="view-ledger-btn w-full" onClick={()=>setLedgerCustomer(person)}>View ledger</Button>{canIssueCredit && <Button variant="ghost" size="sm" className="w-full mt-2" onClick={()=>setCreditCustomer(person)}>+ Issue store credit</Button>}</div></CardBody></Card></li>)}</ul>
       </>}
     </>}
     <Dialog open={open && canCreate} dismissible={!busy} onOpenChange={(value)=>{if(!value)close();}} title="Add customer" description="Add a display name and an optional fictional contact for this demonstration shop." descriptionClassName="sr-only" titleClassName="customer-dialog-title" className="customers-create-dialog" overlayClassName="customer-backdrop" closeClassName={`customer-dialog-close${busy?' customer-close-busy':''}`} onCloseAutoFocus={(event)=>{event.preventDefault();trigger.current?.focus();}}>
@@ -61,6 +63,11 @@ export function CustomersPage() {
       open={!!creditCustomer}
       onOpenChange={(isOpen)=>{if(!isOpen)setCreditCustomer(null);}}
       onSuccess={()=>{void customers.refetch();}}
+    />
+    <CustomerLedgerDrawer
+      customer={ledgerCustomer}
+      open={!!ledgerCustomer}
+      onOpenChange={(isOpen)=>{if(!isOpen)setLedgerCustomer(null);}}
     />
   </section>;
 }

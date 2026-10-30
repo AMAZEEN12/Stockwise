@@ -6,6 +6,27 @@ Source document: `Tesa cohort 6 software engineering capstone project.pdf` (TeSA
 > Any agent opening this project: read this file first, then the "Conventions and guidelines" and "Decisions" sections, then the artifacts in this folder. Continue from "Resume here". Don't re-ask anything already answered below.
 
 ## Resume here
+Customer Ledger Statement UI (PR 1), 2026-10-30: Implemented responsive Customer Ledger Statement drawer (`R10`) on branch `feat/customer-ledger-ui`.
+1. **Frontend UI & Presentation (`CustomerLedgerDrawer.tsx`, `customer-ledger.ts`, `customers.css`)**:
+   - Slide-over statement drawer displaying customer's running balance statement for credit purchases (`CREDIT_SALE`), repayments (`REPAYMENT`), reversals (`REVERSAL`), and store credit grants/deductions (`STORE_CREDIT`).
+   - Summary balance cards detailing both current debt owed and available store credit in integer kobo (`formatMoney`).
+   - Delta amounts styled by transaction type with directional signs (`+₦...`, `-₦...`).
+   - Africa/Lagos WAT timestamps (`formatLagosDateTime`).
+   - Implemented all 5 screen states (loading skeletons, error with retry, empty state, success timeline feed, and running balance summaries).
+   - Responsive layout adapting from right slide-over on desktop to centered modal sheet on mobile screens (<=768px).
+2. **Customers Directory Integration (`CustomersPage.tsx`)**:
+   - Desktop table includes dedicated "Ledger" action button alongside "+ Credit".
+   - Mobile card layout includes full-width "View ledger" action button.
+3. **Data & Mock Integration (`customers.api.ts`, `customers.endpoints.ts`, `development-api.mjs`)**:
+   - Wired RTK Query endpoint `customerLedger` with runtime validation (`validLedgerPage`) against `GET /customers/{customerId}/ledger`.
+   - Updated development simulation mock backend (`development-api.mjs`) to seed customer ledger transactions and append real-time credit purchases and store credit allocations.
+4. **Verification**:
+   - Vitest: 20 test files passed (67 tests, 0 failures), including 9 new customer ledger unit tests (`customer-ledger.test.ts`).
+   - TypeScript: `tsc --noEmit` passed with 0 errors.
+   - ESLint: `eslint . --max-warnings 0` passed with 0 warnings/errors.
+   - Vite Build: `npm run build` succeeded.
+   - Playwright E2E: 14/14 tests in `customers.spec.ts` passed across desktop and mobile projects, including axe-core accessibility checks with 0 serious or critical violations.
+
 PR #39 conflict resolution, 2026-10-30: merged `origin/main` at `a1e7918` into `feat/sale-reversal-simulation`. Preserved both the simulated reversal settlement/idempotency state and the restock mock state, as well as both work-log histories. Web lint and typecheck passed; `npm test -- --run` passed 58 tests in 19 files; `npm run check:reversal-simulation` passed; focused reversal, restock and picker Playwright checks passed 18/18 across desktop and mobile. The reversal remains a simulation and does not implement the real service or imply contract approval.
 
 Sale reversal simulation, 2026-10-29: Victor requested the existing PR #31 UI be made ready using mock data while PR #35 and the service contract await agreement. On `feat/sale-reversal-simulation` from `origin/main` `424b297`, the receipt and supervisor dialogs are clearly labelled simulation-only; the API adapter refuses reversal/code requests outside a local simulation session. The simulation restores stock and the selected sale's fixture debt/credit effects, preserves unrelated customer debt, supports identical-key replay and rejects another reversal. This is not a repayment allocator, real authorization or database implementation. See [simulation notes](../docs/sale-reversal-simulation.md); PR #35 remains draft.
