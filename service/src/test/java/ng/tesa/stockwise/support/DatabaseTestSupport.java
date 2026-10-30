@@ -56,7 +56,7 @@ public abstract class DatabaseTestSupport {
     @BeforeEach
     void emptyTables() {
         // RESTART IDENTITY also restarts sale_reference_seq (owned by sale.reference), as in a fresh database.
-        jdbc.sql("TRUNCATE restock, ledger_entry, stock_movement, sale_line, sale, customer, product, app_user RESTART IDENTITY").update();
+        jdbc.sql("TRUNCATE repayment_allocation, reversal_authorization, restock, ledger_entry, stock_movement, sale_line, sale, customer, product, app_user RESTART IDENTITY").update();
         cashier = jdbc.sql("""
                         INSERT INTO app_user (email, password_hash, display_name, role)
                         VALUES ('assistant@shop.test', 'not-a-real-hash', 'Shop Assistant', 'ASSISTANT')

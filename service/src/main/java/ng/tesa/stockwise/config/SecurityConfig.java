@@ -61,6 +61,8 @@ public class SecurityConfig {
                         .requestMatchers("/error").permitAll()
                         .requestMatchers(HttpMethod.POST, "/api/v1/products").hasRole("OWNER")
                         .requestMatchers(HttpMethod.POST, "/api/v1/restocks").hasRole("OWNER")
+                        .requestMatchers(HttpMethod.POST, "/api/v1/reversals/authorizations").hasAnyRole("OWNER", "ADMIN")
+                        .requestMatchers(HttpMethod.POST, "/api/v1/sales/*/reversal").hasAnyRole("OWNER", "ADMIN", "ASSISTANT")
                         .requestMatchers(HttpMethod.POST, "/api/v1/customers").hasAnyRole("OWNER", "ASSISTANT")
                         .requestMatchers(HttpMethod.POST, "/api/v1/sales").hasAnyRole("OWNER", "ASSISTANT")
                         .anyRequest().authenticated())

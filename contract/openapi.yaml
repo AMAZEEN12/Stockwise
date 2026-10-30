@@ -1,7 +1,7 @@
 openapi: 3.1.0
 info:
   title: Stockwise API
-  version: 0.3.0
+  version: 0.4.0
   summary: Stock and customer-credit ledger for one demonstration shop (TeSA Cohort 6, Team 3).
   description: |
     Contract v0.1 covers the **Monday 26 Oct MVP paths only** (EXECUTION.md step 2).
@@ -14,8 +14,11 @@ info:
     v0.3.0 adds restock recording and history (R6):
     - `POST /restocks`, OWNER-only and idempotent via a required `Idempotency-Key`;
     - `GET /restocks`, with optional product filtering and stable newest-first pagination.
+    v0.4.0 adds real sale reversals and supervisor authorizations (R11, R12):
+    - `POST /sales/{saleId}/reversal`, idempotent via required `Idempotency-Key`, restoring inventory, relieving debt, and crediting repaid amounts to store credit;
+    - `POST /reversals/authorizations`, OWNER/ADMIN single-use 6-digit OTP codes.
     A v0.1.0 client keeps working unchanged.
-    Remaining paths (repayments, reversals, product edit/archive) are added in later versions,
+    Remaining paths (repayments, product edit/archive) are added in later versions,
     each logged in `decisions.md` §3.
 
     Conventions:
@@ -53,6 +56,8 @@ tags:
     description: Today's figures, computed when read
   - name: health
     description: Liveness
+  - name: reversals
+    description: Sale reversals and supervisor authorization (R11, R12)
 
 paths:
   /health:
@@ -743,6 +748,97 @@ paths:
         '404':
           $ref: '#/components/responses/NotFound'
 
+  /sales/{saleId}/reversal:
+    post:
+      tags: [reversals, sales]
+      operationId: reverseSale
+      summary: Reverse an existing sale
+      description: |
+        Reverses a recorded sale, restoring product inventory stock and appending reversing `SALE_REVERSAL` movements.
+        For credit sales, relieves remaining unpaid debt and converts any repaid excess amount to customer store credit (DM5, R12).
+        Restores any store credit originally tendered at checkout.
+        `OWNER` and `ADMIN` can reverse directly. `ASSISTANT` must provide a valid unused supervisor `authorizationCode`.
+        Idempotent via required `Idempotency-Key`.
+      parameters:
+        - $ref: '#/components/parameters/RequestId'
+        - $ref: '#/components/parameters/IdempotencyKey'
+        - name: saleId
+          in: path
+          required: true
+          schema:
+            type: string
+            format: uuid
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/SaleReversalRequest'
+      responses:
+        '200':
+          description: Sale reversed successfully
+          headers:
+            X-Request-Id:
+              $ref: '#/components/headers/RequestId'
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/SaleReversalResponse'
+        '400':
+          $ref: '#/components/responses/BadRequest'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '403':
+          $ref: '#/components/responses/Forbidden'
+        '404':
+          $ref: '#/components/responses/NotFound'
+        '409':
+          description: Sale already reversed or conflicting supervisor authorization
+          content:
+            application/problem+json:
+              schema:
+                $ref: '#/components/schemas/Problem'
+        '422':
+          description: Idempotency key reused with different body
+          content:
+            application/problem+json:
+              schema:
+                $ref: '#/components/schemas/Problem'
+
+  /reversals/authorizations:
+    post:
+      tags: [reversals]
+      operationId: createReversalAuthorization
+      summary: Generate a supervisor authorization code for an assistant reversal
+      description: |
+        `OWNER` or `ADMIN` only. Generates a cryptographically random, single-use 6-digit numeric authorization code.
+        Expires in 15 minutes by default (or custom `validMinutes` between 1 and 60).
+        Can optionally be bound to a specific `saleId`.
+      parameters:
+        - $ref: '#/components/parameters/RequestId'
+      requestBody:
+        required: false
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/ReversalAuthorizationCreate'
+      responses:
+        '201':
+          description: Authorization code created
+          headers:
+            X-Request-Id:
+              $ref: '#/components/headers/RequestId'
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ReversalAuthorization'
+        '400':
+          $ref: '#/components/responses/BadRequest'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '403':
+          $ref: '#/components/responses/Forbidden'
+
 components:
   securitySchemes:
     bearerAuth:
@@ -914,6 +1010,13 @@ components:
             - INSUFFICIENT_STOCK
             - STOCK_LIMIT_EXCEEDED
             - IDEMPOTENCY_KEY_REUSED
+            - SALE_ALREADY_REVERSED
+            - INVALID_AUTHORIZATION_CODE
+            - AUTHORIZATION_EXPIRED
+            - AUTHORIZATION_ALREADY_USED
+            - AUTHORIZATION_SALE_MISMATCH
+            - REVERSAL_MANUAL_REVIEW_REQUIRED
+            - REVERSAL_CONFLICT
             - DATABASE_UNAVAILABLE
             - INTERNAL_ERROR
         requestId:
@@ -1476,6 +1579,18 @@ components:
         createdAt:
           type: string
           format: date-time
+        reversedAt:
+          type: string
+          format: date-time
+        reversedBy:
+          type: string
+          format: uuid
+        reversalReason:
+          $ref: '#/components/schemas/ReversalReason'
+        reversalNotes:
+          type: string
+        unpaidKobo:
+          $ref: '#/components/schemas/Kobo'
 
     SalePage:
       type: object
@@ -1494,3 +1609,96 @@ components:
         totalItems:
           type: integer
           format: int64
+
+    ReversalReason:
+      type: string
+      enum:
+        - CUSTOMER_RETURN
+        - BILLING_ERROR
+        - DAMAGED_PRODUCT
+        - OTHER
+
+    ReversalAuthorizationCreate:
+      type: object
+      properties:
+        saleId:
+          type: string
+          format: uuid
+        validMinutes:
+          type: integer
+          minimum: 1
+          maximum: 60
+          default: 15
+
+    ReversalAuthorization:
+      type: object
+      required: [code, expiresAt, generatedBy]
+      properties:
+        code:
+          type: string
+          example: "583921"
+        saleId:
+          type: string
+          format: uuid
+        expiresAt:
+          type: string
+          format: date-time
+        generatedBy:
+          type: string
+          format: uuid
+        generatedByRole:
+          $ref: '#/components/schemas/Role'
+
+    SaleReversalRequest:
+      type: object
+      required: [reason]
+      properties:
+        reason:
+          $ref: '#/components/schemas/ReversalReason'
+        note:
+          type: string
+          maxLength: 500
+        authorizationCode:
+          type: string
+          pattern: '^[0-9]{6}$'
+
+    SaleReversalResponse:
+      type: object
+      required: [reversalId, saleId, reversedAt, reversedBy, reason, stockRestored]
+      properties:
+        reversalId:
+          type: string
+          format: uuid
+        saleId:
+          type: string
+          format: uuid
+        reversedAt:
+          type: string
+          format: date-time
+        reversedBy:
+          type: string
+          format: uuid
+        reason:
+          $ref: '#/components/schemas/ReversalReason'
+        note:
+          type: string
+        stockRestored:
+          type: boolean
+        debtRemovedKobo:
+          $ref: '#/components/schemas/Kobo'
+        storeCreditAddedKobo:
+          $ref: '#/components/schemas/Kobo'
+        storeCreditRestoredKobo:
+          $ref: '#/components/schemas/Kobo'
+        stockRestoredLines:
+          type: array
+          items:
+            type: object
+            required: [productId, quantity]
+            properties:
+              productId:
+                type: string
+                format: uuid
+              quantity:
+                type: integer
+                minimum: 1
