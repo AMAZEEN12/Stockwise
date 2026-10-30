@@ -101,12 +101,12 @@ export function computeDonutSlices(
     startOffsetAngle?: number;
   } = {}
 ): ComputedSlice[] {
-  const cx = options.cx ?? 150;
-  const cy = options.cy ?? 150;
-  const innerRadius = options.innerRadius ?? 62;
-  const outerRadius = options.outerRadius ?? 92;
-  const activeOuterRadius = options.activeOuterRadius ?? 102;
-  const ringRadius = options.ringRadius ?? 109;
+  const cx = options.cx ?? 160;
+  const cy = options.cy ?? 160;
+  const innerRadius = options.innerRadius ?? 78;
+  const outerRadius = options.outerRadius ?? 112;
+  const activeOuterRadius = options.activeOuterRadius ?? 124;
+  const ringRadius = options.ringRadius ?? 136;
   const startOffset = options.startOffsetAngle ?? -Math.PI / 2; // North
 
   const total = slices.reduce((sum, s) => sum + Math.max(0, s.value), 0);

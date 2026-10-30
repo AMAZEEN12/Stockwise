@@ -18,7 +18,7 @@ describe('InteractiveSalesChart', () => {
       <InteractiveSalesChart todaySales={mockTodaySales} dateLabel="Today in Lagos" />
     );
 
-    expect(screen.getByRole('heading', { name: /Pie Chart - Interactive/i })).toBeInTheDocument();
+    expect(screen.getByRole('heading', { name: /Sales Breakdown/i })).toBeInTheDocument();
     expect(screen.getByText('Today in Lagos')).toBeInTheDocument();
 
     // Metric toggle buttons

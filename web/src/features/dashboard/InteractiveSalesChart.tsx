@@ -55,14 +55,14 @@ export function InteractiveSalesChart({
       ? formatMoney(todaySales.totalKobo)
       : `${todaySales.count} ${todaySales.count === 1 ? 'sale' : 'sales'}`;
 
-  // Compute geometry
+  // Compute geometry with generous proportions so value fits comfortably
   const computedSlices = computeDonutSlices(slicesData, {
-    cx: 150,
-    cy: 150,
-    innerRadius: 62,
-    outerRadius: 92,
-    activeOuterRadius: 102,
-    ringRadius: 110,
+    cx: 160,
+    cy: 160,
+    innerRadius: 78,
+    outerRadius: 112,
+    activeOuterRadius: 124,
+    ringRadius: 136,
   });
 
   // Active slice determination: hover takes precedence for instant feedback, then selection
@@ -82,11 +82,11 @@ export function InteractiveSalesChart({
   return (
     <article
       className={`interactive-chart-card ${className}`}
-      aria-label="Interactive sales breakdown chart"
+      aria-label="Sales breakdown chart"
     >
       <header className="chart-header">
         <div className="chart-title-group">
-          <h2 className="chart-title">Pie Chart - Interactive</h2>
+          <h2 className="chart-title">Sales Breakdown</h2>
           <p className="micro chart-subtitle">{dateLabel}</p>
         </div>
 
@@ -149,7 +149,7 @@ export function InteractiveSalesChart({
         <div className="chart-svg-container">
           <svg
             className="donut-svg"
-            viewBox="0 0 300 300"
+            viewBox="0 0 320 320"
             aria-hidden="true"
           >
             <defs>
@@ -209,12 +209,12 @@ export function InteractiveSalesChart({
               /* Muted empty ring when no sales yet */
               <g className="empty-donut-group">
                 <circle
-                  cx="150"
-                  cy="150"
-                  r="77"
+                  cx="160"
+                  cy="160"
+                  r="95"
                   fill="none"
                   stroke="var(--color-border)"
-                  strokeWidth="30"
+                  strokeWidth="34"
                   strokeDasharray="4 4"
                 />
               </g>
@@ -223,16 +223,16 @@ export function InteractiveSalesChart({
             {/* Donut Center Label & Value */}
             <g className="donut-center-group" aria-hidden="true">
               <text
-                x="150"
-                y="142"
+                x="160"
+                y="152"
                 textAnchor="middle"
                 className="donut-center-value"
               >
                 {centerValue}
               </text>
               <text
-                x="150"
-                y="166"
+                x="160"
+                y="176"
                 textAnchor="middle"
                 className="donut-center-label"
               >

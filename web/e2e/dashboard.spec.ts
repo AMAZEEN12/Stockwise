@@ -87,17 +87,17 @@ test('dashboard displays key metrics, interactive pie chart, low stock alerts, a
   await page.goto('/app/dashboard');
   await expect(page.getByRole('heading', { name: 'Dashboard', exact: true })).toBeVisible();
 
-  // Verify demonstration data badge and time
-  await expect(page.locator('.demo-badge')).toBeVisible();
-
-  // Verify KPI metric cards
-  await expect(page.locator('.metric-card-value').first()).toHaveText('₦34,500.00');
+  // Verify KPI overview cards from screenshot design
+  await expect(page.locator('.overview-card-value').first()).toHaveText('₦34,500.00');
   await expect(page.getByText('₦45,000.00')).toBeVisible();
   await expect(page.getByText('₦15,000.00')).toBeVisible();
-  await expect(page.locator('.metric-card-value').nth(3)).toHaveText('2'); // 2 low stock alerts
+
+  // Verify percentage trends in cards
+  await expect(page.getByText('17.0%')).toBeVisible();
+  await expect(page.getByText('↓ 7.0%')).toBeVisible();
 
   // Interactive Chart Header and Controls
-  await expect(page.getByRole('heading', { name: /Pie Chart - Interactive/i })).toBeVisible();
+  await expect(page.getByRole('heading', { name: /Sales Breakdown/i })).toBeVisible();
   const revenueBtn = page.getByRole('button', { name: /Revenue \(₦\)/i });
   const volumeBtn = page.getByRole('button', { name: /Volume \(Count\)/i });
   await expect(revenueBtn).toBeVisible();
