@@ -497,7 +497,86 @@ const server = createServer(async (request,response) => {
   if (/^\/products\/[^/]+$/.test(url.pathname) && request.method === 'GET') {
     const product = products.find((item) => item.id === url.pathname.split('/')[2]);
     if (!product) {problem(404,'NOT_FOUND','Product not found.'); return;}
+    response.setHeader('ETag', `"${product.version ?? 0}"`);
     send(200,{...product,stockState:stockState(product)}); return;
+  }
+  if (/^\/products\/[^/]+$/.test(url.pathname) && request.method === 'PATCH') {
+    if (user.role !== 'OWNER') {
+      problem(403, 'FORBIDDEN', 'Only the owner can edit or archive products.');
+      return;
+    }
+    const productId = url.pathname.split('/')[2];
+    const product = products.find((item) => item.id === productId);
+    if (!product) {
+      problem(404, 'NOT_FOUND', 'Product not found.');
+      return;
+    }
+
+    const ifMatch = request.headers['if-match'];
+    if (ifMatch === undefined || ifMatch === null || ifMatch === '') {
+      problem(428, 'PRECONDITION_REQUIRED', 'An If-Match header with the product version is required.');
+      return;
+    }
+    const cleanIfMatch = String(ifMatch).replace(/^"|"$/g, '').trim();
+    if (String(product.version ?? 0) !== cleanIfMatch) {
+      problem(412, 'VERSION_CONFLICT', 'This product has been modified by another session. Please refresh and try again.');
+      return;
+    }
+
+    const errors = [];
+    if (body.name !== undefined) {
+      if (typeof body.name !== 'string' || !body.name.trim() || body.name.length > 200) {
+        errors.push({ field: 'name', message: 'Enter a valid name (up to 200 characters).' });
+      }
+    }
+    if (body.reference !== undefined) {
+      if (typeof body.reference !== 'string' || !body.reference.trim() || body.reference.length > 40) {
+        errors.push({ field: 'reference', message: 'Enter a valid reference (up to 40 characters).' });
+      } else if (products.some((p) => p.id !== product.id && p.reference.toLowerCase() === body.reference.trim().toLowerCase())) {
+        problem(409, 'DUPLICATE_REFERENCE', 'A product with this reference already exists');
+        return;
+      }
+    }
+    if (body.category !== undefined) {
+      if (typeof body.category !== 'string' || !body.category.trim() || body.category.length > 60) {
+        errors.push({ field: 'category', message: 'Enter a valid category (up to 60 characters).' });
+      }
+    }
+    if (body.priceKobo !== undefined) {
+      if (!Number.isSafeInteger(body.priceKobo) || body.priceKobo < 0 || body.priceKobo > 9007199254740991) {
+        errors.push({ field: 'priceKobo', message: 'Enter a valid non-negative price in kobo.' });
+      }
+    }
+    if (body.lowStockThreshold !== undefined) {
+      if (!Number.isInteger(body.lowStockThreshold) || body.lowStockThreshold < 0 || body.lowStockThreshold > 2147483647) {
+        errors.push({ field: 'lowStockThreshold', message: 'Enter a non-negative integer low stock threshold.' });
+      }
+    }
+    if (body.active !== undefined) {
+      if (typeof body.active !== 'boolean') {
+        errors.push({ field: 'active', message: 'Active must be a boolean.' });
+      }
+    }
+
+    if (errors.length) {
+      problem(400, 'VALIDATION_FAILED', 'Check product fields.', errors);
+      return;
+    }
+
+    if (body.name !== undefined) product.name = body.name.trim();
+    if (body.reference !== undefined) product.reference = body.reference.trim();
+    if (body.category !== undefined) product.category = body.category.trim();
+    if (body.priceKobo !== undefined) product.priceKobo = body.priceKobo;
+    if (body.lowStockThreshold !== undefined) product.lowStockThreshold = body.lowStockThreshold;
+    if (body.active !== undefined) product.active = body.active;
+
+    product.version = (product.version ?? 0) + 1;
+    product.updatedAt = new Date().toISOString();
+    product.stockState = stockState(product);
+
+    response.setHeader('ETag', `"${product.version}"`);
+    send(200, { ...product });
+    return;
   }
   if (url.pathname === '/restocks' && request.method === 'GET') {
     const page = Number(url.searchParams.get('page') || 0); const size = Number(url.searchParams.get('size') || 20);

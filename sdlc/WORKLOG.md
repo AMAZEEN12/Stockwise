@@ -6,6 +6,27 @@ Source document: `Tesa cohort 6 software engineering capstone project.pdf` (TeSA
 > Any agent opening this project: read this file first, then the "Conventions and guidelines" and "Decisions" sections, then the artifacts in this folder. Continue from "Resume here". Don't re-ask anything already answered below.
 
 ## Resume here
+Product Edit & Optimistic Archive with Rollback (PR 4 / R1, R18), 2026-10-31 (Victor Oyeleke; logged by Antigravity):
+Branch `feat/product-edit-archive` branched from `origin/main` (commit `7e2e739d`, including merged PR #46 dashboard UI) implements the Product Edit and Optimistic Archive/Unarchive feature with version-conflict rollback (R1, R18; DM11).
+1. **Wire Model & Endpoints**:
+   - `web/src/models/requests/products.request.ts`: added `ProductUpdate` (`name`, `reference`, `category`, `priceKobo`, `lowStockThreshold`, `active`).
+   - `web/src/schema/product.schema.ts`: added `productEditSchema` for catalogue field edits without opening stock requirements.
+   - `web/src/service/api/products.api.ts`: implemented `patchProduct` mutation with `If-Match: "version"` request header. Added dual optimistic cache update targeting both `product` detail query and all matching `products` list queries (`state[productsApi.reducerPath].queries`), with automatic `patch.undo()` rollback on error or conflict.
+2. **Development Simulation (`web/scripts/development-api.mjs`)**:
+   - Implemented `PATCH /products/:productId` with `OWNER` role authorization guard (403), `If-Match` version checking (412 `VERSION_CONFLICT` on mismatch, 428 if missing), uniqueness check for reference (409 `DUPLICATE_REFERENCE`), and safe field validation (400 `VALIDATION_FAILED`).
+   - Increments product version, sets `updatedAt`, recalculates `stockState`, returns 200 with `ETag: "${product.version}"`.
+3. **UI Components & Responsive Layout**:
+   - `EditProductPage.tsx` (`/app/products/:productId/edit`): right drawer sheet for OWNER with prefilled fields, stock notice, unsaved-changes confirmation blocker, 409 reference duplication error, 412 conflict error handling with live refresh.
+   - `ProductsPage.tsx`: added row actions column for OWNER with "Edit" button and "Archive" / "Unarchive" action. Archiving prompts `ConfirmDialog` before immediately reflecting optimistic update. Reverts row within one render if 412 conflict or 403 occurs.
+   - `ProductMovementsPage.tsx`: added "Edit product" and "Archive product" / "Unarchive product" actions to header with confirmation and optimistic rollback.
+   - `web/src/styles/shop.css`: responsive 6-column grid for `.product-row.has-owner-actions` on desktop/tablet, mobile 3-row card layout with bottom actions row and no horizontal overflow. Preserved DM41 canonical Tailwind classes, no decorative status badge icons.
+4. **Verification**:
+   - `npm.cmd run lint`: 0 errors, 0 warnings.
+   - `npm.cmd run typecheck`: clean compilation.
+   - Vitest unit tests: 4/4 passed in `src/schema/product.schema.test.ts`; 4/4 passed in `src/features/products/product-edit.test.ts` (verifying optimistic update, 412 conflict rollback, 403 rollback, and PATCH If-Match header).
+   - Playwright E2E: 8/8 tests passed on both desktop and mobile (`e2e/products.spec.ts`), including axe-core (0 serious or critical accessibility violations), product editing, and two-tab 412 conflict rollback.
+   - Production build: `npm.cmd run build` passed cleanly with code-split `EditProductPage` chunk.
+
 Dashboard scrollbar and picker refinement, 2026-10-30 (Victor Oyeleke; logged by Codex): removed amount overflow-auto that produced Windows scrollbar arrows/mobile gray tracks. Values can wrap for unusually long amounts. Kept metric toggle and sales selector on one row; compact visible Revenue/Volume labels at narrow chart widths retain full accessible labels. Enlarged selector to a 44px target and styled native customizable-select picker options with app-green highlight/selection. Native select semantics and existing tests are preserved; browsers without `appearance: base-select` retain their native option-popup styling (MDN customizable-select guidance). No shared component changes.
 
 Verification: lint, typecheck, contract lint, 85/85 unit tests, and 2/2 dashboard desktop/mobile browser/axe tests passed. Actual computed-layout and keyboard checks at 1366, 1100, 360 and 320 pixels confirmed same-row controls, no amount scrollbars/page overflow, and successful keyboard segment selection. Reviewed mobile capture. Existing service wrapper limitation remains; no test edits.

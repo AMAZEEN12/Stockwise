@@ -1,13 +1,16 @@
 import { useState } from 'react';
 import { Link, useNavigate, useOutletContext, useParams } from 'react-router';
 import { Button } from '../../components/ui/button';
+import { ConfirmDialog } from '../../components/ui/dialog';
 import { StatusBadge } from '../../components/ui/status-badge';
 import { EmptyState } from '../../components/ui/empty-state';
 import { ErrorState } from '../../components/ui/error-state';
 import { Skeleton } from '../../components/ui/skeleton';
+import { useToast } from '../../components/ui/toast';
 import { formatMoney } from '../../lib/money';
 import type { User } from '../../models/responses/auth.response';
-import { useProductMovementsQuery, useProductQuery } from '../../service/api/products.api';
+import type { HttpError } from '../../service/http-client';
+import { usePatchProductMutation, useProductMovementsQuery, useProductQuery } from '../../service/api/products.api';
 import {
   formatLagosDateTime,
   formatMovementDelta,
@@ -20,6 +23,9 @@ export function ProductMovementsPage() {
   const user = useOutletContext<User>();
   const navigate = useNavigate();
   const [page, setPage] = useState(0);
+  const [archiveConfirmOpen, setArchiveConfirmOpen] = useState(false);
+  const [patchProduct] = usePatchProductMutation();
+  const { toast } = useToast();
 
   const {
     data: product,
@@ -37,6 +43,45 @@ export function ProductMovementsPage() {
     { skip: !productId }
   );
 
+  const handleArchiveToggle = async (nextActive: boolean) => {
+    if (!product) return;
+    try {
+      await patchProduct({
+        id: product.id,
+        version: product.version,
+        data: { active: nextActive },
+      }).unwrap();
+      toast({
+        variant: 'success',
+        title: nextActive ? `${product.name} activated` : `${product.name} archived`,
+        description: nextActive
+          ? 'Product is active and visible in the new sale catalogue.'
+          : 'Product is archived and hidden from sales.',
+      });
+    } catch (caught) {
+      const error = caught as HttpError;
+      if (error?.status === 412) {
+        toast({
+          variant: 'error',
+          title: 'Conflict: product modified',
+          description: 'This product was modified in another session. Changes have been reverted. Please refresh.',
+        });
+      } else if (error?.status === 403) {
+        toast({
+          variant: 'error',
+          title: 'Permission denied',
+          description: 'Only the owner can edit or archive products. Changes have been reverted.',
+        });
+      } else {
+        toast({
+          variant: 'error',
+          title: nextActive ? 'Could not activate product' : 'Could not archive product',
+          description: 'Request failed. Changes have been reverted.',
+        });
+      }
+    }
+  };
+
   return (
     <div className="product-movements-page">
       <nav aria-label="Breadcrumb" className="product-movements-breadcrumb">
@@ -46,7 +91,7 @@ export function ProductMovementsPage() {
       </nav>
 
       {productLoading ? (
-        <div aria-busy="true" aria-label="Loading product details" className="product-movements-loading">
+        <div role="status" aria-busy="true" aria-label="Loading product details" className="product-movements-loading">
           <Skeleton lines={3} className="product-skeleton" />
         </div>
       ) : productError || !product ? (
@@ -69,14 +114,38 @@ export function ProductMovementsPage() {
             </div>
             <div className="product-movements-actions">
               {user?.role === 'OWNER' && (
-                <Button
-                  variant="primary"
-                  size="md"
-                  className="product-restock-btn"
-                  onClick={() => void navigate(`/app/products/${productId}/restock`)}
-                >
-                  Restock
-                </Button>
+                <>
+                  <Button
+                    variant="secondary"
+                    size="md"
+                    className="product-edit-btn"
+                    onClick={() => void navigate(`/app/products/${productId}/edit`)}
+                  >
+                    Edit product
+                  </Button>
+                  <Button
+                    variant="secondary"
+                    size="md"
+                    className={`product-archive-btn ${product.active ? 'text-danger' : 'text-primary'}`}
+                    onClick={() => {
+                      if (product.active) {
+                        setArchiveConfirmOpen(true);
+                      } else {
+                        void handleArchiveToggle(true);
+                      }
+                    }}
+                  >
+                    {product.active ? 'Archive' : 'Unarchive'}
+                  </Button>
+                  <Button
+                    variant="primary"
+                    size="md"
+                    className="product-restock-btn"
+                    onClick={() => void navigate(`/app/products/${productId}/restock`)}
+                  >
+                    Restock
+                  </Button>
+                </>
               )}
             </div>
           </header>
@@ -137,7 +206,7 @@ export function ProductMovementsPage() {
             </div>
 
             {movementsLoading ? (
-              <div aria-busy="true" aria-label="Loading movements" className="product-movements-loading">
+              <div role="status" aria-busy="true" aria-label="Loading movements" className="product-movements-loading">
                 <Skeleton lines={4} className="product-skeleton" />
               </div>
             ) : movementsError || !movements ? (
@@ -269,6 +338,26 @@ export function ProductMovementsPage() {
               </div>
             )}
           </section>
+          <ConfirmDialog
+            open={archiveConfirmOpen}
+            onOpenChange={(open) => {
+              if (!open) setArchiveConfirmOpen(false);
+            }}
+            title={`Archive ${product.name}?`}
+            description="Archived products are hidden from the new sale catalogue and cannot be sold. Stock movements and ledger history are preserved."
+            className="shop-confirm"
+            overlayClassName="shop-confirm-backdrop"
+            closeClassName="hidden"
+            tone="danger"
+            confirmLabel="Archive product"
+            cancelLabel="Keep active"
+            confirmButtonProps={{ variant: 'secondary', size: 'lg' }}
+            cancelButtonProps={{ variant: 'primary', size: 'lg' }}
+            onConfirm={() => {
+              setArchiveConfirmOpen(false);
+              void handleArchiveToggle(false);
+            }}
+          />
         </>
       )}
     </div>
