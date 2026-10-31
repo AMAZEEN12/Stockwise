@@ -173,7 +173,7 @@ public class SaleRepository {
         List<Sale.Line> ordered = lines.stream().sorted(LINE_ORDER).toList();
         return jdbc.sql("""
                         UPDATE sale SET total_kobo = :total WHERE id = :id
-                        RETURNING id, reference, payment_type, customer_id, due_date, total_kobo, created_by, created_at
+                        RETURNING id, reference, payment_type, customer_id, due_date, total_kobo, created_by, created_at, reversed_at
                         """)
                 .param("total", totalKobo)
                 .param("id", saleId)
