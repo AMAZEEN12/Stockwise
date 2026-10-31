@@ -117,16 +117,17 @@ From [deploy-plan.md](deploy-plan.md) §1. Each provider's own pages were read o
 | Qocent | Not free: prepaid credits only. Used only if the programme supplies them (PD5a). |
 
 ## Performance and load
-Measured on 2026-10-28 from a GitHub Actions runner against the live free-tier services (Render free, 0.1 CPU; Neon free), so network time is included. Nine valid runs; raw output and a run-by-run table are in [docs/evidence/load-2026-10-28/](docs/evidence/load-2026-10-28/). Tuning applied after run 3: database pool 20, JVM flags `-XX:+UseSerialGC -XX:TieredStopAtLevel=1`, debug logging off.
+Measured on 2026-10-28, then again on 2026-10-30 and 2026-10-31 after the sale change, from a GitHub Actions runner against the live free-tier services (Render free, 0.1 CPU; Neon free), so network time is included. Raw output and run-by-run tables: [docs/evidence/load-2026-10-28/](docs/evidence/load-2026-10-28/) and [docs/evidence/load-2026-10-31/](docs/evidence/load-2026-10-31/). Tuning applied after run 3 on 2026-10-28: database pool 20, JVM flags `-XX:+UseSerialGC -XX:TieredStopAtLevel=1`, debug logging off.
+
 
 | Measure | Target (DM12) | Result |
 |----|----|----|
-| `POST /sales` p95, 3 tills, steady, sales spread across 20 products (warm) | ≤ 500 ms | **Met after the sale change: p95 403 ms** (median 367 ms, slowest 479 ms, no failures). Before the change: 656 to 689 ms. |
-| `POST /sales` p95, ramp, sales spread across 20 products | ≤ 500 ms | Held to about 39 virtual users (28 requests/s; p95 502 ms where it stopped). Before the change it stopped at 4 to 5 users. |
-| `POST /sales` p95, ramp, every sale on one product (worst case) | ≤ 500 ms | **Not met: p95 596 ms** (median 372 ms) at the first check, about 7 users. Before the change: 1.46 to 1.70 s. |
-| Dashboard p95 (warm) | ≤ 800 ms | Read paths only (product and sales lists; no `GET /dashboard` yet). After tuning, held to 38 to 50 virtual users (29 to 41 requests/s); p95 800 to 832 ms where each run stopped |
+| `POST /sales` p95, 3 tills, steady, sales spread across 20 products (warm) | ≤ 500 ms | **Met after the sale change: p95 385 to 403 ms** over 2 runs (2026-10-30 and 2026-10-31; medians 342 to 367 ms, slowest 407 to 479 ms in the steady phase, no failures). Before the change: 656 to 689 ms. |
+| `POST /sales` p95, ramp, sales spread across 20 products | ≤ 500 ms | Held to 36 to 39 virtual users (27 to 28 requests/s; p95 502 to 512 ms where it stopped, 2 runs). Before the change it stopped at 4 to 5 users. |
+| `POST /sales` p95, ramp, every sale on one product (worst case) | ≤ 500 ms | **Not met: p95 575 to 596 ms** (median 372 to 379 ms) at the first check, about 7 users (2 runs). Before the change: 1.46 to 1.70 s. |
+| Dashboard p95 (warm) | ≤ 800 ms | Read paths only (product and sales lists; no `GET /dashboard` yet). After tuning, held to 38 to 50 virtual users (29 to 41 requests/s); p95 800 to 832 ms where each run stopped. … On 2026-10-31 one run held the whole ramp to 50 virtual users at p95 769 ms (40 requests/s). |
 | Product catalogue p95 (warm) | 500 ms yardstick | After tuning, held to 30 to 47 virtual users (26 to 41 requests/s); p95 505 to 543 ms where each run stopped |
-| Saturation point | reported | Sales: 4 to 7 virtual users (about 2.5 sales/s). Reads: about 30 to 50 virtual users |
+| Saturation point | reported | Sales spread across products: about 36 to 39 virtual users (27 to 28 requests/s). Sales on one product: about 7 users (about 5 sales/s). Reads: about 30 to 50 virtual users |
 | Cold start (Render) | reported separately | **62 s** to the first 200 after 30 minutes idle (one run, 2026-10-30). Warm `/health` afterwards: 161 to 330 ms |
 | Last-unit test, 10 devices, 3 rounds | one 201, nine 409, stock 0 | **Passed in all 9 runs, on the deployed service** |
 | LCP (Lighthouse, deployed address, 2026-10-30) | ≤ 2.5 s | **Met, narrowly:** 2.4 s mobile, 0.5 s desktop (one run each) |
@@ -135,8 +136,8 @@ Measured on 2026-10-28 from a GitHub Actions runner against the live free-tier s
 
 How to read this:
 - Each k6 ramp test stops itself the moment p95 passes its target, so the p95 shown "at stop" is always just over the target. The user count at that moment is the saturation point.
-- The steady test is the fairest sales figure: 3 tills, each selling about every 2 seconds, after a 20 second warm-up. Its times are tight (median 605 ms, p99 675 ms), which points to a fixed cost per sale on this hardware rather than queueing.
-- Spreading sales across products cut p95 by more than half (about 1.5 s to about 0.66 s) but did not reach 500 ms.
+- The steady test is the fairest sales figure: 3 tills, each selling about every 2 seconds, after a 20 second warm-up. After the sale change its times are tight (medians 342 to 367 ms, p99 about 400 ms), which points to a fixed cost per sale rather than queueing.
+- The sale change cut the work per sale (one statement per line, no re-read of the finished sale), and p95 fell by about 40 percent. Spreading sales across products still matters: sales on one product queue on its stock row.
 - LCP and CLS come from Lighthouse on the opening screen, a lab run with simulated mobile throttling. INP comes from the web-vitals library during a real session and is the slowest interaction seen, so it rose from 40 ms to 216 ms as more of the app was used. Neither is field data from real shops.
 
 ## Known limitations
