@@ -114,7 +114,7 @@ test('stock movement history dedicated page opens on product row click and shows
   await expect(page).toHaveURL(/\/app\/products$/);
 });
 
-test('owner can edit product catalogue fields', async ({ page }) => {
+test('owner can edit product catalogue fields from dedicated page and list rows have no action buttons', async ({ page }) => {
   const target = products[0];
   let patchSent: Record<string, unknown> | null = null;
   let ifMatchHeader: string | null = null;
@@ -140,10 +140,21 @@ test('owner can edit product catalogue fields', async ({ page }) => {
   await page.goto('/app/products');
   await expect(page.getByRole('heading', { name: 'Products', exact: true })).toBeVisible();
 
-  // Find Edit button on target product row
+  // STANDING RULE CHECK: List table rows must NEVER contain action buttons (Edit, Archive, etc.)
   const row = page.locator('.product-row').filter({ hasText: target.name });
   await expect(row).toBeVisible();
-  await row.getByRole('button', { name: 'Edit', exact: true }).click();
+  await expect(row.getByRole('button', { name: 'Edit' })).toHaveCount(0);
+  await expect(row.getByRole('button', { name: 'Archive' })).toHaveCount(0);
+  await expect(row.getByRole('button', { name: 'Unarchive' })).toHaveCount(0);
+
+  // Click on row to navigate to dedicated movements page
+  await row.click();
+  await expect(page).toHaveURL(new RegExp(`/app/products/${target.id}/movements`));
+
+  // Edit button is located on dedicated movements page
+  const editButton = page.getByRole('button', { name: 'Edit product', exact: true });
+  await expect(editButton).toBeVisible();
+  await editButton.click();
 
   // Edit dialog opens with prefilled fields
   const dialog = page.getByRole('dialog', { name: 'Edit product' });
@@ -169,7 +180,7 @@ test('owner can edit product catalogue fields', async ({ page }) => {
   expect(axe.violations.filter((v) => ['serious', 'critical'].includes(v.impact || ''))).toEqual([]);
 });
 
-test('optimistic archive updates immediately and rolls back on 412 version conflict (R18, DM11)', async ({ page }) => {
+test('optimistic archive updates immediately and rolls back on 412 version conflict from dedicated page (R18, DM11)', async ({ page }) => {
   const target = products[0]; // Active in stock product
   let releasePatch: (() => void) | null = null;
   const patchDeferred = new Promise<void>((resolve) => {
@@ -177,6 +188,12 @@ test('optimistic archive updates immediately and rolls back on 412 version confl
   });
 
   await page.route(`**/products/${target.id}`, async (route) => {
+    if (route.request().method() === 'GET') {
+      return route.fulfill({
+        json: { ...target, version: 1, active: true },
+        headers: { etag: '"1"' },
+      });
+    }
     if (route.request().method() === 'PATCH') {
       await patchDeferred;
       return route.fulfill({
@@ -190,13 +207,13 @@ test('optimistic archive updates immediately and rolls back on 412 version confl
     return route.fallback();
   });
 
-  await page.goto('/app/products');
-  const row = page.locator('.product-row').filter({ hasText: target.name });
-  await expect(row).toBeVisible();
-  await expect(row.getByText(/In stock/i).first()).toBeVisible();
+  await page.goto(`/app/products/${target.id}/movements`);
+  await expect(page.getByRole('heading', { level: 2, name: target.name })).toBeVisible();
 
-  // Click Archive
-  await row.getByRole('button', { name: 'Archive', exact: true }).click();
+  // Archive button is on the dedicated page
+  const archiveBtn = page.getByRole('button', { name: 'Archive', exact: true });
+  await expect(archiveBtn).toBeVisible();
+  await archiveBtn.click();
 
   // Confirmation dialog opens
   const confirmDialog = page.getByRole('dialog', { name: /Archive/i });
@@ -204,16 +221,14 @@ test('optimistic archive updates immediately and rolls back on 412 version confl
   await confirmDialog.getByRole('button', { name: 'Archive product', exact: true }).click();
   await expect(confirmDialog).not.toBeVisible();
 
-  // OPTIMISTIC CHECK: Before the server answers, the row is immediately shown as Archived
-  await expect(row.getByText('Archived')).toBeVisible();
-  await expect(row.getByRole('button', { name: 'Unarchive', exact: true })).toBeVisible();
+  // OPTIMISTIC CHECK: Before the server answers, the button immediately switches to 'Unarchive'
+  await expect(page.getByRole('button', { name: 'Unarchive', exact: true })).toBeVisible();
 
   // Release the 412 conflict response from the server
   releasePatch!();
 
-  // ROLLBACK CHECK: The row reverts back to Active ("In stock") within one render
-  await expect(row.getByText(/In stock/i).first()).toBeVisible();
-  await expect(row.getByRole('button', { name: 'Archive', exact: true })).toBeVisible();
+  // ROLLBACK CHECK: The button reverts back to 'Archive' within one render
+  await expect(page.getByRole('button', { name: 'Archive', exact: true })).toBeVisible();
 
   // Toast conflict error is displayed
   await expect(page.getByText('Conflict: product modified', { exact: true })).toBeVisible();

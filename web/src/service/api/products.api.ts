@@ -85,9 +85,11 @@ export const productsApi = authApi.injectEndpoints({ endpoints: (builder) => ({
       );
       patches.push(patchDetail);
 
-      const state = getState() as Record<string, any>;
-      const apiState = state[productsApi.reducerPath] || state.stockwiseApi || state.authApi || state.api || {};
-      const queries = (apiState.queries || {}) as Record<string, { endpointName?: string; originalArgs?: ProductFilters; data?: ProductPage }>;
+      const state = getState() as Record<string, unknown>;
+      const apiState = (state[productsApi.reducerPath] ?? state.stockwiseApi ?? state.authApi ?? state.api ?? {}) as {
+        queries?: Record<string, { endpointName?: string; originalArgs?: ProductFilters; data?: ProductPage }>;
+      };
+      const queries = apiState.queries ?? {};
       for (const q of Object.values(queries)) {
         if (q && q.endpointName === 'products' && q.originalArgs && q.data?.items?.some((p) => p.id === id)) {
           const patchList = dispatch(

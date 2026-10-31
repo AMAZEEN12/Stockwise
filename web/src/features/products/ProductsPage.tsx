@@ -1,16 +1,12 @@
-import { useState } from "react";
 import { Link, Outlet, useLocation, useNavigate, useOutletContext, useSearchParams } from "react-router";
 import {
   useProductsQuery,
   useCatalogueQuery,
-  usePatchProductMutation,
 } from "../../service/api/products.api";
 import type { User } from "../../models/responses/auth.response";
-import type { Product, StockState } from "../../models/responses/products.response";
-import type { HttpError } from "../../service/http-client";
+import type { StockState } from "../../models/responses/products.response";
 import { formatMoney } from "../../lib/money";
 import { Button } from "../../components/ui/button";
-import { ConfirmDialog } from "../../components/ui/dialog";
 import { FilterBar } from "../../components/ui/filter-bar";
 import { FormField } from "../../components/ui/form-field";
 import { Select } from "../../components/ui/select";
@@ -45,47 +41,7 @@ export function ProductsPage() {
       size: 20,
     });
   const categories = useCatalogueQuery();
-  const [patchProduct] = usePatchProductMutation();
-  const [pendingArchiveProduct, setPendingArchiveProduct] = useState<Product | null>(null);
   const { toast } = useToast();
-
-  const handleArchiveToggle = async (product: Product, nextActive: boolean) => {
-    try {
-      await patchProduct({
-        id: product.id,
-        version: product.version,
-        data: { active: nextActive },
-      }).unwrap();
-      toast({
-        variant: "success",
-        title: nextActive ? `${product.name} activated` : `${product.name} archived`,
-        description: nextActive
-          ? "Product is active and visible in the new sale catalogue."
-          : "Product is archived and hidden from sales.",
-      });
-    } catch (caught) {
-      const error = caught as HttpError;
-      if (error?.status === 412) {
-        toast({
-          variant: "error",
-          title: "Conflict: product modified",
-          description: "This product was modified in another session. Changes have been reverted. Please refresh.",
-        });
-      } else if (error?.status === 403) {
-        toast({
-          variant: "error",
-          title: "Permission denied",
-          description: "Only the owner can edit or archive products. Changes have been reverted.",
-        });
-      } else {
-        toast({
-          variant: "error",
-          title: nextActive ? "Could not activate product" : "Could not archive product",
-          description: "Request failed. Changes have been reverted.",
-        });
-      }
-    }
-  };
 
   const update = (key: string, value: string) => {
     const next = new URLSearchParams(params);
@@ -150,28 +106,25 @@ export function ProductsPage() {
           description={params.size ? "Clear the filters to see your catalogue." : "Add your first product to start keeping stock."}/>
       ) : (
         <>
-          <div className={`product-table ${user.role === "OWNER" ? "has-owner-actions" : ""}`} aria-busy={isFetching}>
-            <div className={`product-table-head micro ${user.role === "OWNER" ? "has-owner-actions" : ""}`}>
+          <div className="product-table" aria-busy={isFetching}>
+            <div className="product-table-head micro">
               <span>Name</span>
               <span>Category</span>
               <span>Price</span>
               <span>Stock</span>
               <span>Quantity</span>
-              {user.role === "OWNER" && <span className="product-actions-head">Actions</span>}
             </div>
             {data.items.map((product) => (
               <article
-                className={`product-row product-row-clickable ${user.role === "OWNER" ? "has-owner-actions" : ""}`}
+                className="product-row product-row-clickable"
                 key={product.id}
                 tabIndex={0}
                 aria-label={`${product.name}, ${product.reference}, ${product.category}. View stock movements.`}
-                onClick={(e) => {
-                  if ((e.target as HTMLElement).closest("a, button")) return;
+                onClick={() => {
                   void navigate(`/app/products/${product.id}/movements${location.search}`);
                 }}
                 onKeyDown={(e) => {
                   if (e.key === "Enter" || e.key === " ") {
-                    if ((e.target as HTMLElement).closest("a, button")) return;
                     e.preventDefault();
                     void navigate(`/app/products/${product.id}/movements${location.search}`);
                   }
@@ -215,36 +168,6 @@ export function ProductsPage() {
                   <span>Qty </span>
                   <strong className="product-quantity-value">{product.quantity}</strong>
                 </span>
-                {user.role === "OWNER" && (
-                  <div className="product-row-actions">
-                    <Button
-                      variant="ghost"
-                      size="sm"
-                      className="product-row-action-btn edit-action-btn"
-                      onClick={(e) => {
-                        e.stopPropagation();
-                        void navigate(`${product.id}/edit${location.search}`);
-                      }}
-                    >
-                      Edit
-                    </Button>
-                    <Button
-                      variant="ghost"
-                      size="sm"
-                      className={`product-row-action-btn archive-action-btn ${product.active ? "archive-btn-active" : "archive-btn-inactive"}`}
-                      onClick={(e) => {
-                        e.stopPropagation();
-                        if (product.active) {
-                          setPendingArchiveProduct(product);
-                        } else {
-                          void handleArchiveToggle(product, true);
-                        }
-                      }}
-                    >
-                      {product.active ? "Archive" : "Unarchive"}
-                    </Button>
-                  </div>
-                )}
               </article>
             ))}
           </div>
@@ -271,29 +194,6 @@ export function ProductsPage() {
           )}
         </>
       )}
-      <ConfirmDialog
-        open={Boolean(pendingArchiveProduct)}
-        onOpenChange={(open) => {
-          if (!open) setPendingArchiveProduct(null);
-        }}
-        title={`Archive ${pendingArchiveProduct?.name ?? "this product"}?`}
-        description="Archived products are hidden from the new sale catalogue and cannot be sold. Stock movements and ledger history are preserved."
-        className="shop-confirm"
-        overlayClassName="shop-confirm-backdrop"
-        closeClassName="hidden"
-        tone="danger"
-        confirmLabel="Archive product"
-        cancelLabel="Keep active"
-        confirmButtonProps={{ variant: "secondary", size: "lg" }}
-        cancelButtonProps={{ variant: "primary", size: "lg" }}
-        onConfirm={() => {
-          if (pendingArchiveProduct) {
-            const target = pendingArchiveProduct;
-            setPendingArchiveProduct(null);
-            void handleArchiveToggle(target, false);
-          }
-        }}
-      />
       <Outlet
         context={{
           user,

@@ -91,7 +91,7 @@ export function ProductMovementsPage() {
       </nav>
 
       {productLoading ? (
-        <div aria-busy="true" aria-label="Loading product details" className="product-movements-loading">
+        <div role="status" aria-busy="true" aria-label="Loading product details" className="product-movements-loading">
           <Skeleton lines={3} className="product-skeleton" />
         </div>
       ) : productError || !product ? (
@@ -206,7 +206,7 @@ export function ProductMovementsPage() {
             </div>
 
             {movementsLoading ? (
-              <div aria-busy="true" aria-label="Loading movements" className="product-movements-loading">
+              <div role="status" aria-busy="true" aria-label="Loading movements" className="product-movements-loading">
                 <Skeleton lines={4} className="product-skeleton" />
               </div>
             ) : movementsError || !movements ? (
