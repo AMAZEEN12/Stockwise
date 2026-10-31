@@ -172,9 +172,14 @@ public class SaleRepository {
     public Sale finishSale(UUID saleId, long totalKobo, List<Sale.Line> lines) {
         List<Sale.Line> ordered = lines.stream().sorted(LINE_ORDER).toList();
         return jdbc.sql("""
-                        UPDATE sale SET total_kobo = :total WHERE id = :id
-                        RETURNING id, reference, payment_type, customer_id, due_date, total_kobo, created_by, created_at
-                        """)
+                    UPDATE sale
+                    SET total_kobo = :total,
+                        unpaid_kobo = CASE WHEN payment_type = 'CREDIT' THEN :total ELSE 0 END
+                    WHERE id = :id
+                    RETURNING id, reference, payment_type, customer_id, due_date, total_kobo,
+                              created_by, created_at,
+                              reversed_at, reversed_by, reversal_reason, reversal_notes, unpaid_kobo
+                    """)
                 .param("total", totalKobo)
                 .param("id", saleId)
                 .query((rs, row) -> mapSale(rs, ordered))

@@ -19,6 +19,8 @@ Sales spread across 20 products (ramp): run 8 p95 667 ms, median 572 ms; run 9 p
 Sales spread across 20 products (steady, 3 tills, 120 s after a 20 s warm-up, run 9): p95 656 ms, median 605 ms, slowest 717 ms, 136 requests, no failures.
 Last-unit (10 devices, 3 rounds): passed in all 9 runs.
 
+Second run after the sale change (first: 2026-10-30). Steady p95 385 ms; spread ramp p95 512 ms at 36 users; one-product ramp p95 575 ms at 7 users; dashboard p95 769 ms over the full ramp; catalogue p95 544 ms at 44 users; last-unit passed 3 of 3. No failed requests.
+
 Excluded: one run that stopped at the login step (nothing was measured), and one cold-start attempt that answered in 0.3 s because the service had not gone to sleep.
 Failed dashboard requests in runs 2, 5 and 7: cause not identified. In runs 8 and 9, requests logged as failed were cut off at the moment the test stopped itself.
 Not measured on 2026-10-28: cold start, Lighthouse. LCP, INP and CLS were measured on 2026-10-30: see docs/evidence/web-vitals-2026-10-30/.
