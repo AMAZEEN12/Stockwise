@@ -35,7 +35,7 @@ export function CustomersPage() {
   const asOf=retrievedAt ? new Intl.DateTimeFormat('en-GB',{hour:'2-digit',minute:'2-digit',hour12:false,timeZone:'Africa/Lagos'}).format(retrievedAt) : null;
   const close=()=>{if(!busy)form.current?.requestClose();};
   return <section className="customers-page" aria-label="Customer directory">
-    <header className="page-heading"><div><h1>Customers</h1><p className="customer-micro" title="Time of the last successful retrieval in Africa/Lagos; balances may change afterwards.">{asOf ? `as of ${asOf} WAT` : 'Waiting for customer data'}{customers.isFetching && customers.data ? ' · refreshing…' : ''}</p></div>{canCreate && <Button ref={trigger} className="add-customer" size="lg" onClick={()=>setOpen(true)}>+ Add customer</Button>}</header>
+    <header className="page-heading"><div><h1>Customers</h1><p className="customer-micro" title="Time of the last successful retrieval in Africa/Lagos; balances may change afterwards.">{asOf ? `as of ${asOf} WAT` : 'Waiting for customer data'}{customers.isFetching && customers.data ? ' · refreshing…' : ''}</p></div>{canCreate && <Button ref={trigger} className="add-customer" size="lg" onClick={()=>setOpen(true)}>Add customer</Button>}</header>
     {!canCreate && <p className="customer-readonly customer-micro"><CustomerIcon/>Read-only access. Admins cannot add customers.</p>}
     <FilterBar className="customer-filter-bar" searchLabel="Search customers by name" searchPlaceholder="Search by name"
       query={query} onQueryChange={setQuery} activeCount={0} onClearAll={()=>setQuery('')}

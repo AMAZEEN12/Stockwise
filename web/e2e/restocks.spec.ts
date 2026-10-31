@@ -28,7 +28,8 @@ test('records stock once and retries an uncertain response with the same key and
     await route.fulfill({status:201,json:{id:'22222222-2222-4222-8222-222222222222',...body,createdBy:user.id,createdAt:'2026-10-29T08:00:00Z'}});
   });
   await page.goto('/app/products');
-  await page.getByRole('link',{name:'Restock'}).click();
+  await page.locator('.product-row-clickable').first().click();
+  await page.getByRole('button', { name: 'Restock' }).click();
   const dialog = page.getByRole('dialog',{name:'Restock product'});
   await expect(dialog).toBeVisible();
   await page.getByLabel('Quantity received').fill('3');
@@ -53,4 +54,6 @@ test('non-owners do not see restock actions', async ({page}) => {
   await page.goto('/app/products');
   await expect(page.getByText(product.name,{exact:true})).toBeVisible();
   await expect(page.getByRole('link',{name:'Restock'})).toHaveCount(0);
+  await page.locator('.product-row-clickable').first().click();
+  await expect(page.getByRole('button', { name: 'Restock' })).toHaveCount(0);
 });

@@ -6,6 +6,55 @@ Source document: `Tesa cohort 6 software engineering capstone project.pdf` (TeSA
 > Any agent opening this project: read this file first, then the "Conventions and guidelines" and "Decisions" sections, then the artifacts in this folder. Continue from "Resume here". Don't re-ask anything already answered below.
 
 ## Resume here
+Dashboard UI & Interactive Sales Donut Chart (PR 3 / R14), 2026-10-30 (Victor Oyeleke; logged by Antigravity):
+Branch `feat/dashboard-ui` branched from conflict-free `feat/product-movements-ui` implements the Shop Dashboard screen (`/app/dashboard`, `R14`).
+1. **Layout & Modern Visual Design (Aligned with Dashboard Screenshot Reference)**:
+   - **Hero Overview Container**: Dark charcoal container (`#121316`) housing 3 cards (Total Revenue, Outstanding Credit, Store Credit Held) with subtle `(i)` icons, big bold amounts, count labels, and percentage movement trends (`+17.0% ↑`, `-7.0% ↓`, `+1.8% ↑`). Removed all links inside the cards.
+   - **Two-Column Grid Structure**:
+     - *Left Column*: Hero Overview Container on top, followed immediately by Recent Sales table (replacing Transaction History).
+     - *Right Column*: Top-right Interactive Sales Pie Chart (replacing My Card), followed beneath by Low Stock Alerts (replacing Recent Activity).
+   - **Strict Alignment**: `Time (WAT)`, `Amount`, and `Status` headers and table cells are right-aligned in Recent Sales; `Threshold` and `Stock` headers and table cells are right-aligned in Low Stock.
+   - **Pure Monitoring View**: Removed "New sale" action button, removed "Demonstration data" banner/card, and eliminated all navigation links inside dashboard widgets and table rows.
+2. **Interactive Sales Pie/Donut Chart (`InteractiveSalesChart.tsx`, `donut-geometry.ts`)**:
+   - Enlarged geometry (`viewBox="0 0 320 320"`, center `(160, 160)`, inner radius `78px` with `156px` center hole, outer radius `112px`, active outer radius `124px`, highlight arc ring `136px`) providing generous room for currency figures.
+   - Header title updated to `Sales Breakdown` (removed "Pie Chart - Interactive").
+   - Dropdown styled with an app color shade (`--color-primary` tint) with live indicator swatch and focus ring.
+   - Outer floating highlight arc and active slice radius expansion on hover/select.
+   - Accessible keyboard/screen-reader support (`<svg aria-hidden="true">`, scrollable table regions with `tabIndex={0}` and ARIA labels).
+3. **Verification**:
+   - Vitest: 23 test suites, 85/85 tests passed (`donut-geometry.test.ts` 5/5, `dashboard.test.tsx` 4/4).
+   - Strict TypeScript (`tsc --noEmit`): 0 errors.
+   - ESLint: 0 errors, 0 warnings.
+   - Vite Production Build: Succeeded in 19.08s with all chunks and CSS emitted cleanly.
+   - Playwright: 2/2 tests passed in `dashboard.spec.ts` across desktop and mobile with 0 axe-core critical or serious accessibility violations.
+
+PR #44 conflict resolution, 2026-10-30: merged `origin/main` at `250a7b85` into `feat/product-movements-ui`. Preserved both the product stock movements dedicated page implementation and the customer ledger dedicated page implementation from PR #42, along with all recent main branch commits and worklog entries. Preserved user-requested removals (no decorative icons on product status badges, no plus sign on the Add customer button).
+
+Product stock movements dedicated page (PR 2 / PR #44), 2026-10-30 (Victor Oyeleke; logged by Antigravity):
+Branch `feat/product-movements-ui` implements the stock movements history dedicated page for products (`GET /api/v1/products/{id}/movements`, `R17`).
+1. Frontend implementation & refinements:
+   - Dedicated page: Added `ProductMovementsPage.tsx` mounted at dedicated route `/app/products/:productId/movements` (sibling to `/app/products` in `router.tsx`).
+   - Clean header hierarchy: `Stock Movements` is the top `<h1>` heading, `{product.name}` is a subordinate `<h2>` subheading, followed by product reference and category.
+   - Restock action: Green button (`variant="primary"`) on both desktop and mobile, right-aligned on mobile (`justify-content: flex-end`). Removed catalogue item action buttons from `ProductsPage.tsx`; restocks are now initiated exclusively from the dedicated product page.
+   - Summary cards interaction: Hovering over current stock, selling price, and recorded movements cards highlights border, background, labels, and values in brand green (`var(--color-primary)`).
+   - Navigation: Removed redundant bottom "Close" button and unneeded "×" icon; return navigation is handled cleanly via the `← Back to products` breadcrumb link.
+   - Filter chips: Styled `.filter-chips` on mobile to display horizontally on a single line with smooth horizontal scrolling (`flex-wrap: nowrap; overflow-x: auto; scrollbar-width: none`).
+   - Responsive typography, alignment & badge layout:
+     - Left-aligned Quantity column header and values (`text-align: left`) on desktop/tablet catalogue table so numbers line up directly under `QUANTITY`.
+     - Fixed stock badge pills (`Low (...)`, `Out of stock`): Added `white-space: nowrap; width: max-content;` and resolved medium breakpoint (`@media (min-width: 769px) and (max-width: 1150px)`) to 4 explicit grid tracks (`minmax(160px, 2fr) minmax(90px, 1fr) minmax(190px, max-content) 80px`), allocating sufficient width so badges never wrap or distort into oval bubbles.
+     - Refined desktop typography & weight: Reduced table font to 14px, product names to 15px (500 weight), price to 14px (500 weight), `.stock-badge` and `.stock-count` to 13px (500 weight), and `.product-quantity` to 14px (500 weight). Scoped row hover to `.product-name strong` so numbers do not turn neon green on hover. Removed `@media (min-width: 1440px)` scaling that inflated numbers to 20px.
+     - Preserved user-removed decorative badge icons and the customer add button `+` sign.
+   - Dual responsive view: Comprehensive statement table on desktop (5 columns: Name, Category, Price, Stock, Quantity) and compact feed cards on mobile, with Africa/Lagos (WAT) timestamps, quantity delta badges, and running balance (`quantityAfter`), plus loading skeletons, error state with retry, and empty state.
+   - Products catalogue rows in `ProductsPage.tsx` are clickable and keyboard accessible (`tabIndex={0}`, Enter/Space), styled with brand highlight (`color-mix(in srgb, var(--color-primary) 8%, var(--color-surface))`) without text underlines, preserving active search parameters.
+   - Added pure validators and formatters in `product-movements.ts`.
+   - Updated development API simulation (`development-api.mjs`) to record and return stock movements for product creation, restocks, sales, and reversals.
+2. Verification:
+   - Vitest: 20 test files, 67 tests passing (`product-movements.test.ts` 9/9).
+   - Strict TypeScript (`tsc --noEmit`): 0 errors.
+   - ESLint: 0 errors, 0 warnings (`--max-warnings 0`).
+   - Vite production build: SUCCESS (`dist/` generated cleanly in 16.53s).
+   - Playwright: 4/4 passing on `products.spec.ts` and 4/4 passing on `restocks.spec.ts` across desktop and mobile with 0 axe accessibility violations.
+
 Customer Ledger Dedicated Page (PR 1), 2026-10-30: Per Victor's design direction to eliminate repetitive row buttons when the customer list grows large, evolved the customer ledger feature from an overlay drawer into a clean, dedicated statement page (`/app/customers/:customerId`) on branch `feat/customer-ledger-ui`.
 1. **Dedicated Page & Routing (`CustomerDetailPage.tsx`, `router.tsx`, `role-landing.ts`)**:
    - Registered `/app/customers/:customerId` under `ShopLayout` and permitted in `role-landing.ts` for deep-linking.

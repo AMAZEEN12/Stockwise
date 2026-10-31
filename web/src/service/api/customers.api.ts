@@ -1,3 +1,4 @@
+import { createUuid } from '../../shared/utils/uuid';
 import {authApi} from './auth.api';
 import {customersEndpoints} from '../endpoints/customers.endpoints';
 import type {Customer, CustomerPage, LedgerPage} from '../../models/responses/customers.response';
@@ -78,7 +79,7 @@ export const customersApi = authApi.injectEndpoints({endpoints:(builder) => ({
     query:({customerId,body}) => ({
       url:customersEndpoints.storeCredit(customerId),
       method:'POST',
-      headers:{'Idempotency-Key':crypto.randomUUID()},
+      headers:{'Idempotency-Key':createUuid()},
       data:body,
     }),
     invalidatesTags:(_result,error) => error ? [] : ['Customers'],

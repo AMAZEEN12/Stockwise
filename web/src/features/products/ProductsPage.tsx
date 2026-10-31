@@ -1,4 +1,4 @@
-import { Link, Outlet, useOutletContext, useSearchParams } from "react-router";
+import { Link, Outlet, useLocation, useNavigate, useOutletContext, useSearchParams } from "react-router";
 import {
   useProductsQuery,
   useCatalogueQuery,
@@ -25,6 +25,8 @@ const filters: [string, StockState | ""][] = [
 ];
 export function ProductsPage() {
   const user = useOutletContext<User>();
+  const navigate = useNavigate();
+  const location = useLocation();
   const [params, setParams] = useSearchParams();
   const stock =
     filters.find(([, value]) => value === params.get("stockState"))?.[1] ||
@@ -63,7 +65,7 @@ export function ProductsPage() {
         </div>
         {user.role === "OWNER" && (
           <Link className="primary-link add-product" to="new">
-            ＋ Add product
+            Add product
           </Link>
         )}
       </div>
@@ -110,10 +112,25 @@ export function ProductsPage() {
               <span>Price</span>
               <span>Stock</span>
               <span>Quantity</span>
-              <span>Actions</span>
             </div>
             {data.items.map((product) => (
-              <article className="product-row" key={product.id}>
+              <article
+                className="product-row product-row-clickable"
+                key={product.id}
+                tabIndex={0}
+                aria-label={`${product.name}, ${product.reference}, ${product.category}. View stock movements.`}
+                onClick={(e) => {
+                  if ((e.target as HTMLElement).closest("a, button")) return;
+                  void navigate(`/app/products/${product.id}/movements${location.search}`);
+                }}
+                onKeyDown={(e) => {
+                  if (e.key === "Enter" || e.key === " ") {
+                    if ((e.target as HTMLElement).closest("a, button")) return;
+                    e.preventDefault();
+                    void navigate(`/app/products/${product.id}/movements${location.search}`);
+                  }
+                }}
+              >
                 <div className="product-name">
                   <strong title={product.name}>{product.name}</strong>
                   <span className="micro">
@@ -135,22 +152,22 @@ export function ProductsPage() {
                   appearance="outline"
                   tone={product.stockState === "IN_STOCK" ? "success" : product.stockState === "LOW" ? "warning" : product.stockState === "OUT" ? "danger" : "neutral"}
                   className={`stock-badge stock-${product.stockState.toLowerCase()}`}
-                  icon={product.stockState !== "ARCHIVED" ? <span>{product.stockState === "IN_STOCK" ? "✓" : product.stockState === "LOW" ? "▲" : "⊘"}</span> : undefined}
                 >
                   {product.stockState === "IN_STOCK"
                     ? "In stock"
                     : product.stockState === "LOW"
-                      ? `Low (${product.quantity} left, threshold ${product.lowStockThreshold})`
+                      ? (
+                        <>
+                          Low (<strong className="stock-count">{product.quantity}</strong> left, threshold <strong className="stock-count">{product.lowStockThreshold}</strong>)
+                        </>
+                      )
                       : product.stockState === "OUT"
                         ? "Out of stock"
                         : "Archived"}
                 </StatusBadge>
-                <span className="product-quantity micro">
+                <span className="product-quantity">
                   <span>Qty </span>
-                  {product.quantity}
-                </span>
-                <span className="product-actions">
-                  {user.role === "OWNER" && product.active && <Link className="restock-link" to={`${product.id}/restock`}>Restock</Link>}
+                  <strong className="product-quantity-value">{product.quantity}</strong>
                 </span>
               </article>
             ))}

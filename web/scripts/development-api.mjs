@@ -171,6 +171,29 @@ const customerLedgers = new Map([
 const reversalSubmissions = new Map();
 const restocks = [];
 const restockSubmissions = new Map();
+const stockMovements = [
+  { id: '44444444-4444-4444-8444-000000000001', productId: '11111111-1111-4111-8111-000000000001', delta: 49, sourceType: 'OPENING', createdAt: '2026-10-24T08:41:00Z' },
+  { id: '44444444-4444-4444-8444-000000000002', productId: '11111111-1111-4111-8111-000000000001', delta: -1, sourceType: 'SALE', sourceId: '33333333-3333-4333-8333-000000000001', createdAt: new Date(Date.now() - 3 * 3600 * 1000).toISOString() },
+
+  { id: '44444444-4444-4444-8444-000000000003', productId: '11111111-1111-4111-8111-000000000002', delta: 10, sourceType: 'OPENING', createdAt: '2026-10-24T08:41:00Z' },
+  { id: '44444444-4444-4444-8444-000000000004', productId: '11111111-1111-4111-8111-000000000002', delta: -10, sourceType: 'SALE', createdAt: new Date(Date.now() - 4 * 3600 * 1000).toISOString() },
+
+  { id: '44444444-4444-4444-8444-000000000005', productId: '11111111-1111-4111-8111-000000000003', delta: 6, sourceType: 'OPENING', createdAt: '2026-10-24T08:41:00Z' },
+  { id: '44444444-4444-4444-8444-000000000006', productId: '11111111-1111-4111-8111-000000000003', delta: -1, sourceType: 'SALE', sourceId: '33333333-3333-4333-8333-000000000001', createdAt: new Date(Date.now() - 3 * 3600 * 1000).toISOString() },
+
+  { id: '44444444-4444-4444-8444-000000000007', productId: '11111111-1111-4111-8111-000000000004', delta: 5, sourceType: 'OPENING', createdAt: '2026-10-24T08:41:00Z' },
+  { id: '44444444-4444-4444-8444-000000000008', productId: '11111111-1111-4111-8111-000000000004', delta: -2, sourceType: 'SALE', sourceId: '33333333-3333-4333-8333-000000000003', createdAt: new Date(Date.now() - 3600 * 1000).toISOString() },
+
+  { id: '44444444-4444-4444-8444-000000000009', productId: '11111111-1111-4111-8111-000000000005', delta: 13, sourceType: 'OPENING', createdAt: '2026-10-24T08:41:00Z' },
+  { id: '44444444-4444-4444-8444-000000000010', productId: '11111111-1111-4111-8111-000000000005', delta: -1, sourceType: 'SALE', sourceId: '33333333-3333-4333-8333-000000000002', createdAt: new Date(Date.now() - 2 * 3600 * 1000).toISOString() },
+
+  { id: '44444444-4444-4444-8444-000000000011', productId: '11111111-1111-4111-8111-000000000006', delta: 30, sourceType: 'OPENING', createdAt: '2026-10-24T08:41:00Z' },
+
+  { id: '44444444-4444-4444-8444-000000000012', productId: '11111111-1111-4111-8111-000000000007', delta: 5, sourceType: 'OPENING', createdAt: '2026-10-20T08:00:00Z' },
+  { id: '44444444-4444-4444-8444-000000000013', productId: '11111111-1111-4111-8111-000000000007', delta: -5, sourceType: 'SALE', createdAt: '2026-10-21T08:00:00Z' },
+
+  { id: '44444444-4444-4444-8444-000000000014', productId: '11111111-1111-4111-8111-000000000008', delta: 18, sourceType: 'OPENING', createdAt: '2026-10-24T08:41:00Z' },
+];
 const reversalAuthorizations = new Map([
   [
     '839201',
@@ -189,10 +212,16 @@ const isUuid = (text) => typeof text === 'string' && /^[0-9a-f]{8}-[0-9a-f]{4}-[
 const isDate = (value) => typeof value === 'string' && /^\d{4}-\d{2}-\d{2}$/.test(value) && Number.isFinite(Date.parse(value)) && new Date(value).toISOString().slice(0,10) === value;
 const server = createServer(async (request,response) => {
   const origin = request.headers.origin;
-  if (origin && !/^http:\/\/(127\.0\.0\.1|localhost):\d+$/.test(origin)) {response.writeHead(403); response.end(); return;}
-  response.setHeader('Access-Control-Allow-Origin', origin || 'http://127.0.0.1:5173');
+  const isAllowedOrigin =
+    !origin ||
+    /^http:\/\/(127\.0\.0\.1|localhost):\d+$/.test(origin) ||
+    origin === 'http://192.168.0.143:5173' ||
+    origin.includes("devtunnels.ms") ||
+    origin === "https://wg7l5hc6-4710.uks1.devtunnels.ms";
+  if (origin && !isAllowedOrigin) {response.writeHead(403); response.end(); return;}
+  response.setHeader('Access-Control-Allow-Origin', origin || '*');
   response.setHeader('Vary','Origin');
-  response.setHeader('Access-Control-Allow-Headers','Content-Type, Authorization, Idempotency-Key, X-Request-Id');
+  response.setHeader('Access-Control-Allow-Headers','Content-Type, Authorization, Idempotency-Key, X-Request-Id, If-Match, Accept');
   response.setHeader('Access-Control-Allow-Methods','GET, POST, OPTIONS');
   response.setHeader('Access-Control-Expose-Headers','X-Request-Id, Location');
   const requestId = isUuid(request.headers['x-request-id']) ? request.headers['x-request-id'] : randomUUID();
@@ -201,6 +230,8 @@ const server = createServer(async (request,response) => {
   const problem = (status,code,detail,errors) => send(status,{type:`https://stockwise.example/problems/${code.toLowerCase().replaceAll('_','-')}`,title:detail,status,code,detail,requestId,...(errors ? {errors}: {})});
   if (request.method === 'OPTIONS') {response.writeHead(204); response.end(); return;}
   const url = new URL(request.url,'http://127.0.0.1:4710');
+  // Match the deployed API base path while preserving existing local mock clients.
+  url.pathname = url.pathname.replace(/^\/api\/v1(?=\/|$)/, '') || '/';
   let body;
   try {
     if (request.method === 'POST') {
@@ -340,6 +371,63 @@ const server = createServer(async (request,response) => {
   if(!session || Date.parse(session.expiresAt)<=Date.now()){problem(401,'UNAUTHENTICATED','Sign in again.');return;}
   const user=session.user;
   if (url.pathname === '/me' && request.method === 'GET') {send(200,user); return;}
+  if (url.pathname === '/dashboard' && request.method === 'GET') {
+    const now = new Date();
+    const lagosDateStr = new Intl.DateTimeFormat('en-CA', { timeZone: 'Africa/Lagos' }).format(now);
+    const todaySalesList = sales.filter((sale) => {
+      const saleLagosDate = new Intl.DateTimeFormat('en-CA', { timeZone: 'Africa/Lagos' }).format(new Date(sale.createdAt));
+      return saleLagosDate === lagosDateStr;
+    });
+    const paidSales = todaySalesList.filter((s) => s.paymentType === 'PAID');
+    const creditSales = todaySalesList.filter((s) => s.paymentType === 'CREDIT');
+    const totalKobo = todaySalesList.reduce((sum, s) => sum + s.totalKobo, 0);
+    const paidKobo = paidSales.reduce((sum, s) => sum + s.totalKobo, 0);
+    const creditKobo = creditSales.reduce((sum, s) => sum + s.totalKobo, 0);
+
+    const outstandingCreditKobo = customers.reduce((sum, c) => sum + (c.balanceKobo || 0), 0);
+    const customersOwing = customers.filter((c) => (c.balanceKobo || 0) > 0).length;
+    const storeCreditHeldKobo = customers.reduce((sum, c) => sum + (c.storeCreditKobo || 0), 0);
+
+    const lowStockAll = products.filter((p) => p.active && p.quantity <= p.lowStockThreshold)
+      .sort((a, b) => a.quantity - b.quantity || a.name.localeCompare(b.name));
+    const lowStockCount = lowStockAll.length;
+    const lowStock = lowStockAll.slice(0, 10).map((p) => ({
+      id: p.id,
+      reference: p.reference,
+      name: p.name,
+      quantity: p.quantity,
+      lowStockThreshold: p.lowStockThreshold,
+    }));
+
+    const recentSales = sales.slice(0, 5).map((s) => ({
+      id: s.id,
+      reference: s.reference,
+      paymentType: s.paymentType,
+      totalKobo: s.totalKobo,
+      createdAt: s.createdAt,
+    }));
+
+    send(200, {
+      computedAt: now.toISOString(),
+      isDemonstrationData: true,
+      today: lagosDateStr,
+      todaySales: {
+        count: todaySalesList.length,
+        totalKobo,
+        paidCount: paidSales.length,
+        paidKobo,
+        creditCount: creditSales.length,
+        creditKobo,
+      },
+      outstandingCreditKobo,
+      customersOwing,
+      storeCreditHeldKobo,
+      lowStockCount,
+      lowStock,
+      recentSales,
+    });
+    return;
+  }
   if (url.pathname === '/product-categories' && request.method === 'GET') {
     const cats = [...new Set(products.map((p) => p.category).filter(Boolean))].sort((a,b) => a.localeCompare(b, undefined, { sensitivity: 'base' }));
     send(200, cats); return;
@@ -362,7 +450,49 @@ const server = createServer(async (request,response) => {
     if (errors.length) {problem(400,'VALIDATION_FAILED','Check product fields.',errors); return;}
     if (products.some((product) => product.reference === body.reference)) {problem(409,'DUPLICATE_REFERENCE','A product with this reference already exists'); return;}
     const product = {...body,id:randomUUID(),active:true,version:1,createdAt:new Date().toISOString(),updatedAt:new Date().toISOString()};
-    product.stockState = stockState(product); products.unshift(product); response.setHeader('Location',`/products/${product.id}`); send(201,product); return;
+    product.stockState = stockState(product); products.unshift(product);
+    if (product.quantity > 0) stockMovements.push({ id: randomUUID(), productId: product.id, delta: product.quantity, sourceType: 'OPENING', createdAt: product.createdAt });
+    response.setHeader('Location',`/products/${product.id}`); send(201,product); return;
+  }
+  const movementsMatch = url.pathname.match(/^\/products\/([^/]+)\/movements$/);
+  if (movementsMatch && request.method === 'GET') {
+    const productId = decodeURIComponent(movementsMatch[1]);
+    const product = products.find((item) => item.id === productId);
+    if (!product) { problem(404, 'NOT_FOUND', 'Product not found.'); return; }
+    const page = Number(url.searchParams.get('page') || 0);
+    const size = Number(url.searchParams.get('size') || 20);
+    if (!Number.isInteger(page) || page < 0 || !Number.isInteger(size) || size < 1 || size > 100) {
+      problem(400, 'VALIDATION_FAILED', 'Invalid pagination.');
+      return;
+    }
+    const productMovements = stockMovements
+      .filter((m) => m.productId === productId)
+      .sort((a, b) => a.createdAt.localeCompare(b.createdAt) || a.id.localeCompare(b.id));
+
+    let running = 0;
+    const withRunning = productMovements.map((m) => {
+      running += m.delta;
+      return {
+        id: m.id,
+        delta: m.delta,
+        sourceType: m.sourceType,
+        ...(m.sourceId ? { sourceId: m.sourceId } : {}),
+        quantityAfter: running,
+        createdAt: m.createdAt,
+      };
+    });
+
+    const newestFirst = [...withRunning].reverse();
+    const items = newestFirst.slice(page * size, (page + 1) * size);
+    send(200, {
+      productId: product.id,
+      currentQuantity: product.quantity,
+      items,
+      page,
+      size,
+      totalItems: newestFirst.length,
+    });
+    return;
   }
   if (/^\/products\/[^/]+$/.test(url.pathname) && request.method === 'GET') {
     const product = products.find((item) => item.id === url.pathname.split('/')[2]);
@@ -401,7 +531,7 @@ const server = createServer(async (request,response) => {
     const createdAt = new Date().toISOString();
     const restock = {id:randomUUID(),productId:product.id,quantity:body.quantity,receivedOn:body.receivedOn,...(body.note?.trim() ? {note:body.note.trim()} : {}),createdBy:user.id,createdAt};
     product.quantity += body.quantity; product.version++; product.updatedAt = createdAt; product.stockState = stockState(product);
-    restocks.unshift(restock); restockSubmissions.set(submissionKey,{userId:user.id,body:canonical,restock}); response.setHeader('Location',`/restocks/${restock.id}`); send(201,restock); return;
+    restocks.unshift(restock); stockMovements.push({ id: randomUUID(), productId: product.id, delta: body.quantity, sourceType: 'RESTOCK', sourceId: restock.id, createdAt }); restockSubmissions.set(submissionKey,{userId:user.id,body:canonical,restock}); response.setHeader('Location',`/restocks/${restock.id}`); send(201,restock); return;
   }
   if (/^\/restocks\/[^/]+$/.test(url.pathname) && request.method === 'GET') {
     const restock = restocks.find((item) => item.id === url.pathname.split('/')[2]);
@@ -546,7 +676,7 @@ const server = createServer(async (request,response) => {
       }
     }
     saleSettlements.set(sale.id,{debt:body.paymentType === 'CREDIT' ? totalKobo-applied : 0,repaid:0,creditUsed:applied});
-    sales.unshift(sale); submissions.set(submissionKey,{body:serialized,sale}); response.setHeader('Location',`/sales/${sale.id}`); send(201,sale); return;
+    sales.unshift(sale); for (const line of lines) stockMovements.push({ id: randomUUID(), productId: line.productId, delta: -line.quantity, sourceType: 'SALE', sourceId: sale.id, createdAt: sale.createdAt }); submissions.set(submissionKey,{body:serialized,sale}); response.setHeader('Location',`/sales/${sale.id}`); send(201,sale); return;
   }
   if (/^\/sales\/[^/]+$/.test(url.pathname) && request.method === 'GET') {
     const sale = sales.find((item) => item.id === url.pathname.split('/')[2]); if (!sale) {problem(404,'NOT_FOUND','Sale not found.'); return;} send(200,sale); return;
@@ -654,6 +784,7 @@ const server = createServer(async (request,response) => {
         product.quantity += line.quantity;
         product.version++;
         product.updatedAt = new Date().toISOString();
+        stockMovements.push({ id: randomUUID(), productId: line.productId, delta: line.quantity, sourceType: 'SALE_REVERSAL', sourceId: sale.id, createdAt: sale.reversedAt });
       }
     }
     const result = {
@@ -675,4 +806,4 @@ const server = createServer(async (request,response) => {
 });
 const port=Number(process.env.DEVELOPMENT_API_PORT || 4710);
 if(!Number.isInteger(port) || port<1024 || port>65535)throw new Error('Invalid DEVELOPMENT_API_PORT');
-server.listen(port,'127.0.0.1',() => console.log(`Development simulation listening on http://127.0.0.1:${port} (${forcedRole || 'per-account demo roles'}). In-memory demonstration data only; no credential or backend-rule proof.`));
+server.listen(port,'0.0.0.0',() => console.log(`Development simulation listening on http://127.0.0.1:${port} and https://wg7l5hc6-4710.uks1.devtunnels.ms (${forcedRole || 'per-account demo roles'}). In-memory demonstration data only; no credential or backend-rule proof.`));
