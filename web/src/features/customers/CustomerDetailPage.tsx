@@ -45,7 +45,7 @@ export function CustomerDetailPage() {
       </nav>
 
       {customersQuery.isLoading ? (
-        <div aria-busy="true" aria-label="Loading customer details" className="customer-detail-loading">
+        <div role="status" aria-busy="true" aria-label="Loading customer details" className="customer-detail-loading">
           <Skeleton lines={2} className="customer-skeleton" />
         </div>
       ) : !customer ? (
@@ -78,7 +78,7 @@ export function CustomerDetailPage() {
                   className="issue-credit-btn"
                   onClick={() => setCreditDialogOpen(true)}
                 >
-                  + Issue store credit
+                  Issue store credit
                 </Button>
               )}
             </div>
@@ -108,7 +108,7 @@ export function CustomerDetailPage() {
             </div>
 
             {isLoading ? (
-              <div aria-busy="true" aria-label="Loading ledger statement" className="customer-ledger-loading">
+              <div role="status" aria-busy="true" aria-label="Loading ledger statement" className="customer-ledger-loading">
                 <div className="customer-skeletons">
                   <Skeleton lines={2} className="customer-skeleton" />
                   <Skeleton lines={2} className="customer-skeleton" />
