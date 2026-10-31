@@ -71,6 +71,14 @@ export const router = createBrowserRouter([
             }),
           },
           {
+            path: ":productId/edit",
+            lazy: async () => ({
+              Component: (
+                await import("../../features/products/EditProductPage")
+              ).EditProductPage,
+            }),
+          },
+          {
             path: ":productId/restock",
             lazy: async () => ({
               Component: (

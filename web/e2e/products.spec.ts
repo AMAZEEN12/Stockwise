@@ -113,3 +113,111 @@ test('stock movement history dedicated page opens on product row click and shows
   await backLink.click();
   await expect(page).toHaveURL(/\/app\/products$/);
 });
+
+test('owner can edit product catalogue fields', async ({ page }) => {
+  const target = products[0];
+  let patchSent: Record<string, unknown> | null = null;
+  let ifMatchHeader: string | null = null;
+
+  await page.route(`**/products/${target.id}`, async (route) => {
+    if (route.request().method() === 'GET') {
+      return route.fulfill({
+        json: { ...target, version: 1 },
+        headers: { etag: '"1"' },
+      });
+    }
+    if (route.request().method() === 'PATCH') {
+      patchSent = route.request().postDataJSON();
+      ifMatchHeader = route.request().headers()['if-match'] || null;
+      return route.fulfill({
+        json: { ...target, ...patchSent, version: 2 },
+        headers: { etag: '"2"' },
+      });
+    }
+    return route.fallback();
+  });
+
+  await page.goto('/app/products');
+  await expect(page.getByRole('heading', { name: 'Products', exact: true })).toBeVisible();
+
+  // Find Edit button on target product row
+  const row = page.locator('.product-row').filter({ hasText: target.name });
+  await expect(row).toBeVisible();
+  await row.getByRole('button', { name: 'Edit', exact: true }).click();
+
+  // Edit dialog opens with prefilled fields
+  const dialog = page.getByRole('dialog', { name: 'Edit product' });
+  await expect(dialog).toBeVisible();
+  await expect(dialog.getByLabel('Name', { exact: true })).toHaveValue(target.name);
+  await expect(dialog.getByLabel('Reference', { exact: true })).toHaveValue(target.reference);
+
+  // Edit name and price
+  await dialog.getByLabel('Name', { exact: true }).fill('Indomie Chicken 70g Special');
+  await dialog.getByLabel('Selling price', { exact: true }).fill('520.00');
+
+  await dialog.getByRole('button', { name: 'Save changes', exact: true }).click();
+
+  // Dialog closes and patch was sent with If-Match version
+  await expect(dialog).not.toBeVisible();
+  expect(ifMatchHeader).toBe('"1"');
+  expect(patchSent).toMatchObject({
+    name: 'Indomie Chicken 70g Special',
+    priceKobo: 52000,
+  });
+
+  const axe = await new AxeBuilder({ page }).analyze();
+  expect(axe.violations.filter((v) => ['serious', 'critical'].includes(v.impact || ''))).toEqual([]);
+});
+
+test('optimistic archive updates immediately and rolls back on 412 version conflict (R18, DM11)', async ({ page }) => {
+  const target = products[0]; // Active in stock product
+  let releasePatch: (() => void) | null = null;
+  const patchDeferred = new Promise<void>((resolve) => {
+    releasePatch = resolve;
+  });
+
+  await page.route(`**/products/${target.id}`, async (route) => {
+    if (route.request().method() === 'PATCH') {
+      await patchDeferred;
+      return route.fulfill({
+        status: 412,
+        json: {
+          code: 'VERSION_CONFLICT',
+          message: 'This product was modified in another session. Please refresh.',
+        },
+      });
+    }
+    return route.fallback();
+  });
+
+  await page.goto('/app/products');
+  const row = page.locator('.product-row').filter({ hasText: target.name });
+  await expect(row).toBeVisible();
+  await expect(row.getByText(/In stock/i).first()).toBeVisible();
+
+  // Click Archive
+  await row.getByRole('button', { name: 'Archive', exact: true }).click();
+
+  // Confirmation dialog opens
+  const confirmDialog = page.getByRole('dialog', { name: /Archive/i });
+  await expect(confirmDialog).toBeVisible();
+  await confirmDialog.getByRole('button', { name: 'Archive product', exact: true }).click();
+  await expect(confirmDialog).not.toBeVisible();
+
+  // OPTIMISTIC CHECK: Before the server answers, the row is immediately shown as Archived
+  await expect(row.getByText('Archived')).toBeVisible();
+  await expect(row.getByRole('button', { name: 'Unarchive', exact: true })).toBeVisible();
+
+  // Release the 412 conflict response from the server
+  releasePatch!();
+
+  // ROLLBACK CHECK: The row reverts back to Active ("In stock") within one render
+  await expect(row.getByText(/In stock/i).first()).toBeVisible();
+  await expect(row.getByRole('button', { name: 'Archive', exact: true })).toBeVisible();
+
+  // Toast conflict error is displayed
+  await expect(page.getByText('Conflict: product modified', { exact: true })).toBeVisible();
+
+  const axe = await new AxeBuilder({ page }).analyze();
+  expect(axe.violations.filter((v) => ['serious', 'critical'].includes(v.impact || ''))).toEqual([]);
+});
