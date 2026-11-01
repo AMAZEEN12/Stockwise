@@ -55,7 +55,7 @@ export function ReceiptPage() {
         <>
           <section className="receipt-card">
             {reversed ? (
-              <h2 className="text-[var(--color-danger)]">
+              <h2 className="text-(--color-danger)">
                 <span aria-hidden="true">✕</span> Sale reversed
               </h2>
             ) : (
@@ -73,7 +73,7 @@ export function ReceiptPage() {
               WAT
             </p>
             {reversed && (
-              <div className="p-3 bg-[var(--color-danger-subtle)] border border-[var(--color-danger)] rounded-md text-sm text-[var(--color-danger)] my-3">
+              <div className="p-3 bg-[var(--color-danger-subtle)] border border-[var(--color-danger)] rounded-md text-sm text-(--color-danger) my-3">
                 This sale has been reversed. Inventory items have been returned to stock.
               </div>
             )}

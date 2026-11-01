@@ -69,12 +69,12 @@ export const Checkbox = forwardRef<HTMLButtonElement, CheckboxProps>(function Ch
       <div className="min-w-0 font-sans">
         <label
           htmlFor={checkboxId}
-          className={cn("block break-words text-sm text-[var(--color-text)]", disabled ? "cursor-not-allowed opacity-60" : "cursor-pointer")}
+          className={cn("block break-words text-sm text-(--color-text)", disabled ? "cursor-not-allowed opacity-60" : "cursor-pointer")}
         >
           {label}
         </label>
         {description && (
-          <p id={descriptionId} className="text-sm text-[var(--color-text-muted)]">
+          <p id={descriptionId} className="text-sm text-(--color-text-muted)">
             {description}
           </p>
         )}

@@ -1,6 +1,6 @@
 import { createUuid } from '../../shared/utils/uuid';
 import { useEffect, useState } from "react";
-import { Link, useNavigate, useOutletContext } from "react-router";
+import { useNavigate, useOutletContext } from "react-router";
 import { Button } from "../../components/ui/button";
 import { ConfirmDialog } from "../../components/ui/dialog";
 import { FormField } from "../../components/ui/form-field";
@@ -608,7 +608,7 @@ export function NewSalePage() {
                       </span>
                     </label>
                     {unavailableCredit ? (
-                      <p className="micro text-[var(--color-danger)]">
+                      <p className="micro text-(--color-danger)">
                         Store-credit recording is awaiting service support.
                         Uncheck above to complete this sale without credit
                         deduction.
@@ -781,11 +781,11 @@ export function NewSalePage() {
           {customer ? ` · ${customer.displayName}` : ""}
         </p>
       </ConfirmDialog>
-      <p className="sale-demo-note">
+      {/* <p className="sale-demo-note">
         Demonstration data ·{" "}
         {simulation ? "Simulated shop" : "Prices confirmed on receipt"}.{" "}
         <Link to="/app/products">View products</Link>
-      </p>
+      </p> */}
     </div>
   );
 }

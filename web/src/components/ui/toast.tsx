@@ -73,7 +73,7 @@ const focusRing =
 
 const variantStyles: Record<ToastVariant, { accent: string; icon: string; word: string }> = {
   success: { accent: "border-l-[var(--color-success)]", icon: "text-[var(--color-success)]", word: "Success" },
-  error: { accent: "border-l-[var(--color-danger)]", icon: "text-[var(--color-danger)]", word: "Error" },
+  error: { accent: "border-l-[var(--color-danger)]", icon: "text-(--color-danger)", word: "Error" },
   info: { accent: "border-l-[var(--color-primary)]", icon: "text-[var(--color-primary)]", word: "Information" },
 };
 
@@ -157,7 +157,7 @@ export function ToastProvider({ children, viewportClassName, toastClassName }: T
                 if (!open) dismiss(item.id);
               }}
               className={cn(
-                "flex items-start gap-3 rounded-[var(--radius)] border border-l-4 border-[var(--color-border)] bg-[var(--color-surface)] p-4 text-[var(--color-text)] shadow-lg",
+                "flex items-start gap-3 rounded-[var(--radius)] border border-l-4 border-[var(--color-border)] bg-[var(--color-surface)] p-4 text-(--color-text) shadow-lg",
                 styles.accent,
                 toastClassName,
               )}
@@ -171,7 +171,7 @@ export function ToastProvider({ children, viewportClassName, toastClassName }: T
                   {item.title}
                 </ToastPrimitive.Title>
                 {item.description ? (
-                  <ToastPrimitive.Description className="text-sm text-[var(--color-text-muted)]">
+                  <ToastPrimitive.Description className="text-sm text-(--color-text-muted)">
                     {item.description}
                   </ToastPrimitive.Description>
                 ) : null}

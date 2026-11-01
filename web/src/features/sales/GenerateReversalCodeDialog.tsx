@@ -90,20 +90,20 @@ export function GenerateReversalCodeDialog({
     >
       <div className="flex flex-col gap-4 py-2">
         <p className="text-sm" role="status">{simulation ? 'Simulation only: this code cannot authorize a real sale reversal.' : 'Code generation is unavailable until the service contract is approved.'}</p>
-        <p className="text-sm text-[var(--color-text-muted)]">
+        <p className="text-sm text-(--color-text-muted)">
           Give this 6-digit authorization code to the cashier to authorize reversing sale{' '}
-          <strong className="text-[var(--color-text)]">{saleReference}</strong>. The code is single-use and expires in 15 minutes.
+          <strong className="text-(--color-text)">{saleReference}</strong>. The code is single-use and expires in 15 minutes.
         </p>
 
         {errorMsg && (
           <div className="flex flex-col gap-2 p-3 bg-[var(--color-danger-subtle)] border border-[var(--color-danger)] rounded-md">
-            <p className="text-sm text-[var(--color-danger)]">{errorMsg}</p>
+            <p className="text-sm text-(--color-danger)">{errorMsg}</p>
           </div>
         )}
 
         {!authData ? (
           <div className="flex flex-col items-center justify-center p-6 bg-[var(--color-surface-hover)] border border-[var(--color-border)] rounded-md gap-3 text-center">
-            <p className="text-sm text-[var(--color-text-muted)]">
+            <p className="text-sm text-(--color-text-muted)">
               Click below to generate an authorization code for sale <strong>{saleReference}</strong>.
             </p>
             <Button
@@ -120,12 +120,12 @@ export function GenerateReversalCodeDialog({
           </div>
         ) : (
           <div className="flex flex-col items-center justify-center p-6 bg-[var(--color-surface-hover)] border border-[var(--color-border)] rounded-md gap-3">
-            <span className="text-xs uppercase tracking-wider text-[var(--color-text-muted)] font-medium">
+            <span className="text-xs uppercase tracking-wider text-(--color-text-muted) font-medium">
               6-Digit Authorization Code
             </span>
             <span
               className={`font-mono text-4xl font-bold tracking-widest ${
-                isExpired ? 'line-through text-[var(--color-danger)]' : 'text-[var(--color-primary)]'
+                isExpired ? 'line-through text-(--color-danger)' : 'text-[var(--color-primary)]'
               }`}
               aria-label={`Code: ${authData.code}`}
             >
@@ -134,7 +134,7 @@ export function GenerateReversalCodeDialog({
 
             {isExpired ? (
               <div className="flex flex-col items-center gap-2 mt-1">
-                <span className="text-xs text-[var(--color-danger)] font-medium">
+                <span className="text-xs text-(--color-danger) font-medium">
                   This code has expired.
                 </span>
                 <Button size="sm" variant="secondary" onClick={() => void handleGenerate()}>
@@ -142,7 +142,7 @@ export function GenerateReversalCodeDialog({
                 </Button>
               </div>
             ) : (
-              <div className="flex items-center gap-2 text-xs text-[var(--color-text-muted)]">
+              <div className="flex items-center gap-2 text-xs text-(--color-text-muted)">
                 <span>⏱ Expires in <strong>{timeFormatted}</strong></span>
                 <span>• Single-use</span>
               </div>

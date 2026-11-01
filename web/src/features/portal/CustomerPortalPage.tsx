@@ -123,7 +123,7 @@ export function CustomerPortalPage() {
         <div className="portal-wrapper">
           <div className="portal-header text-center p-8">
             <h1 className="text-xl font-bold">Invalid Portal Link</h1>
-            <p className="text-sm text-[var(--color-text-muted)] mt-2">
+            <p className="text-sm text-(--color-text-muted) mt-2">
               No customer link token was provided in the URL.
             </p>
           </div>
@@ -156,7 +156,7 @@ export function CustomerPortalPage() {
       <main className="portal-container">
         <div className="portal-wrapper">
           <div className="portal-header p-6">
-            <span className="portal-brand-badge text-[var(--color-danger)] bg-[var(--color-danger-subtle)]">
+            <span className="portal-brand-badge text-(--color-danger) bg-[var(--color-danger-subtle)]">
               {isExpired ? "Link Expired" : "Portal Unavailable"}
             </span>
             <h1 className="portal-shop-title mt-2">
@@ -200,7 +200,7 @@ export function CustomerPortalPage() {
           <div className="flex items-center justify-between">
             <span className="portal-brand-badge">Customer Self-Service Portal</span>
             {portalData.tokenExpiresAt && (
-              <span className="text-xs text-[var(--color-text-muted)] font-mono">
+              <span className="text-xs text-(--color-text-muted) font-mono">
                 Active link
               </span>
             )}
@@ -289,7 +289,7 @@ export function CustomerPortalPage() {
               </div>
             ) : !productsData?.items.length ? (
               <div className="portal-header text-center py-8">
-                <p className="text-sm text-[var(--color-text-muted)]">
+                <p className="text-sm text-(--color-text-muted)">
                   {search ? `No products matching "${search}"` : "No products available for online ordering right now."}
                 </p>
               </div>
@@ -347,7 +347,7 @@ export function CustomerPortalPage() {
           <section className="portal-catalogue-section" aria-label="Customer Statement">
             <div className="portal-header">
               <h2 className="text-lg font-bold">Ledger Balance Summary</h2>
-              <p className="text-xs text-[var(--color-text-muted)]">
+              <p className="text-xs text-(--color-text-muted)">
                 Live balances maintained in real time with Ngozi Provisions Store.
               </p>
 
@@ -376,7 +376,7 @@ export function CustomerPortalPage() {
                 </div>
               </div>
 
-              <p className="text-xs text-[var(--color-text-muted)] mt-4">
+              <p className="text-xs text-(--color-text-muted) mt-4">
                 Payments made in cash or bank transfer at the shop are credited to your account ledger upon receipt.
               </p>
             </div>
@@ -388,13 +388,13 @@ export function CustomerPortalPage() {
           <section className="portal-catalogue-section" aria-label="Contact Shop">
             <div className="portal-header">
               <h2 className="text-lg font-bold">Contact Store</h2>
-              <p className="text-sm text-[var(--color-text-muted)]">
+              <p className="text-sm text-(--color-text-muted)">
                 Have questions about your order, account statement, or special items? Reach out directly.
               </p>
 
               <div className="mt-4 flex flex-col gap-4">
                 <div className="p-3 bg-[var(--color-bg)] rounded-md border border-[var(--color-border)]">
-                  <p className="text-xs text-[var(--color-text-muted)]">Shop Address</p>
+                  <p className="text-xs text-(--color-text-muted)">Shop Address</p>
                   <p className="text-sm font-medium mt-1">{shop.address}</p>
                 </div>
 
@@ -467,7 +467,7 @@ export function CustomerPortalPage() {
               {cartLines.map(({ product, quantity }) => (
                 <div key={product.id} className="portal-order-line">
                   <span className="portal-order-line-name">
-                    {product.name} <small className="text-xs text-[var(--color-text-muted)]">× {quantity}</small>
+                    {product.name} <small className="text-xs text-(--color-text-muted)">× {quantity}</small>
                   </span>
                   <span className="portal-order-line-price">
                     {formatMoney(product.priceKobo * quantity)}
@@ -599,14 +599,14 @@ export function CustomerPortalPage() {
               ✓
             </div>
             <div>
-              <p className="text-xs text-[var(--color-text-muted)] font-mono uppercase">
+              <p className="text-xs text-(--color-text-muted) font-mono uppercase">
                 Order Reference
               </p>
               <h3 className="text-2xl font-bold font-mono text-[var(--color-primary)] mt-1">
                 {lastOrderNumber}
               </h3>
             </div>
-            <p className="text-sm text-[var(--color-text-muted)] max-w-sm">
+            <p className="text-sm text-(--color-text-muted) max-w-sm">
               {shop.name} is preparing your items. You will receive an update when your package is ready for pickup.
             </p>
 
