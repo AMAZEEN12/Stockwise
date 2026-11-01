@@ -1,8 +1,8 @@
 import { createUuid } from '../../shared/utils/uuid';
 import {authApi} from './auth.api';
 import {customersEndpoints} from '../endpoints/customers.endpoints';
-import type {Customer, CustomerPage, LedgerPage} from '../../models/responses/customers.response';
-import type {CustomerCreate, StoreCreditGrantRequest} from '../../models/requests/customers.request';
+import type {Customer, CustomerPage, LedgerPage, RepaymentResponse} from '../../models/responses/customers.response';
+import type {CustomerCreate, StoreCreditGrantRequest, CustomerRepaymentRequest} from '../../models/requests/customers.request';
 
 export function validCustomer(value:unknown):value is Customer {
   if (!value || typeof value !== 'object') return false;
@@ -84,5 +84,20 @@ export const customersApi = authApi.injectEndpoints({endpoints:(builder) => ({
     }),
     invalidatesTags:(_result,error) => error ? [] : ['Customers'],
   }),
+  recordRepayment: builder.mutation<RepaymentResponse, CustomerRepaymentRequest>({
+    query: (data) => ({
+      url: customersEndpoints.repayments,
+      method: 'POST',
+      headers: { 'Idempotency-Key': createUuid() },
+      data,
+    }),
+    invalidatesTags: (_result, error) => (error ? [] : ['Customers']),
+  }),
 })});
-export const {useCustomersQuery,useCustomerLedgerQuery,useCreateCustomerMutation,useIssueStoreCreditMutation} = customersApi;
+export const {
+  useCustomersQuery,
+  useCustomerLedgerQuery,
+  useCreateCustomerMutation,
+  useIssueStoreCreditMutation,
+  useRecordRepaymentMutation,
+} = customersApi;
