@@ -64,24 +64,24 @@ export const EmptyState = forwardRef<HTMLDivElement, EmptyStateProps>(function E
       className={cn(
         "shared-state",
         "flex w-full min-w-0 flex-col items-center gap-3 px-4 py-10 text-center",
-        "font-sans text-[var(--color-text)]",
-        "break-words [overflow-wrap:anywhere]",
+        "font-sans text-(--color-text)",
+        "break-words",
         className,
       )}
       {...rest}
     >
       {icon && (
         <span
-          className="inline-flex shrink-0 text-[var(--color-text-muted)]"
+          className="inline-flex shrink-0 text-(--color-text-muted)"
           aria-hidden="true"
         >
           {icon}
         </span>
       )}
-      <Heading className={cn("max-w-full text-lg font-semibold leading-snug text-[var(--color-text)]", titleClassName)}>
+      <Heading className={cn("max-w-full text-lg font-semibold leading-snug text-(--color-text)", titleClassName)}>
         {title}
       </Heading>
-      <p className={cn("max-w-prose text-sm leading-6 text-[var(--color-text-muted)]", descriptionClassName)}>
+      <p className={cn("max-w-prose text-sm leading-6 text-(--color-text-muted)", descriptionClassName)}>
         {description}
       </p>
       {details && <div className="shared-state-details">{details}</div>}

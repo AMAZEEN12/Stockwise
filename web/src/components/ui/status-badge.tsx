@@ -56,7 +56,7 @@ export const StatusBadge = forwardRef<HTMLSpanElement, StatusBadgeProps>(functio
         "inline-flex max-w-full min-w-0 items-center gap-1 align-middle",
         "rounded-[var(--radius-sm)] border px-2 py-0.5",
         "text-xs font-medium leading-5 font-sans",
-        "whitespace-normal break-words [overflow-wrap:anywhere]",
+        "whitespace-normal break-words",
         toneClasses[tone],
         "shared-status-badge",
         className,
