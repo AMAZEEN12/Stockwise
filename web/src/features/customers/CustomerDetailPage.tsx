@@ -10,6 +10,7 @@ import { CustomerIcon } from './CustomerStates';
 import { debtDisplay, storeCreditDisplay } from './customer-balance';
 import { formatDelta, formatLagosDateTime, sourceLabel, sourceTone } from './customer-ledger';
 import { IssueStoreCreditDialog } from './IssueStoreCreditDialog';
+import { RecordRepaymentDialog } from './RecordRepaymentDialog';
 import { formatMoney } from '../../lib/money';
 import type { User } from '../../models/responses/auth.response';
 import type { HttpError } from '../../service/http-client';
@@ -20,8 +21,10 @@ export function CustomerDetailPage() {
   const navigate = useNavigate();
   const user = useOutletContext<User>();
   const [creditDialogOpen, setCreditDialogOpen] = useState(false);
+  const [repaymentDialogOpen, setRepaymentDialogOpen] = useState(false);
 
   const canIssueCredit = ['OWNER', 'ADMIN'].includes(user.role);
+  const canRecordRepayment = ['OWNER', 'ASSISTANT'].includes(user.role);
 
   const customersQuery = useCustomersQuery(undefined, {
     refetchOnMountOrArgChange: false,
@@ -45,7 +48,7 @@ export function CustomerDetailPage() {
       </nav>
 
       {customersQuery.isLoading ? (
-        <div aria-busy="true" aria-label="Loading customer details" className="customer-detail-loading">
+        <div role="status" aria-busy="true" aria-label="Loading customer details" className="customer-detail-loading">
           <Skeleton lines={2} className="customer-skeleton" />
         </div>
       ) : !customer ? (
@@ -71,6 +74,16 @@ export function CustomerDetailPage() {
               </p>
             </div>
             <div className="customer-detail-actions">
+              {canRecordRepayment && customer.balanceKobo > 0 && (
+                <Button
+                  variant="primary"
+                  size="md"
+                  className="record-repayment-btn"
+                  onClick={() => setRepaymentDialogOpen(true)}
+                >
+                  Record repayment
+                </Button>
+              )}
               {canIssueCredit && (
                 <Button
                   variant="secondary"
@@ -78,7 +91,7 @@ export function CustomerDetailPage() {
                   className="issue-credit-btn"
                   onClick={() => setCreditDialogOpen(true)}
                 >
-                  + Issue store credit
+                  Issue store credit
                 </Button>
               )}
             </div>
@@ -108,7 +121,7 @@ export function CustomerDetailPage() {
             </div>
 
             {isLoading ? (
-              <div aria-busy="true" aria-label="Loading ledger statement" className="customer-ledger-loading">
+              <div role="status" aria-busy="true" aria-label="Loading ledger statement" className="customer-ledger-loading">
                 <div className="customer-skeletons">
                   <Skeleton lines={2} className="customer-skeleton" />
                   <Skeleton lines={2} className="customer-skeleton" />
@@ -242,6 +255,16 @@ export function CustomerDetailPage() {
             customer={customer}
             open={creditDialogOpen}
             onOpenChange={setCreditDialogOpen}
+            onSuccess={() => {
+              void customersQuery.refetch();
+              void refetch();
+            }}
+          />
+
+          <RecordRepaymentDialog
+            customer={customer}
+            open={repaymentDialogOpen}
+            onOpenChange={setRepaymentDialogOpen}
             onSuccess={() => {
               void customersQuery.refetch();
               void refetch();

@@ -26,6 +26,32 @@ Branch `feat/product-edit-archive` branched from `origin/main` (commit `7e2e739d
    - Vitest unit tests: 4/4 passed in `src/schema/product.schema.test.ts`; 4/4 passed in `src/features/products/product-edit.test.ts` (verifying optimistic update, 412 conflict rollback, 403 rollback, and PATCH If-Match header).
    - Playwright E2E: 8/8 tests passed on both desktop and mobile (`e2e/products.spec.ts`), including axe-core (0 serious or critical accessibility violations), product editing, and two-tab 412 conflict rollback.
    - Production build: `npm.cmd run build` passed cleanly with code-split `EditProductPage` chunk.
+Customer Actions Placement & List Card Cleanup, 2026-10-31 (Victor Oyeleke; logged by Antigravity):
+Branch `feat/customer-actions-cleanup` enforces the standing rule in `AGENTS.md` (item action placement):
+1. **List Page Cleanup (`CustomersPage.tsx`):**
+   - Removed `View ledger →` and `+ Issue store credit` buttons from mobile customer balance cards.
+   - Removed `+ Credit` button and the Actions column from the desktop customer directory table.
+   - Cleaned up unused dialog state and imports; rows and cards remain accessible clickable/keyboard elements navigating to `/app/customers/:id`.
+2. **Dedicated Page Alignment (`CustomerDetailPage.tsx`):**
+   - Retained the `Issue store credit` action button in the dedicated page header, with touch-friendly 40px full-width mobile sizing.
+   - Added `role="status"` to loading skeletons for WCAG / axe accessibility compliance.
+3. **Verification**:
+   - ESLint: 0 errors, 0 warnings.
+   - TypeScript (`tsc --noEmit`): 0 errors.
+   - Vitest: 23 test suites, 85/85 tests green.
+   - Playwright: 16/16 tests passed in `e2e/customers.spec.ts` across desktop and mobile, 0 axe violations.
+   - Production Build (`npm run build`): Succeeded in 15.4s.
+   - PR opened on GitHub: PR #49 (`https://github.com/AMAZEEN12/Stockwise/pull/49`).
+
+Product Edit & Optimistic Archive with Rollback (PR 4 / R1, R18), 2026-10-31 (Victor Oyeleke; logged by Antigravity):
+Branch `feat/product-edit-archive` implements product catalog editing and optimistic archive toggling with rollback on conflict (DM11, R1, R18).
+1. Wire models & validation: Added `ProductUpdate` request model and `productEditSchema` in `web/src/schema/product.schema.ts`.
+2. Development mock API: Added `PATCH /products/:productId` with `If-Match` ETag matching, 403 OWNER role check, 412 `VERSION_CONFLICT` on mismatch, 409 `DUPLICATE_REFERENCE`, and 200 with updated version.
+3. RTK Query optimistic updates: Dual optimistic cache update with automatic rollback on error.
+4. Dedicated page actions: Added `Edit product` and `Archive product` / `Unarchive product` buttons on [`ProductMovementsPage.tsx`](web/src/features/products/ProductMovementsPage.tsx), removing action buttons from the list rows per the project guideline.
+5. Verification:
+   - PR opened on GitHub: PR #47 (`https://github.com/AMAZEEN12/Stockwise/pull/47`).
+   - Guideline PR opened: PR #48 (`https://github.com/AMAZEEN12/Stockwise/pull/48`).
 
 Dashboard scrollbar and picker refinement, 2026-10-30 (Victor Oyeleke; logged by Codex): removed amount overflow-auto that produced Windows scrollbar arrows/mobile gray tracks. Values can wrap for unusually long amounts. Kept metric toggle and sales selector on one row; compact visible Revenue/Volume labels at narrow chart widths retain full accessible labels. Enlarged selector to a 44px target and styled native customizable-select picker options with app-green highlight/selection. Native select semantics and existing tests are preserved; browsers without `appearance: base-select` retain their native option-popup styling (MDN customizable-select guidance). No shared component changes.
 
