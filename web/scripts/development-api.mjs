@@ -171,6 +171,8 @@ const customerLedgers = new Map([
 const reversalSubmissions = new Map();
 const restocks = [];
 const restockSubmissions = new Map();
+const repayments = [];
+const repaymentSubmissions = new Map();
 const stockMovements = [
   { id: '44444444-4444-4444-8444-000000000001', productId: '11111111-1111-4111-8111-000000000001', delta: 49, sourceType: 'OPENING', createdAt: '2026-10-24T08:41:00Z' },
   { id: '44444444-4444-4444-8444-000000000002', productId: '11111111-1111-4111-8111-000000000001', delta: -1, sourceType: 'SALE', sourceId: '33333333-3333-4333-8333-000000000001', createdAt: new Date(Date.now() - 3 * 3600 * 1000).toISOString() },
@@ -601,6 +603,104 @@ const server = createServer(async (request,response) => {
     });
     customerLedgers.set(customer.id, history);
     send(201, customer);
+    return;
+  }
+  if ((url.pathname === '/repayments' || (url.pathname.startsWith('/customers/') && url.pathname.endsWith('/repayments'))) && request.method === 'POST') {
+    if (user.role === 'ADMIN') {
+      problem(403, 'FORBIDDEN', 'Admins cannot record repayments.');
+      return;
+    }
+    const key = request.headers['idempotency-key'];
+    if (!isUuid(key)) {
+      problem(400, 'VALIDATION_FAILED', 'A UUID Idempotency-Key is required.');
+      return;
+    }
+    const customerId = url.pathname.startsWith('/customers/') ? url.pathname.split('/')[2] : body.customerId;
+    if (!customerId || !isUuid(customerId)) {
+      problem(400, 'VALIDATION_FAILED', 'A valid customer ID is required.');
+      return;
+    }
+    const canonical = JSON.stringify({
+      customerId,
+      amountKobo: body.amountKobo,
+      note: typeof body.note === 'string' && body.note.trim() ? body.note.trim() : null,
+    });
+    const submissionKey = key;
+    if (repaymentSubmissions.has(submissionKey)) {
+      const saved = repaymentSubmissions.get(submissionKey);
+      if (saved.userId !== user.id || saved.body !== canonical) {
+        problem(422, 'IDEMPOTENCY_KEY_REUSED', 'This key was already used with a different request.');
+        return;
+      }
+      send(201, saved.repayment);
+      return;
+    }
+    const customer = customers.find((c) => c.id === customerId);
+    if (!customer) {
+      problem(404, 'NOT_FOUND', 'Customer not found.');
+      return;
+    }
+    const amountKobo = Number(body.amountKobo);
+    if (!Number.isSafeInteger(amountKobo) || amountKobo <= 0) {
+      problem(400, 'VALIDATION_FAILED', 'Repayment amount must be a positive integer in kobo.', [
+        { field: 'amountKobo', message: 'Enter an amount greater than zero.' },
+      ]);
+      return;
+    }
+    if (amountKobo > customer.balanceKobo) {
+      problem(
+        409,
+        'REPAYMENT_EXCEEDS_BALANCE',
+        `Repayment amount (${amountKobo} kobo) exceeds outstanding debt (${customer.balanceKobo} kobo).`
+      );
+      return;
+    }
+    const newBalance = customer.balanceKobo - amountKobo;
+    customer.balanceKobo = newBalance;
+    customer.hasDebtActivity = true;
+    const repaymentId = randomUUID();
+    const createdAt = new Date().toISOString();
+    const repayment = {
+      id: repaymentId,
+      customerId: customer.id,
+      amountKobo,
+      balanceAfterKobo: newBalance,
+      createdAt,
+    };
+    let remaining = amountKobo;
+    for (const [saleId, settlement] of saleSettlements.entries()) {
+      const sale = sales.find((s) => s.id === saleId && s.customerId === customer.id);
+      if (sale && settlement.debt > 0 && remaining > 0) {
+        const allocated = Math.min(remaining, settlement.debt);
+        settlement.debt -= allocated;
+        settlement.repaid += allocated;
+        remaining -= allocated;
+      }
+    }
+    const history = customerLedgers.get(customer.id) || [];
+    history.unshift({
+      id: randomUUID(),
+      sourceType: 'REPAYMENT',
+      sourceId: repaymentId,
+      deltaKobo: -amountKobo,
+      balanceAfterKobo: newBalance,
+      storeCreditAfterKobo: customer.storeCreditKobo,
+      createdAt,
+    });
+    customerLedgers.set(customer.id, history);
+    repayments.unshift(repayment);
+    repaymentSubmissions.set(submissionKey, { userId: user.id, body: canonical, repayment });
+    response.setHeader('Location', `/repayments/${repaymentId}`);
+    send(201, repayment);
+    return;
+  }
+  if (/^\/repayments\/[^/]+$/.test(url.pathname) && request.method === 'GET') {
+    const repayment = repayments.find((item) => item.id === url.pathname.split('/')[2]);
+    if (!repayment) {
+      problem(404, 'NOT_FOUND', 'Repayment not found.');
+      return;
+    }
+    send(200, repayment);
     return;
   }
   if (url.pathname === '/sales' && request.method === 'GET') {

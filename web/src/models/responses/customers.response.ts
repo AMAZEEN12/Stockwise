@@ -5,3 +5,11 @@ export type LedgerEntry = components['schemas']['LedgerEntry'];
 export type LedgerPage = components['schemas']['LedgerPage'];
 export type LedgerSourceType = components['schemas']['LedgerSourceType'];
 
+export interface RepaymentResponse {
+  id: string;
+  customerId: string;
+  amountKobo: number;
+  balanceAfterKobo: number;
+  createdAt: string;
+}
+

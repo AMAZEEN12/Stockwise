@@ -517,6 +517,11 @@
 .customer-unused-balance {
   color: var(--color-text-muted);
 }
+.record-repayment-btn {
+  font-size: 13px;
+  height: 32px;
+  padding: 0 12px;
+}
 .issue-credit-btn {
   font-size: 13px;
   height: 32px;
@@ -1101,7 +1106,11 @@
   }
   .customer-detail-actions {
     width: 100%;
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
   }
+  .customer-detail-actions .record-repayment-btn,
   .customer-detail-actions .issue-credit-btn {
     width: 100%;
     height: 40px;

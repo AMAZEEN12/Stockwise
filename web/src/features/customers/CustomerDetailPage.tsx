@@ -10,6 +10,7 @@ import { CustomerIcon } from './CustomerStates';
 import { debtDisplay, storeCreditDisplay } from './customer-balance';
 import { formatDelta, formatLagosDateTime, sourceLabel, sourceTone } from './customer-ledger';
 import { IssueStoreCreditDialog } from './IssueStoreCreditDialog';
+import { RecordRepaymentDialog } from './RecordRepaymentDialog';
 import { formatMoney } from '../../lib/money';
 import type { User } from '../../models/responses/auth.response';
 import type { HttpError } from '../../service/http-client';
@@ -20,8 +21,10 @@ export function CustomerDetailPage() {
   const navigate = useNavigate();
   const user = useOutletContext<User>();
   const [creditDialogOpen, setCreditDialogOpen] = useState(false);
+  const [repaymentDialogOpen, setRepaymentDialogOpen] = useState(false);
 
   const canIssueCredit = ['OWNER', 'ADMIN'].includes(user.role);
+  const canRecordRepayment = ['OWNER', 'ASSISTANT'].includes(user.role);
 
   const customersQuery = useCustomersQuery(undefined, {
     refetchOnMountOrArgChange: false,
@@ -71,6 +74,16 @@ export function CustomerDetailPage() {
               </p>
             </div>
             <div className="customer-detail-actions">
+              {canRecordRepayment && customer.balanceKobo > 0 && (
+                <Button
+                  variant="primary"
+                  size="md"
+                  className="record-repayment-btn"
+                  onClick={() => setRepaymentDialogOpen(true)}
+                >
+                  Record repayment
+                </Button>
+              )}
               {canIssueCredit && (
                 <Button
                   variant="secondary"
@@ -242,6 +255,16 @@ export function CustomerDetailPage() {
             customer={customer}
             open={creditDialogOpen}
             onOpenChange={setCreditDialogOpen}
+            onSuccess={() => {
+              void customersQuery.refetch();
+              void refetch();
+            }}
+          />
+
+          <RecordRepaymentDialog
+            customer={customer}
+            open={repaymentDialogOpen}
+            onOpenChange={setRepaymentDialogOpen}
             onSuccess={() => {
               void customersQuery.refetch();
               void refetch();
