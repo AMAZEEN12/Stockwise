@@ -42,6 +42,7 @@ export function ProductsPage() {
     });
   const categories = useCatalogueQuery();
   const { toast } = useToast();
+
   const update = (key: string, value: string) => {
     const next = new URLSearchParams(params);
     if (value) next.set(key, value);
@@ -119,13 +120,11 @@ export function ProductsPage() {
                 key={product.id}
                 tabIndex={0}
                 aria-label={`${product.name}, ${product.reference}, ${product.category}. View stock movements.`}
-                onClick={(e) => {
-                  if ((e.target as HTMLElement).closest("a, button")) return;
+                onClick={() => {
                   void navigate(`/app/products/${product.id}/movements${location.search}`);
                 }}
                 onKeyDown={(e) => {
                   if (e.key === "Enter" || e.key === " ") {
-                    if ((e.target as HTMLElement).closest("a, button")) return;
                     e.preventDefault();
                     void navigate(`/app/products/${product.id}/movements${location.search}`);
                   }
@@ -201,6 +200,9 @@ export function ProductsPage() {
           onCreated: () => {
             toast({ variant: "success", title: "Product added" });
             setParams({});
+          },
+          onUpdated: (productName: string) => {
+            toast({ variant: "success", title: `${productName} updated` });
           },
           onRestocked: (quantity: number, productName: string) => {
             toast({ variant: "success", title: `${productName} restocked`, description: `${quantity} units added.` });
