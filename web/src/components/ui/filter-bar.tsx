@@ -26,6 +26,8 @@ export type FilterBarProps = {
   onQueryChange: (query: string) => void
   /** Visible label for the search box, e.g. "Search by patient name or reference". */
   searchLabel: string
+  /** Whether to visually hide the search label (kept for screen readers and accessibility). */
+  searchLabelHidden?: boolean
   searchHint?: string
   searchPlaceholder?: string
   /** Select, Checkbox or FilterGroup filters. */
@@ -50,6 +52,7 @@ export const FilterBar = forwardRef<HTMLDivElement, FilterBarProps>(function Fil
     query,
     onQueryChange,
     searchLabel,
+    searchLabelHidden = false,
     searchHint,
     searchPlaceholder,
     children,
@@ -73,7 +76,12 @@ export const FilterBar = forwardRef<HTMLDivElement, FilterBarProps>(function Fil
   return (
     <div ref={ref} role="search" aria-label={label} className={cn("shared-filter-bar w-full", className)}>
       <div className="shared-filter-controls flex flex-col gap-4 sm:flex-row sm:flex-wrap sm:items-end">
-        <FormField label={searchLabel} hint={searchHint} className="sm:min-w-64 sm:flex-[2]">
+        <FormField
+          label={searchLabel}
+          hint={searchHint}
+          labelClassName={searchLabelHidden ? "sr-only" : undefined}
+          className="sm:min-w-64 sm:flex-[2]"
+        >
           {(control) => (
             <div className={cn("shared-filter-input", searchInputClassName)}>
             {searchIcon}

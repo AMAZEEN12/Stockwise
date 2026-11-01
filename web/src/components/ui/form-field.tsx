@@ -35,6 +35,7 @@ export type FormFieldProps = {
   /** Pass your own id if the control needs a stable one; otherwise one is generated. */
   id?: string;
   className?: string;
+  labelClassName?: string;
   children: (field: FieldControlProps) => ReactNode;
 };
 
@@ -46,6 +47,7 @@ export function FormField({
   requiredIndicator = true,
   id,
   className,
+  labelClassName,
   children,
 }: FormFieldProps) {
   const generatedId = useId();
@@ -66,7 +68,10 @@ export function FormField({
 
   return (
     <div className={cn("flex flex-col gap-1.5 font-sans", className)}>
-      <label htmlFor={controlId} className="text-sm font-medium text-(--color-text)">
+      <label
+        htmlFor={controlId}
+        className={cn("text-sm font-medium text-(--color-text)", labelClassName)}
+      >
         {label}
         {required && requiredIndicator && (
           <span aria-hidden="true" className="ml-0.5 text-(--color-danger)">

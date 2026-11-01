@@ -363,7 +363,7 @@ export function SalesHistoryPage() {
         }}
       >
         <div className="history-controls">
-          <FormField label="Date range">
+          <FormField label="Date range" labelClassName="sr-only">
             {(field) => (
               <Select
                 {...field}
@@ -407,9 +407,7 @@ export function SalesHistoryPage() {
           </div>
         </div>
       </SalesResults>
-      <p className="history-contract-note micro">
-        Customer and staff shown by ID. Totals are recorded sale amounts.
-      </p>
+
     </section>
   );
 }

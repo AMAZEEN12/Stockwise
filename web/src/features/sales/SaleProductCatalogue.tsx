@@ -61,7 +61,6 @@ export function SaleProductCatalogue({
       <div className="sale-catalogue-heading">
         <div>
           <h2>Products</h2>
-          {/* <p className="micro">Alphabetical by name</p> */}
         </div>
         <Button
           variant="ghost"
@@ -76,6 +75,7 @@ export function SaleProductCatalogue({
         className="sale-filter-bar"
         label="Product catalogue filters"
         searchLabel="Search products to add"
+        searchLabelHidden
         searchPlaceholder="Search products to add"
         query={query}
         onQueryChange={changeQuery}

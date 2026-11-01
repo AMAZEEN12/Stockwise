@@ -33,7 +33,7 @@ export function CustomersPage() {
   return <section className="customers-page" aria-label="Customer directory">
     <header className="page-heading"><div><h1>Customers</h1><p className="customer-micro" title="Time of the last successful retrieval in Africa/Lagos; balances may change afterwards.">{asOf ? `as of ${asOf} WAT` : 'Waiting for customer data'}{customers.isFetching && customers.data ? ' · refreshing…' : ''}</p></div>{canCreate && <Button ref={trigger} className="add-customer" size="lg" onClick={()=>setOpen(true)}>Add customer</Button>}</header>
     {!canCreate && <p className="customer-readonly customer-micro"><CustomerIcon/>Read-only access. Admins cannot add customers.</p>}
-    <FilterBar className="customer-filter-bar" searchLabel="Search customers by name" searchPlaceholder="Search by name"
+    <FilterBar className="customer-filter-bar" searchLabel="Search customers by name" searchLabelHidden searchPlaceholder="Search by name"
       query={query} onQueryChange={setQuery} activeCount={0} onClearAll={()=>setQuery('')}
       searchIcon={<CustomerIcon kind="search"/>} searchInputClassName="customer-search"
       searchInputProps={{type:"text",className:"shop-input",maxLength:100}}

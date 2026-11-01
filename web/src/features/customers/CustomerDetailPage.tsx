@@ -68,10 +68,9 @@ export function CustomerDetailPage() {
           <header className="customer-detail-header">
             <div className="customer-detail-title-group">
               <h1>{customer.displayName}’s Ledger</h1>
-              <p className="customer-micro">
-                {customer.contactPlaceholder ? `${customer.contactPlaceholder} · ` : ''}
-                Customer ID: {customer.id.slice(0, 8)}…
-              </p>
+              {customer.contactPlaceholder && (
+                <p className="customer-micro">{customer.contactPlaceholder}</p>
+              )}
             </div>
             <div className="customer-detail-actions">
               {canRecordRepayment && customer.balanceKobo > 0 && (

@@ -781,11 +781,6 @@ export function NewSalePage() {
           {customer ? ` · ${customer.displayName}` : ""}
         </p>
       </ConfirmDialog>
-      {/* <p className="sale-demo-note">
-        Demonstration data ·{" "}
-        {simulation ? "Simulated shop" : "Prices confirmed on receipt"}.{" "}
-        <Link to="/app/products">View products</Link>
-      </p> */}
     </div>
   );
 }
