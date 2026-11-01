@@ -6,6 +6,10 @@ Source document: `Tesa cohort 6 software engineering capstone project.pdf` (TeSA
 > Any agent opening this project: read this file first, then the "Conventions and guidelines" and "Decisions" sections, then the artifacts in this folder. Continue from "Resume here". Don't re-ask anything already answered below.
 
 ## Resume here
+Mock PATCH crash fix, 2026-11-01 (Victor Oyeleke; logged by Codex): JSON parsing previously ran only for POST, leaving product PATCH handlers with undefined body and crashing on body.name. Extended the existing bounded JSON-object parser to PATCH as well. Preserved user's other development-api.mjs edits. Isolated real HTTP verification on port 4719 passed product name update (200), empty/null/array/malformed PATCH bodies (400), and subsequent health request (200). Lint/typecheck/contract lint passed; Vitest `Test Files 26 passed (26)`, `Tests 99 passed (99)`. No tests or UI changed. Restart the user-owned mock to load the fix. Existing service wrapper limitation remains; no backend verification claimed.
+
+Tunnel preflight diagnosis, 2026-11-01 (Victor Oyeleke; logged by Codex): compared OPTIONS `/api/v1/auth/sessions` with Origin `http://localhost:5173`, POST method and content-type/x-request-id headers. Local mock returned 204 with matching Access-Control-Allow-Origin; public dev tunnel returned empty 401 without that header. The tunnel access layer is blocking preflight before the mock; advised setting forwarded port 4710 visibility to Public in the IDE. No application CORS changes or server restarts made; existing user edits in development-api.mjs preserved. Public access remains pending that tunnel setting change.
+
 Product Edit & Optimistic Archive with Rollback (PR 4 / R1, R18), 2026-10-31 (Victor Oyeleke; logged by Antigravity):
 Branch `feat/product-edit-archive` branched from `origin/main` (commit `7e2e739d`, including merged PR #46 dashboard UI) implements the Product Edit and Optimistic Archive/Unarchive feature with version-conflict rollback (R1, R18; DM11).
 1. **Wire Model & Endpoints**:
