@@ -324,7 +324,6 @@ function SalesResults({
             <EmptyState
               layout="panel"
               className="history-state"
-              icon={<CustomerIcon kind="empty" />}
               titleClassName="history-state-title"
               title={
                 filters.paymentType

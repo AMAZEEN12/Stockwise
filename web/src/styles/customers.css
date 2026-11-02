@@ -522,6 +522,8 @@
   height: 32px;
   padding: 0 12px;
 }
+.customer-copy-link-btn,
+.customer-send-link-btn,
 .issue-credit-btn {
   font-size: 13px;
   height: 32px;
@@ -529,6 +531,8 @@
   color: var(--color-primary);
   border: 1px solid var(--color-border);
 }
+.customer-copy-link-btn:hover,
+.customer-send-link-btn:hover,
 .issue-credit-btn:hover {
   background: var(--color-surface-subtle);
 }
@@ -979,22 +983,30 @@
 }
 
 .customer-breadcrumb {
-  margin-bottom: 4px;
+  margin-bottom: 16px;
 }
 
 .customer-back-link {
   display: inline-flex;
   align-items: center;
+  justify-content: center;
   gap: 6px;
-  font: 500 14px/1.4 var(--font-sans);
-  color: var(--color-text-muted);
+  font: 500 13px/1.4 var(--font-sans);
+  height: 32px;
+  padding: 0 12px;
+  color: var(--color-primary);
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-md);
+  background: transparent;
+  cursor: pointer;
   text-decoration: none;
-  transition: color 0.15s ease;
+  transition: background 0.15s ease, color 0.15s ease, border-color 0.15s ease;
 }
 
 .customer-back-link:hover {
-  color: var(--color-text);
-  text-decoration: underline;
+  background: var(--color-surface-subtle);
+  color: var(--color-primary);
+  text-decoration: none;
 }
 
 .customer-detail-header {
@@ -1015,6 +1027,7 @@
   display: flex;
   align-items: center;
   gap: 12px;
+  flex-wrap: wrap;
 }
 
 .customer-detail-summary-cards {
@@ -1111,7 +1124,9 @@
     gap: 8px;
   }
   .customer-detail-actions .record-repayment-btn,
-  .customer-detail-actions .issue-credit-btn {
+  .customer-detail-actions .issue-credit-btn,
+  .customer-detail-actions .customer-copy-link-btn,
+  .customer-detail-actions .customer-send-link-btn {
     width: 100%;
     height: 40px;
     font-size: 14px;

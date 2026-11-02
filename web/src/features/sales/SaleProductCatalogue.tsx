@@ -63,8 +63,8 @@ export function SaleProductCatalogue({
           <h2>Products</h2>
         </div>
         <Button
-          variant="ghost"
-          size="md"
+          variant="secondary"
+          size="lg"
           disabled={disabled || result.isFetching}
           onClick={() => void result.refetch()}
         >

@@ -72,7 +72,7 @@ export function AuthOverlay({ mode }: { mode: 'sign-in' | 'sign-up' }) {
     form.setErrors({});
     form.setTouched({});
     setStatus('idle');
-    setDemoNotice(defaultPassword ? 'Demo details filled in. Select Sign in to continue.' : 'Enter the demonstration password provided by your team.');
+    setDemoNotice(defaultPassword ? '' : 'Enter the demonstration password provided by your team.');
     document.getElementById('auth-password')?.focus();
   }
 
