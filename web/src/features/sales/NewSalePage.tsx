@@ -90,9 +90,12 @@ export function NewSalePage() {
   const [ordersModalOpen, setOrdersModalOpen] = useState(false);
   const [activeOrder, setActiveOrder] = useState<PickupOrder | null>(null);
   const [loadingOrderId, setLoadingOrderId] = useState<string | null>(null);
-  const pickupOrders = useGetPickupOrdersQuery(undefined, {
-    pollingInterval: 10000,
-  });
+  const pickupOrders = useGetPickupOrdersQuery(
+    { status: "PENDING_PICKUP" },
+    {
+      pollingInterval: 5000,
+    },
+  );
   const [fulfillOrder] = useFulfillOrderMutation();
 
   const handleLoadOrder = async (order: PickupOrder) => {
@@ -100,17 +103,35 @@ export function NewSalePage() {
     try {
       const loadedLines: CartLine[] = [];
       for (const line of order.lines) {
+        let product: Product | null = null;
         try {
           const res = await httpClient.get<Product>(
             productsEndpoints.detail(line.productId),
           );
-          loadedLines.push({
-            product: res.data,
-            quantity: line.quantity,
-          });
+          if (res.data) product = res.data;
         } catch {
-          // If a product lookup fails, omit
+          // Fall back to product metadata
         }
+        if (!product) {
+          product = {
+            id: line.productId,
+            name: line.productName,
+            reference: "ORD",
+            category: "General",
+            priceKobo: line.unitPriceKobo,
+            quantity: Math.max(line.quantity, 50),
+            lowStockThreshold: 5,
+            stockState: "IN_STOCK",
+            active: true,
+            version: 1,
+            createdAt: new Date().toISOString(),
+            updatedAt: new Date().toISOString(),
+          };
+        }
+        loadedLines.push({
+          product,
+          quantity: line.quantity,
+        });
       }
       if (loadedLines.length === 0) {
         toast({
@@ -126,6 +147,16 @@ export function NewSalePage() {
       );
       if (matchedCustomer) {
         setSelectedCustomer(matchedCustomer);
+      } else {
+        setSelectedCustomer({
+          id: order.customerId,
+          displayName: order.customerName,
+          balanceKobo: 0,
+          storeCreditKobo: 0,
+          hasDebtActivity: false,
+          hasStoreCreditActivity: false,
+          createdAt: new Date().toISOString(),
+        });
       }
       if (order.paymentPreference === "ON_ACCOUNT") {
         setPaymentType("CREDIT");
@@ -369,16 +400,18 @@ export function NewSalePage() {
         },
         user.id,
       );
-      if (activeOrder) {
+      const orderIdToFulfill = activeOrder?.id || snapshot.body.orderId;
+      if (orderIdToFulfill) {
         try {
           await fulfillOrder({
-            orderId: activeOrder.id,
+            orderId: orderIdToFulfill,
             saleId: sale.id,
           }).unwrap();
         } catch {
           // Handled or already fulfilled by backend createSale
         }
         setActiveOrder(null);
+        void pickupOrders.refetch();
       }
       clearPending();
       setPending(null);

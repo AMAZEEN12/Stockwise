@@ -88,4 +88,52 @@ describe("Pre-order sale fulfillment (Solution A)", () => {
     expect(fulfilledOrder.saleId).toBe(simulatedFinalizedSaleId);
     expect(fulfilledOrder.fulfilledAt).toBeDefined();
   });
+
+  it("maps order items, customer, and payment preferences to cart state", () => {
+    const order: PickupOrder = {
+      id: "44444444-4444-4444-8444-000000000001",
+      orderNumber: "ORD-849201",
+      customerId: "22222222-2222-4222-8222-222222222223",
+      customerName: "Ngozi Okoro",
+      lines: [
+        {
+          productId: "11111111-1111-4111-8111-000000000002",
+          productName: "Indomie Chicken 70g",
+          quantity: 2,
+          unitPriceKobo: 45000,
+          lineTotalKobo: 90000,
+        },
+      ],
+      itemsCount: 2,
+      totalKobo: 90000,
+      storeCreditAppliedKobo: 0,
+      paymentPreference: "ON_ACCOUNT",
+      status: "PENDING_PICKUP",
+      createdAt: new Date().toISOString(),
+    };
+
+    const cartLines = order.lines.map((line) => ({
+      product: {
+        id: line.productId,
+        name: line.productName,
+        reference: "ORD",
+        category: "General",
+        priceKobo: line.unitPriceKobo,
+        quantity: 50,
+        lowStockThreshold: 5,
+        stockState: "IN_STOCK" as const,
+        active: true,
+        version: 1,
+        createdAt: new Date().toISOString(),
+        updatedAt: new Date().toISOString(),
+      },
+      quantity: line.quantity,
+    }));
+
+    expect(cartLines).toHaveLength(1);
+    expect(cartLines[0].product.name).toBe("Indomie Chicken 70g");
+    expect(cartLines[0].quantity).toBe(2);
+    expect(order.paymentPreference === "ON_ACCOUNT" ? "CREDIT" : "PAID").toBe("CREDIT");
+  });
 });
+

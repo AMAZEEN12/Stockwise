@@ -628,7 +628,15 @@
   color: var(--color-text-muted);
   font-size: 13px;
 }
+.pickup-orders-backdrop {
+  position: fixed;
+  inset: 0;
+  z-index: 80;
+  background: var(--color-overlay-shop);
+}
 .pickup-orders-dialog {
+  position: fixed;
+  z-index: 85 !important;
   width: min(600px, calc(100vw - 32px));
   max-height: calc(100dvh - 48px);
   overflow-y: auto;

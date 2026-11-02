@@ -6,3 +6,4 @@ export const ordersEndpoints = {
   },
   fulfill: (id: string) => `/orders/${encodeURIComponent(id)}/fulfill`,
 };
+

@@ -22,3 +22,4 @@ export interface PickupOrder {
   fulfilledAt?: string;
   saleId?: string;
 }
+
