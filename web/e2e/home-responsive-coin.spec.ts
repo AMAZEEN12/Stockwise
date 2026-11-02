@@ -43,7 +43,12 @@ test('home coin stays visible and mobile tagline sits to its left', async ({ pag
       const wordmark = await page.locator('.wordmark').boundingBox();
       expect(coin!.y).toBeGreaterThanOrEqual(wordmark!.y + wordmark!.height);
       expect(coin!.width).toBe(width <= 1440 ? 340 : 440);
-      await page.evaluate(() => window.scrollTo(0, document.documentElement.scrollHeight));
+      // A resize can update the document height after the first scroll has run.
+      await expect.poll(() => page.evaluate(() => {
+        window.scrollTo(0, document.documentElement.scrollHeight);
+        const bounds = document.querySelector('.coin-position')!.getBoundingClientRect();
+        return bounds.top >= 0 && bounds.bottom <= window.innerHeight;
+      })).toBe(true);
       const visibleCoin = await page.locator('.coin-position').boundingBox();
       expect(visibleCoin!.y).toBeGreaterThanOrEqual(0);
       expect(visibleCoin!.y + visibleCoin!.height).toBeLessThanOrEqual(height);
