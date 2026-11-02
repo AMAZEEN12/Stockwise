@@ -30,6 +30,7 @@
   align-items: center;
   justify-content: space-between;
   gap: 8px;
+  margin-bottom: 24px;
 }
 .sale-catalogue-heading h2 {
   font-size: 18px;
@@ -421,29 +422,33 @@
   margin-top: 12px;
 }
 .receipt-breadcrumb {
-  margin-bottom: 8px;
+  margin-bottom: 16px;
 }
 .receipt-back-link {
   display: inline-flex;
   align-items: center;
+  justify-content: center;
   gap: 6px;
-  font: 500 14px/1.4 var(--font-sans);
-  color: var(--color-text-muted);
+  font: 500 13px/1.4 var(--font-sans);
+  height: 32px;
+  padding: 0 12px;
+  color: var(--color-primary);
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-md);
   background: transparent;
-  border: none;
-  padding: 0;
   cursor: pointer;
   text-decoration: none;
-  transition: color 0.15s ease;
+  transition: background 0.15s ease, color 0.15s ease, border-color 0.15s ease;
 }
 .receipt-back-link:hover {
-  color: var(--color-text);
-  text-decoration: underline;
+  background: var(--color-surface-subtle);
+  color: var(--color-primary);
+  text-decoration: none;
 }
 .receipt-back-link:focus-visible {
   outline: var(--focus-ring-width) solid var(--color-focus);
   outline-offset: var(--focus-ring-offset);
-  border-radius: var(--radius-xs);
+  border-radius: var(--radius-md);
 }
 .receipt-actions {
   display: flex;

@@ -41,7 +41,6 @@ export function CustomersPage() {
     {customers.isLoading ? <CustomerLoading count={5}/> : <>
       {customers.isError && <CustomerLoadError error={customers.error as HttpError} stale={!!customers.data} retrying={customers.isFetching} onRetry={()=>void customers.refetch()}/>}
       {!customers.isError && !list.length ? <EmptyState layout="panel" headingLevel="h3" className="customer-state customers-directory-state" titleClassName="customer-state-title"
-        icon={<CustomerIcon kind={query.trim() ? 'info' : 'empty'}/>}
         title={query.trim() ? 'No customers match' : 'No customers yet'}
         description={query.trim() ? 'Try a different name.' : canCreate ? 'Add your first customer to start selling on credit.' : 'Customers added by the shop will appear here.'}
         action={query.trim() ? {label:'Clear search',onClick:()=>setQuery('')} : canCreate ? {label:'Add your first customer',onClick:()=>setOpen(true)} : undefined}

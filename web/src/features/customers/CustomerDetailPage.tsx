@@ -82,7 +82,6 @@ export function CustomerDetailPage() {
           <EmptyState
             layout="panel"
             headingLevel="h2"
-            icon={<CustomerIcon kind="empty" />}
             title="Customer not found"
             description="The customer record could not be found or may have been removed."
             action={{ label: 'Back to customer list', onClick: () => void navigate('/app/customers') }}
@@ -197,7 +196,6 @@ export function CustomerDetailPage() {
                 layout="panel"
                 headingLevel="h3"
                 className="customer-state customer-ledger-empty"
-                icon={<CustomerIcon kind="empty" />}
                 title="No ledger entries"
                 description="Credit sales, repayments, reversals, and store credit activity for this customer will appear here."
               />
