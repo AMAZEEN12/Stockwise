@@ -86,3 +86,37 @@ describe("Customer Portal Order Request Payload Validation", () => {
     expect(tabOrder.paymentPreference).toBe("ON_ACCOUNT");
   });
 });
+
+describe("Customer Portal Payment Due Notification Guard", () => {
+  it("shows due banner when customer has an outstanding balance due within 48 hours", async () => {
+    const { isPaymentDueIn48Hours } = await import("./portal-due");
+
+    // Case 1: Customer has balance and due in 36 hours -> true
+    const dueSoon = {
+      balanceKobo: 450000,
+      paymentDueAt: new Date(Date.now() + 36 * 3600 * 1000).toISOString(),
+    };
+    expect(isPaymentDueIn48Hours(dueSoon)).toBe(true);
+
+    // Case 2: Customer has balance and no specific timestamp -> true (debt owed)
+    const debtCustomer = {
+      balanceKobo: 150000,
+      paymentDueAt: null,
+    };
+    expect(isPaymentDueIn48Hours(debtCustomer)).toBe(true);
+
+    // Case 3: Customer has zero balance -> false
+    const clearCustomer = {
+      balanceKobo: 0,
+      paymentDueAt: new Date(Date.now() + 12 * 3600 * 1000).toISOString(),
+    };
+    expect(isPaymentDueIn48Hours(clearCustomer)).toBe(false);
+
+    // Case 4: Customer due in 72 hours -> false
+    const dueLater = {
+      balanceKobo: 200000,
+      paymentDueAt: new Date(Date.now() + 72 * 3600 * 1000).toISOString(),
+    };
+    expect(isPaymentDueIn48Hours(dueLater)).toBe(false);
+  });
+});

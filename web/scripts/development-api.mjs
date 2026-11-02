@@ -470,7 +470,12 @@ const server = createServer(async (request, response) => {
     }
     const customer =
       customers.find((c) => c.id === rawToken) ||
-      (rawToken === "chidi-demo-token" ? customers[0] : customers[1]);
+      (rawToken === "chidi-demo-token" ? customers[0] : null);
+    if (!customer) {
+      problem(404, "NOT_FOUND", "Customer portal link is invalid.");
+      return;
+    }
+    const history = customerLedgers.get(customer.id) || [];
     send(200, {
       shop: {
         name: "Ngozi Provisions Store",
@@ -485,7 +490,20 @@ const server = createServer(async (request, response) => {
         storeCreditKobo: customer.storeCreditKobo,
         hasDebtActivity: customer.hasDebtActivity,
         hasStoreCreditActivity: customer.hasStoreCreditActivity,
+        paymentDueAt:
+          customer.balanceKobo > 0
+            ? new Date(Date.now() + 36 * 3600 * 1000).toISOString()
+            : null,
       },
+      statement: history.map((entry) => ({
+        id: entry.id,
+        sourceType: entry.sourceType,
+        sourceId: entry.sourceId,
+        deltaKobo: entry.deltaKobo,
+        balanceAfterKobo: entry.balanceAfterKobo,
+        storeCreditAfterKobo: entry.storeCreditAfterKobo,
+        createdAt: entry.createdAt,
+      })),
       tokenExpiresAt: new Date(Date.now() + 30 * 86400000).toISOString(),
     });
     return;
@@ -541,7 +559,11 @@ const server = createServer(async (request, response) => {
     }
     const customer =
       customers.find((c) => c.id === rawToken) ||
-      (rawToken === "chidi-demo-token" ? customers[0] : customers[1]);
+      (rawToken === "chidi-demo-token" ? customers[0] : null);
+    if (!customer) {
+      problem(404, "NOT_FOUND", "Customer portal link is invalid.");
+      return;
+    }
     if (!body || !Array.isArray(body.lines) || body.lines.length === 0) {
       problem(
         400,
