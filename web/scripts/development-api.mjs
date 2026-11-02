@@ -469,7 +469,8 @@ const server = createServer(async (request, response) => {
       return;
     }
     const customer =
-      rawToken === "chidi-demo-token" ? customers[0] : customers[1];
+      customers.find((c) => c.id === rawToken) ||
+      (rawToken === "chidi-demo-token" ? customers[0] : customers[1]);
     send(200, {
       shop: {
         name: "Ngozi Provisions Store",
@@ -539,7 +540,8 @@ const server = createServer(async (request, response) => {
       return;
     }
     const customer =
-      rawToken === "chidi-demo-token" ? customers[0] : customers[1];
+      customers.find((c) => c.id === rawToken) ||
+      (rawToken === "chidi-demo-token" ? customers[0] : customers[1]);
     if (!body || !Array.isArray(body.lines) || body.lines.length === 0) {
       problem(
         400,
