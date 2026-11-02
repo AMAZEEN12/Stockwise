@@ -5,7 +5,7 @@ import { httpClient } from '../../service/http-client';
 export function isReversalSimulation(): boolean {
   try {
     const base = new URL(httpClient.defaults.baseURL || '');
-    return base.protocol === 'http:' && ['localhost','127.0.0.1'].includes(base.hostname)
+    return ((base.protocol === 'http:' && ['localhost','127.0.0.1'].includes(base.hostname)) || base.hostname.endsWith('.devtunnels.ms'))
       && Boolean(readSession()?.accessToken.startsWith('stockwise-simulation-'));
   } catch { return false; }
 }

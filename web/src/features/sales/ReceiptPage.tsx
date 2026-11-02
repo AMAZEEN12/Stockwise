@@ -55,7 +55,7 @@ export function ReceiptPage() {
         </button>
       </nav>
       <h1>Receipt</h1>
-      {query.isError ? (
+      {query.isError && !sale ? (
         <StatusPanel error title="Could not load this receipt">
           <div className="flex gap-3">
             <Button

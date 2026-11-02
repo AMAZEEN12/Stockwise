@@ -912,3 +912,20 @@ Updated the obsolete real-session-disabled browser expectation for this authoriz
 ### Reversal UI PR conflict resolution, 2026-11-02
 Requested by Victor Oyeleke; resolved/logged by Codex. Merged origin/main (411cc879) into the reversal UI branch in an isolated checkout. The only textual conflict was WORKLOG; preserved both reversal UI entries and incoming API/service reconciliation entries. Incoming main includes newer service/contract work, including store-credit spending and legacy reconciliation, so earlier readiness notes describe the earlier inspected revision. No application conflict resolutions or backend fixes added. User working-tree edits remain untouched.
 Merge verification: no unresolved paths; staged diff check clean; ESLint zero warnings; tsc --noEmit exit 0; Redocly contract valid; Vitest Test Files 28 passed (28), Tests 106 passed (106). Service verification could not start (existing Maven wrapper null-array / Cannot start maven from wrapper error). No UI code changed during conflict resolution, so the previous focused browser evidence remains the last browser run.
+
+### Playwright CI & Receipt query resilience fix, 2026-11-02
+Requested by Victor Oyeleke; fixed/logged by Antigravity assistant.
+- Root causes:
+  1. `ReceiptPage.tsx` rendered `<StatusPanel error title="Could not load this receipt">` unconditionally on `query.isError`, masking the locally saved receipt and breaking `e2e/sales.spec.ts` & `e2e/sales-recovery.spec.ts` when querying unmocked or mock-generated sale IDs. Guarded with `query.isError && !sale`.
+  2. Background polling from `useGetPickupOrdersQuery` (`/orders?status=PENDING_PICKUP`) lacked an intercepted test route in `sales.spec.ts` and `sales-recovery.spec.ts`; added `**/orders?*` to resolve cleanly without matching Vite's module scripts (`orders.api.ts`).
+  3. `reversal-simulation.ts` recognized localhost/127.0.0.1; expanded hostname check to support `.devtunnels.ms` development environments.
+- Verification:
+  - ESLint: zero errors, zero warnings.
+  - TypeScript: strict `tsc --noEmit` exit 0.
+  - Vitest: 28 test files passed (107/107 tests green).
+  - OpenAPI Contract Lint: Redocly validated `contract/openapi.yaml` ("Woohoo! Your API description is valid.").
+  - Playwright E2E:
+    - `sales.spec.ts`: 10 passed (1.6m) on desktop and mobile.
+    - `sales-recovery.spec.ts`: 4 passed (42.1s) on desktop and mobile.
+    - `sale-reversal-simulation.spec.ts`: 12 passed on desktop and mobile.
+  - Production build: `vite build` completed successfully in 28.30s.
