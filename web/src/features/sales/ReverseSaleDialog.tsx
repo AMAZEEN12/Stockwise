@@ -147,7 +147,7 @@ export function ReverseSaleDialog({
         <div className="p-3 bg-[var(--color-surface-hover)] border border-[var(--color-border)] rounded-md text-sm">
           <div className="flex justify-between items-center">
             <span>Sale reference</span>
-            <strong className="text-[var(--color-text)]">{saleReference}</strong>
+            <strong className="text-(--color-text)">{saleReference}</strong>
           </div>
           <div className="flex justify-between items-center mt-1">
             <span>Original total</span>
@@ -157,10 +157,10 @@ export function ReverseSaleDialog({
 
         {isAssistant ? (
           <div className="flex flex-col gap-2 p-3 bg-[var(--color-surface-hover)] border border-[var(--color-border)] rounded-md">
-            <span className="text-xs uppercase tracking-wide font-medium text-[var(--color-text-muted)]">
+            <span className="text-xs uppercase tracking-wide font-medium text-(--color-text-muted)">
               Supervisor Authorization Required
             </span>
-            <p className="text-xs text-[var(--color-text-muted)]">
+            <p className="text-xs text-(--color-text-muted)">
               Admin and Owner are in charge of code generation. Ask your store Owner or Admin for a 6-digit reversal code to authorize reversing this sale.
             </p>
             <FormField
@@ -184,7 +184,7 @@ export function ReverseSaleDialog({
                 />
               )}
             </FormField>
-            <div className="flex items-center justify-between text-xs text-[var(--color-text-muted)] pt-1">
+            <div className="flex items-center justify-between text-xs text-(--color-text-muted) pt-1">
               <span>Admin / Owner in charge of code generation</span>
               {simulation && <button
                 type="button"
@@ -197,7 +197,7 @@ export function ReverseSaleDialog({
             </div>
           </div>
         ) : (
-          <div className="flex items-center justify-between p-3 bg-[var(--color-surface-hover)] border border-[var(--color-border)] rounded-md text-xs text-[var(--color-text-muted)]">
+          <div className="flex items-center justify-between p-3 bg-[var(--color-surface-hover)] border border-[var(--color-border)] rounded-md text-xs text-(--color-text-muted)">
             <span>Admin / Owner: Direct reversal authorized for {userRole}.</span>
             {onRequestCodeClick && (
               <Button
@@ -241,7 +241,7 @@ export function ReverseSaleDialog({
         </FormField>
 
         {errorMsg && (
-          <div role="alert" className="p-3 bg-[var(--color-danger-subtle)] border border-[var(--color-danger)] rounded-md text-sm text-[var(--color-danger)]">
+          <div role="alert" className="p-3 bg-[var(--color-danger-subtle)] border border-[var(--color-danger)] rounded-md text-sm text-(--color-danger)">
             {errorMsg}
           </div>
         )}

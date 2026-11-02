@@ -1,4 +1,4 @@
-import { Link, useOutletContext, useParams } from "react-router";
+import { Link, useNavigate, useOutletContext, useParams } from "react-router";
 import { useState } from "react";
 import { useSaleQuery } from "../../service/api/sales.api";
 import { useCustomersQuery } from "../../service/api/customers.api";
@@ -17,10 +17,19 @@ import "../../styles/sales.css";
 export function ReceiptPage() {
   const { saleId = "" } = useParams();
   const user = useOutletContext<User>();
+  const navigate = useNavigate();
   const simulation = isReversalSimulation();
   const [saved] = useState(() => readReceipt(saleId, user.id));
   const query = useSaleQuery(saleId, { skip: !!saved && !simulation });
   const sale = query.data || saved?.sale;
+
+  const handleBack = () => {
+    if (window.history.state && window.history.state.idx > 0) {
+      navigate(-1);
+    } else {
+      navigate("/app/sales");
+    }
+  };
 
   const customers = useCustomersQuery(undefined, { skip: !sale?.customerId });
   const customerName =
@@ -36,31 +45,57 @@ export function ReceiptPage() {
 
   return (
     <div className="receipt-page">
+      <nav aria-label="Breadcrumb" className="receipt-breadcrumb">
+        <button
+          type="button"
+          onClick={handleBack}
+          className="receipt-back-link"
+        >
+          ← Back
+        </button>
+      </nav>
       <h1>Receipt</h1>
       {query.isError ? (
         <StatusPanel error title="Could not load this receipt">
-          <Button
-            variant="secondary"
-            size="lg"
-            onClick={() => void query.refetch()}
-          >
-            Retry
-          </Button>
+          <div className="flex gap-3">
+            <Button
+              variant="secondary"
+              size="lg"
+              onClick={() => void query.refetch()}
+            >
+              Retry
+            </Button>
+            <Button
+              variant="secondary"
+              size="lg"
+              onClick={handleBack}
+            >
+              Back
+            </Button>
+          </div>
         </StatusPanel>
       ) : !sale ? (
         <LoadingState label="Loading receipt…" />
       ) : !validSale(sale) ? (
-        <StatusPanel error title="The receipt amounts could not be verified" />
+        <StatusPanel error title="The receipt amounts could not be verified">
+          <Button
+            variant="secondary"
+            size="lg"
+            onClick={handleBack}
+          >
+            Back
+          </Button>
+        </StatusPanel>
       ) : (
         <>
           <section className="receipt-card">
             {reversed ? (
-              <h2 className="text-[var(--color-danger)]">
+              <h2 className="text-(--color-danger)">
                 <span aria-hidden="true">✕</span> Sale reversed
               </h2>
             ) : (
               <h2>
-                <span aria-hidden="true">✓</span> Sale recorded
+                <span aria-hidden="true"></span> Sale recorded
               </h2>
             )}
             <p className="micro">
@@ -73,7 +108,7 @@ export function ReceiptPage() {
               WAT
             </p>
             {reversed && (
-              <div className="p-3 bg-[var(--color-danger-subtle)] border border-[var(--color-danger)] rounded-md text-sm text-[var(--color-danger)] my-3">
+              <div className="p-3 bg-[var(--color-danger-subtle)] border border-[var(--color-danger)] rounded-md text-sm text-(--color-danger) my-3">
                 This sale has been reversed. Inventory items have been returned to stock.
               </div>
             )}
@@ -139,14 +174,7 @@ export function ReceiptPage() {
                 Generate reversal code
               </Button>
             )}
-            <Button
-              size="lg"
-              variant="secondary"
-              disabled
-              aria-describedby="history-note"
-            >
-              View in Sales
-            </Button>
+            
           </div>
           {!reversed && <p className="micro">{simulation ? 'Sale reversal is a simulation; no real shop data is changed.' : 'Sale reversal is unavailable until the service contract is approved.'}</p>}
           <p id="history-note" className="micro">

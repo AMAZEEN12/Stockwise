@@ -36,7 +36,7 @@ export type StatusBadgeProps = HTMLAttributes<HTMLSpanElement> & {
 // Neutral sits on --color-surface, the same as Card, so it gets a visible edge.
 const toneClasses: Record<StatusBadgeTone, string> = {
   neutral:
-    "bg-[var(--color-surface)] text-[var(--color-text)] border-[var(--color-border-input)]",
+    "bg-[var(--color-surface)] text-(--color-text) border-[var(--color-border-input)]",
   info: "bg-[var(--color-primary)] text-[var(--color-on-primary)] border-transparent",
   success: "bg-[var(--color-success)] text-[var(--color-on-success)] border-transparent",
   warning: "bg-[var(--color-warning)] text-[var(--color-on-warning)] border-transparent",
@@ -56,7 +56,7 @@ export const StatusBadge = forwardRef<HTMLSpanElement, StatusBadgeProps>(functio
         "inline-flex max-w-full min-w-0 items-center gap-1 align-middle",
         "rounded-[var(--radius-sm)] border px-2 py-0.5",
         "text-xs font-medium leading-5 font-sans",
-        "whitespace-normal break-words [overflow-wrap:anywhere]",
+        "whitespace-normal break-words",
         toneClasses[tone],
         "shared-status-badge",
         className,

@@ -35,6 +35,7 @@ export type FormFieldProps = {
   /** Pass your own id if the control needs a stable one; otherwise one is generated. */
   id?: string;
   className?: string;
+  labelClassName?: string;
   children: (field: FieldControlProps) => ReactNode;
 };
 
@@ -46,6 +47,7 @@ export function FormField({
   requiredIndicator = true,
   id,
   className,
+  labelClassName,
   children,
 }: FormFieldProps) {
   const generatedId = useId();
@@ -66,17 +68,20 @@ export function FormField({
 
   return (
     <div className={cn("flex flex-col gap-1.5 font-sans", className)}>
-      <label htmlFor={controlId} className="text-sm font-medium text-[var(--color-text)]">
+      <label
+        htmlFor={controlId}
+        className={cn("text-sm font-medium text-(--color-text)", labelClassName)}
+      >
         {label}
         {required && requiredIndicator && (
-          <span aria-hidden="true" className="ml-0.5 text-[var(--color-danger)]">
+          <span aria-hidden="true" className="ml-0.5 text-(--color-danger)">
             *
           </span>
         )}
       </label>
 
       {hint && (
-        <p id={hintId} className="text-sm text-[var(--color-text-muted)]">
+        <p id={hintId} className="text-sm text-(--color-text-muted)">
           {hint}
         </p>
       )}
@@ -85,7 +90,7 @@ export function FormField({
 
       {/* Error is text with an icon-like prefix, never colour alone. */}
       {error && (
-        <p id={errorId} className="text-sm font-medium text-[var(--color-danger)]">
+        <p id={errorId} className="text-sm font-medium text-(--color-danger)">
           <svg aria-hidden="true" width="16" height="16" viewBox="0 0 16 16" fill="none" stroke="currentColor"><circle cx="8" cy="8" r="7" /><path d="M8 4v5m0 2v1" strokeWidth="1.5" /></svg>
           {error}
         </p>

@@ -76,6 +76,7 @@ export function ProductsPage() {
       <FilterBar
         className="product-filter-bar"
         searchLabel="Search name or reference"
+        searchLabelHidden
         searchPlaceholder="Search name or reference"
         searchInputProps={{ type: "text", className: "shop-input" }}
         query={params.get("q") || ""}
@@ -84,7 +85,7 @@ export function ProductsPage() {
         onClearAll={() => setParams({})}
         resultMessage={data && !isFetching ? `${data.totalItems} products found` : undefined}
       >
-        <FormField label="Filter by category" className="category-filter">
+        <FormField label="Filter by category" labelClassName="sr-only" className="category-filter">
           {(field) => <Select {...field} className="shop-input" allowAny anyLabel="Category: All"
             value={params.get("category") ? `category:${params.get("category")}` : undefined}
             onValueChange={(value) => update("category", value?.slice("category:".length) || "")}

@@ -401,14 +401,6 @@
   font-size: 11px;
   margin-top: 8px;
 }
-.sale-demo-note {
-  font: 11px var(--font-mono);
-  color: var(--color-text-muted);
-  margin-top: 28px;
-}
-.sale-demo-note a {
-  text-decoration: underline;
-}
 .receipt-card {
   padding: 16px;
   max-width: 520px;
@@ -428,8 +420,34 @@
 .receipt-card .receipt-total {
   margin-top: 12px;
 }
+.receipt-breadcrumb {
+  margin-bottom: 8px;
+}
+.receipt-back-link {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  font: 500 14px/1.4 var(--font-sans);
+  color: var(--color-text-muted);
+  background: transparent;
+  border: none;
+  padding: 0;
+  cursor: pointer;
+  text-decoration: none;
+  transition: color 0.15s ease;
+}
+.receipt-back-link:hover {
+  color: var(--color-text);
+  text-decoration: underline;
+}
+.receipt-back-link:focus-visible {
+  outline: var(--focus-ring-width) solid var(--color-focus);
+  outline-offset: var(--focus-ring-offset);
+  border-radius: var(--radius-xs);
+}
 .receipt-actions {
   display: flex;
+  flex-wrap: wrap;
   gap: 12px;
   margin-top: 16px;
 }
@@ -520,9 +538,6 @@
   }
   .sale-total > .micro {
     font-size: 12px;
-  }
-  .sale-demo-note {
-    margin-bottom: calc(120px + env(safe-area-inset-bottom, 0px));
   }
   .sale-confirm {
     width: calc(100vw - 32px);

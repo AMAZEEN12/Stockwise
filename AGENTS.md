@@ -81,8 +81,12 @@ Rule: when an agent makes the same mistake twice, the correction goes here.
 | `focus-visible:[outline-offset:var(--focus-ring-offset)]` | `focus-visible:outline-offset-(--focus-ring-offset)` |
 | `rounded-[var(--radius-md)]` | `rounded-md` |
 | `font-[family-name:var(--font-sans)]` | `font-sans` |
+| `text-[var(--color-text)]` | `text-(--color-text)` |
+| `text-[var(--color-text-muted)]` | `text-(--color-text-muted)` |
+| `text-[var(--color-danger)]` | `text-(--color-danger)` |
+| `[overflow-wrap:anywhere]` | `break-words` |
 
-Apply these replacements when creating, editing or copying shared components. Preserve Stockwise's existing `--radius-md: 10px`, Inter Tight `font-sans` mapping and configured focus offset. These particular arbitrary-value classes are valid syntax, but their canonical equivalents are the required project convention. Keep arbitrary values where no equivalent utility exists; do not change the design just to shorten a class.
+Apply these replacements when creating, editing or copying shared components. Preserve Stockwise's existing `--radius-md: 10px`, Inter Tight `font-sans` mapping and configured focus offset. In Tailwind v4, use variable shorthand syntax like `text-(--color-text)` and `text-(--color-danger)` instead of arbitrary property syntax `text-[var(--color-...)]`. Avoid duplicate wrapping utilities: `break-words` applies `overflow-wrap: anywhere`, so never pair `break-words` with `[overflow-wrap:anywhere]`. These particular arbitrary-value classes are valid syntax, but their canonical equivalents are the required project convention. Keep arbitrary values where no equivalent utility exists; do not change the design just to shorten a class.
 
 ## Verifying your work
 Run these before reporting any task complete, and paste the output (full list in `sdlc/test-plan.md`):

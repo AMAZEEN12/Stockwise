@@ -83,10 +83,10 @@ export const Select = forwardRef<HTMLButtonElement, SelectProps>(function Select
         {...triggerAria}
         className={cn(
           "flex h-10 w-full min-w-0 items-center justify-between gap-2 rounded-md",
-          "border border-[var(--color-border-input)] bg-[var(--color-bg)] px-3 text-left text-[var(--color-text)] font-sans",
+          "border border-[var(--color-border-input)] bg-[var(--color-bg)] px-3 text-left text-(--color-text) font-sans",
           "focus-visible:[outline:var(--focus-ring-width)_solid_var(--color-focus)]",
           "focus-visible:outline-offset-(--focus-ring-offset)",
-          "data-[placeholder]:text-[var(--color-text-muted)]",
+          "data-[placeholder]:text-(--color-text-muted)",
           "aria-[invalid=true]:border-2 aria-[invalid=true]:border-[var(--color-danger)]",
           "disabled:cursor-not-allowed disabled:bg-[var(--color-surface)] disabled:opacity-60",
           className,
@@ -96,7 +96,7 @@ export const Select = forwardRef<HTMLButtonElement, SelectProps>(function Select
           <RadixSelect.Value placeholder={placeholder} />
         </span>
         <RadixSelect.Icon asChild>
-          <ChevronDown aria-hidden="true" className="size-4 shrink-0 text-[var(--color-text-muted)]" />
+          <ChevronDown aria-hidden="true" className="size-4 shrink-0 text-(--color-text-muted)" />
         </RadixSelect.Icon>
       </RadixSelect.Trigger>
 
@@ -108,11 +108,11 @@ export const Select = forwardRef<HTMLButtonElement, SelectProps>(function Select
           collisionPadding={8}
           className={cn(
             "relative z-50 max-h-[var(--radix-select-content-available-height)] min-w-[var(--radix-select-trigger-width)]",
-            "max-w-[calc(100vw-16px)] overflow-hidden rounded-md border border-[var(--color-border)] bg-[var(--color-bg)] text-[var(--color-text)] shadow-lg",
+            "max-w-[calc(100vw-16px)] overflow-hidden rounded-md border border-[var(--color-border)] bg-[var(--color-bg)] text-(--color-text) shadow-lg",
             contentClassName,
           )}
         >
-          <RadixSelect.ScrollUpButton className="flex h-6 items-center justify-center text-[var(--color-text-muted)]">
+          <RadixSelect.ScrollUpButton className="flex h-6 items-center justify-center text-(--color-text-muted)">
             <ChevronUp aria-hidden="true" className="size-4" />
           </RadixSelect.ScrollUpButton>
 
@@ -123,7 +123,7 @@ export const Select = forwardRef<HTMLButtonElement, SelectProps>(function Select
             ))}
           </RadixSelect.Viewport>
 
-          <RadixSelect.ScrollDownButton className="flex h-6 items-center justify-center text-[var(--color-text-muted)]">
+          <RadixSelect.ScrollDownButton className="flex h-6 items-center justify-center text-(--color-text-muted)">
             <ChevronDown aria-hidden="true" className="size-4" />
           </RadixSelect.ScrollDownButton>
         </RadixSelect.Content>
@@ -141,7 +141,7 @@ function SelectItem({ value, label, disabled }: SelectOption) {
       className={cn(
         // min-h-10 keeps every option above the 24×24 px target size, with room for touch.
         "relative flex min-h-10 cursor-default select-none items-center rounded-[var(--radius-sm)] py-2 pl-8 pr-3 outline-none text-sm",
-        "data-[highlighted]:bg-[var(--color-surface)] data-[highlighted]:text-[var(--color-text)]",
+        "data-[highlighted]:bg-[var(--color-surface)] data-[highlighted]:text-(--color-text)",
         "data-[disabled]:pointer-events-none data-[disabled]:opacity-50",
       )}
     >
