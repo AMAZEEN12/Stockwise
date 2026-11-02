@@ -8,14 +8,17 @@ import jakarta.validation.constraints.Max;
 import jakarta.validation.constraints.Min;
 import jakarta.validation.constraints.NotBlank;
 import jakarta.validation.constraints.NotNull;
+import jakarta.validation.constraints.Pattern;
 import jakarta.validation.constraints.PositiveOrZero;
 import jakarta.validation.constraints.Size;
 
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.GetMapping;
+import org.springframework.web.bind.annotation.PatchMapping;
 import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestBody;
+import org.springframework.web.bind.annotation.RequestHeader;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
@@ -23,7 +26,7 @@ import org.springframework.web.bind.annotation.RestController;
 import ng.tesa.stockwise.common.NotFoundException;
 import ng.tesa.stockwise.common.Page;
 
-/** Catalogue endpoints (spec R1, R2). Adding a product is OWNER only (SecurityConfig). */
+/** Catalogue endpoints (spec R1, R2, R18). Adding and editing a product is OWNER only (SecurityConfig). */
 @RestController
 @RequestMapping("/api/v1/products")
 public class ProductController {
@@ -62,10 +65,70 @@ public class ProductController {
         return ResponseEntity.created(URI.create("/api/v1/products/" + product.id())).body(product);
     }
 
-    /** The ETag is the version, for the later conditional edit and archive ({@code If-Match}). */
+    /** The ETag is the version, for the conditional edit and archive ({@code If-Match}). */
     @GetMapping("/{productId}")
     public ResponseEntity<Product> get(@PathVariable UUID productId) {
         Product product = products.findById(productId).orElseThrow(() -> new NotFoundException("Product " + productId));
         return ResponseEntity.ok().eTag(String.valueOf(product.version())).body(product);
+    }
+
+    /**
+     * Contract {@code ProductUpdate}. Every field is optional; a sent string must not be blank.
+     * Quantity is not editable here (R13). Unknown fields are refused by the JSON reader.
+     */
+    public record UpdateRequest(
+            @Size(max = 40) @Pattern(regexp = ".*\\S.*", message = "must not be blank") String reference,
+            @Size(max = 200) @Pattern(regexp = ".*\\S.*", message = "must not be blank") String name,
+            @Size(max = 60) @Pattern(regexp = ".*\\S.*", message = "must not be blank") String category,
+            @PositiveOrZero @Max(9007199254740991L) Long priceKobo,
+            @PositiveOrZero Integer lowStockThreshold,
+            Boolean active) {
+
+        Product.Changes toChanges() {
+            return new Product.Changes(reference, name, category, priceKobo, lowStockThreshold, active);
+        }
+    }
+
+    /**
+     * R1, R18: edit, archive ({@code active: false}) or unarchive a product. OWNER only
+     * (SecurityConfig). {@code If-Match} must carry the version the client edited, as the ETag
+     * gave it; a stale version is 412 {@code VERSION_CONFLICT} and nothing changes. Repeating the
+     * same request with the new ETag is safe.
+     */
+    @PatchMapping("/{productId}")
+    public ResponseEntity<Product> update(@PathVariable UUID productId,
+                                          @RequestHeader(name = "If-Match", required = false) String ifMatch,
+                                          @Valid @RequestBody UpdateRequest request) {
+        int expectedVersion = parseVersion(ifMatch);
+        Product.Changes changes = request.toChanges();
+        if (changes.isEmpty()) {
+            throw new Product.NoChanges();
+        }
+        Product product = products.update(productId, expectedVersion, changes)
+                .orElseThrow(() -> new NotFoundException("Product " + productId));
+        return ResponseEntity.ok().eTag(String.valueOf(product.version())).body(product);
+    }
+
+    /** Accepts {@code 7}, {@code "7"} and {@code W/"7"}; anything else is 428. */
+    static int parseVersion(String ifMatch) {
+        if (ifMatch == null) {
+            throw new Product.VersionRequired();
+        }
+        String value = ifMatch.trim();
+        if (value.startsWith("W/")) {
+            value = value.substring(2);
+        }
+        if (value.length() >= 2 && value.startsWith("\"") && value.endsWith("\"")) {
+            value = value.substring(1, value.length() - 1);
+        }
+        try {
+            int version = Integer.parseInt(value);
+            if (version < 0) {
+                throw new Product.VersionRequired();
+            }
+            return version;
+        } catch (NumberFormatException e) {
+            throw new Product.VersionRequired();
+        }
     }
 }

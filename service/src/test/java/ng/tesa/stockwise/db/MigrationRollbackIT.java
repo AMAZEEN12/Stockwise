@@ -10,6 +10,7 @@ import java.sql.Connection;
 import java.sql.SQLException;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Set;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 import java.util.stream.Stream;
@@ -26,6 +27,12 @@ import org.junit.jupiter.api.Test;
 class MigrationRollbackIT {
 
     private static final Pattern VERSIONED = Pattern.compile("V(\\d+)__(.+)\\.sql");
+
+    /**
+     * Migrations that only correct data and leave the schema as it was. V8 reconciles
+     * {@code unpaid_kobo} with balances (DM75); its undo script is a no-op.
+     */
+    private static final Set<Integer> DATA_ONLY = Set.of(8);
 
     @BeforeEach
     void emptySchema() throws SQLException {
@@ -52,7 +59,11 @@ class MigrationRollbackIT {
         for (int v = 1; v <= latest; v++) {
             PostgresTestDatabase.flyway(Integer.toString(v)).migrate();
             schemaAt.add(SchemaSnapshot.take());
-            assertThat(schemaAt.get(v)).as("V%d changes the schema", v).isNotEqualTo(schemaAt.get(v - 1));
+            if (DATA_ONLY.contains(v)) {
+                assertThat(schemaAt.get(v)).as("V%d leaves the schema as it was", v).isEqualTo(schemaAt.get(v - 1));
+            } else {
+                assertThat(schemaAt.get(v)).as("V%d changes the schema", v).isNotEqualTo(schemaAt.get(v - 1));
+            }
         }
 
         try (Connection c = PostgresTestDatabase.connect()) {

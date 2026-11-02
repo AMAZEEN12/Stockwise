@@ -93,6 +93,28 @@ class DashboardIT extends ApiTestSupport {
         assertThat(today.get("totalKobo").asLong()).isEqualTo(30_000);
     }
 
+    /** R14 acceptance: reversing a sale moves today's total on the next load. */
+    @Test
+    void aReversedSaleLeavesTodaysTotal() {
+        String owner = login(OWNER);
+        String milk = product(owner, "MILK-400", 100_000, 10, 2);
+        var kept = sell(owner, """
+                {"paymentType":"PAID","lines":[{"productId":"%s","quantity":1}]}""".formatted(milk));
+        var reversed = sell(owner, """
+                {"paymentType":"PAID","lines":[{"productId":"%s","quantity":2}]}""".formatted(milk));
+        assertThat(kept.status()).isEqualTo(201);
+        assertThat(reversed.status()).isEqualTo(201);
+        assertThat(get("/api/v1/dashboard", owner).body().get("todaySales").get("totalKobo").asLong()).isEqualTo(300_000);
+
+        var reversal = post("/api/v1/sales/" + reversed.body().get("id").asString() + "/reversal", owner, """
+                {"reason":"BILLING_ERROR"}""", "Idempotency-Key", UUID.randomUUID().toString());
+        assertThat(reversal.status()).as("reversal %s", reversal.body()).isEqualTo(200);
+
+        JsonNode today = get("/api/v1/dashboard", owner).body().get("todaySales");
+        assertThat(today.get("count").asInt()).isEqualTo(1);
+        assertThat(today.get("totalKobo").asLong()).isEqualTo(100_000);
+    }
+
     @Test
     void archivedProductsAreNotListedAsLowStock() {
         String owner = login(OWNER);

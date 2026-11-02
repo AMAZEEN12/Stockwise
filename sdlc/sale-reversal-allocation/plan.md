@@ -1,80 +1,64 @@
-# Plan: Real Sale Reversal & Oldest-First Repayment Allocation
+# Plan: Priority Backend Services, Sale Reversal & Oldest-First Allocation
 
-Derived from: intent.md (2026-10-30), spec.md (2026-10-30) · Status: draft
-Accepted by: Nnaemeka Chukwuma (Data and rules owner) · Higher-risk sign-off: Isaac Bassey (API & access owner)
+Derived from: intent.md (2026-11-02), spec.md (2026-11-02) · Status: accepted
+Accepted by: Nnaemeka Chukwuma (Data and rules owner, 2026-11-02) · Higher-risk sign-off: Isaac Bassey (API & access owner, 2026-11-02)
 Supporting skills: sdlc
 
 ## Files that change
 | File | New / modified / deleted | Requirements covered |
 |------|--------------------------|----------------------|
-| `contract/openapi.yaml` | modified | R11, R12, R14, R15, N5 |
-| `decisions.md` | modified | Sign-off log and contract entries |
-| `service/src/main/resources/db/migration/V6__sale_reversal_allocation.sql` | new | R11, R12, R13, R14, N1 |
-| `service/src/main/resources/db/rollback/U6__sale_reversal_allocation.sql` | new | DM13 (Rollback testing) |
-| `service/src/main/java/ng/tesa/stockwise/reversal/ReversalReason.java` | new | R11 |
-| `service/src/main/java/ng/tesa/stockwise/reversal/SaleReversalRequest.java` | new | R11, R14 |
-| `service/src/main/java/ng/tesa/stockwise/reversal/SaleReversalResponse.java` | new | R11, R12 |
-| `service/src/main/java/ng/tesa/stockwise/reversal/ReversalAuthorization.java` | new | R14 |
-| `service/src/main/java/ng/tesa/stockwise/reversal/ReversalAuthorizationRepository.java` | new | R14 |
-| `service/src/main/java/ng/tesa/stockwise/reversal/ReversalAuthorizationController.java` | new | R14, N3 |
-| `service/src/main/java/ng/tesa/stockwise/reversal/SaleReversalService.java` | new | R11, R12, R15, R16, N1, N2, N4 |
-| `service/src/main/java/ng/tesa/stockwise/reversal/SaleReversalController.java` | new | R11, R14, R15, N3 |
-| `service/src/main/java/ng/tesa/stockwise/customer/RepaymentAllocation.java` | new | R13, N4 |
-| `service/src/main/java/ng/tesa/stockwise/customer/CustomerRepository.java` | modified | R12, R13, N2 |
-| `service/src/main/java/ng/tesa/stockwise/common/ProblemHandler.java` | modified | N5 |
-| `service/src/test/java/ng/tesa/stockwise/reversal/SaleReversalIT.java` | new | R11, R12, R14, R15, R16 |
-| `service/src/test/java/ng/tesa/stockwise/customer/RepaymentAllocationIT.java` | new | R13 |
-| `web/src/api/schema.d.ts` | modified | Regenerated types |
+| `contract/openapi.yaml` | modified | R1, R9, R11, R12, R14, R15, R18, N5 |
+| `decisions.md` | modified | Reconciled sign-off log for v0.4.0 and v0.5.0 |
+| `service/src/main/java/ng/tesa/stockwise/product/Product.java` | modified | R1, R18 (Added `Product.Update` record) |
+| `service/src/main/java/ng/tesa/stockwise/product/ProductRepository.java` | modified | R1, R18 (Implemented optimistic `update` method) |
+| `service/src/main/java/ng/tesa/stockwise/product/ProductController.java` | modified | R1, R18 (Exposed `PATCH /products/{id}` with `If-Match`) |
+| `service/src/main/java/ng/tesa/stockwise/common/PreconditionFailedException.java` | new | R1 (HTTP 412 exception) |
+| `service/src/main/java/ng/tesa/stockwise/common/ErrorCode.java` | modified | R1 (`VERSION_CONFLICT`) |
+| `service/src/main/java/ng/tesa/stockwise/common/ProblemHandler.java` | modified | R1, N5 (Mapped `PreconditionFailedException` and `IllegalArgumentException`) |
+| `service/src/main/java/ng/tesa/stockwise/config/SecurityConfig.java` | modified | N3 (Role permissions for PATCH products, repayments, store credit) |
+| `service/src/main/java/ng/tesa/stockwise/customer/CustomerRepository.java` | modified | R9, R12, R13 (Repayment idempotency replay, `issueStoreCredit`) |
+| `service/src/main/java/ng/tesa/stockwise/customer/CustomerController.java` | modified | R9, R12 (`POST /repayments`, `POST /store-credit`) |
+| `service/src/main/java/ng/tesa/stockwise/sale/Sale.java` | modified | R12 (Added `storeCreditUsedKobo`) |
+| `service/src/main/java/ng/tesa/stockwise/sale/NewSale.java` | modified | R12 (Added `useStoreCredit`) |
+| `service/src/main/java/ng/tesa/stockwise/sale/SaleRepository.java` | modified | R12 (`applyStoreCredit`, `setTotal`, `findSale`, `list`) |
+| `service/src/main/java/ng/tesa/stockwise/sale/SaleService.java` | modified | R12 (Checkout store credit deduction and net debt calculation) |
+| `service/src/main/java/ng/tesa/stockwise/sale/SaleRequestHash.java` | modified | R12 (Includes `useStoreCredit` in canonical hash) |
+| `service/src/test/java/ng/tesa/stockwise/product/ProductValidationTest.java` | modified | R1 (`UpdateRequest` validation) |
+| `service/src/test/java/ng/tesa/stockwise/customer/CustomerValidationTest.java` | new | R9, R12 (Repayment and store credit request validation) |
+| `service/src/test/java/ng/tesa/stockwise/product/ProductEditIT.java` | new | R1, R18 (6 integration test scenarios) |
+| `service/src/test/java/ng/tesa/stockwise/customer/CustomerRepaymentEndpointIT.java` | new | R9, R13 (4 integration test scenarios) |
+| `service/src/test/java/ng/tesa/stockwise/customer/StoreCreditSettlementIT.java` | new | R12 (2 integration test scenarios) |
+| `web/src/api/schema.d.ts` | modified | Regenerated OpenAPI TypeScript types |
 | `sdlc/sale-reversal-allocation/WORKLOG.md` | modified | Stage tracking |
 
 ## Order of work
-1. **Contract definition (OpenAPI):** Add `POST /sales/{saleId}/reversal` and `POST /reversals/authorizations` to `contract/openapi.yaml`. Validate with Redocly CLI (`contract/redocly.yaml`).
-2. **Database migration (V6 & U6):** Write Flyway migration `V6__sale_reversal_allocation.sql` and rollback `U6__sale_reversal_allocation.sql` (columns on `sale`, table `repayment_allocation`, table `reversal_authorization`). Test migration rollback via `MigrationRollbackIT`.
-3. **Supervisor Authorization (OTP):** Implement `ReversalAuthorization` repository and controller (`POST /reversals/authorizations`) generating cryptographically secure 6-digit codes with 15-minute expiration for `OWNER`/`ADMIN`.
-4. **Oldest-First Repayment Allocation Engine:** Implement `repayment_allocation` logic in `CustomerRepository` ensuring repayments allocate in ascending `(created_at, id)` order.
-5. **Sale Reversal Service & Controller:** Implement atomic `POST /sales/{saleId}/reversal`:
-   - Enforce single reversal and idempotency.
-   - Enforce assistant OTP code verification.
-   - Restore stock and append `Movement` (`SALE_REVERSAL`).
-   - Relieve unpaid sale debt and convert repaid excess to store credit (DM5/R12).
-   - Append `CustomerLedgerEntry` (`SALE_REVERSAL` and `STORE_CREDIT`).
-6. **Error handling & RFC 9457:** Map `SALE_ALREADY_REVERSED`, `INVALID_AUTHORIZATION_CODE`, `AUTHORIZATION_EXPIRED`, `REVERSAL_MANUAL_REVIEW_REQUIRED`, and `REVERSAL_CONFLICT` in `ProblemHandler`.
-7. **Testing & Evidence:** Run integration tests (`SaleReversalIT`, `RepaymentAllocationIT`), verify rule removal in `docs/rule-removal-log.md`, regenerate web contract types (`npm run generate:api`), and run web tests.
+1. **Contract definition (OpenAPI):** Bump to v0.5.0 in `contract/openapi.yaml`. Add `PATCH /products/{id}`, `POST /repayments`, `POST /customers/{id}/store-credit`, `SaleCreate.useStoreCredit`, `Sale.storeCreditUsedKobo`, schemas, parameters, and responses. Validate with Redocly CLI.
+2. **Web Contract Sync:** Run `npm run generate:api` in `web/` to produce updated `src/api/schema.d.ts`. Verify with `npm run typecheck` and `npm run lint`.
+3. **Backend Priority 1 Implementation:**
+   - Product edit & archive: Add `Product.Update`, `PreconditionFailedException`, update repository method with optimistic version check, and controller `PATCH` handler.
+   - Customer repayments: Expose `POST /repayments` and `POST /customers/{customerId}/repayments` with idempotency replay cache.
+   - Store credit settlement: Expose `POST /customers/{customerId}/store-credit`, integrate `applyStoreCredit` during sale creation in `SaleService`.
+4. **Security Configuration:** Update `SecurityConfig.java` to enforce OWNER-only for PATCH products, OWNER/ADMIN for store credit, OWNER/ASSISTANT for repayments.
+5. **Testing & Verification:**
+   - Write and run unit tests for request records and validation.
+   - Write integration tests: `ProductEditIT`, `CustomerRepaymentEndpointIT`, `StoreCreditSettlementIT`.
+   - Run backend Maven test suite (`./mvnw.cmd test`).
+   - Run frontend Vitest suite (`npm test -- --run`).
+6. **Reconciliation & Sign-off:** Update `decisions.md` §3 with dual-engineer approval (Nnaemeka Chukwuma and Isaac Bassey). Update SDLC runbook and worklogs.
 
-## Parallelization
-- **Independent:**
-  - Supervisor OTP authorization module (`reversal_authorization` table, repo, controller).
-  - OpenAPI contract editing and web type generation.
-- **Sequential:**
-  - V6 Migration → Repayment allocation engine → Sale reversal service → End-to-end integration tests.
-
-## Risks
+## Risks & Mitigations
 | Risk | What it could break | Mitigation |
 |------|---------------------|------------|
-| Concurrency race on customer debt | Over-relieving debt or overallocating repayments | Acquire pessimistic lock (`SELECT id FROM customer WHERE id = ? FOR UPDATE`) before calculating debt/credit effects. |
-| Inconsistent store credit | Creating negative store credit on subsequent adjustments | Enforce `CHECK (store_credit_kobo >= 0)` and reject conflicting operations with 409. |
-| Non-deterministic allocation | Sales allocated differently on replay | Order strictly by `(created_at ASC, id ASC)`. |
-
-**Riskiest step:** The atomic reversal transaction inside `SaleReversalService` where stock, customer debt, and store credit are adjusted simultaneously across multiple tables.
-
-## Alternatives considered
-- *Allowing negative customer debt:* Rejected per DM5 and brief invariants; negative balances confuse shopkeepers and violate database constraints.
-- *Netting store credit against older credit sales automatically:* Rejected per proposal; customer debt and store credit remain distinct balances so customers retain full visibility and agency over their account position.
+| Lost updates on product edits | Concurrent edits overwrite each other | Enforce optimistic locking via `If-Match: version` header; mismatch returns 412 `VERSION_CONFLICT`. |
+| Store credit race condition | Negative store credit balance | Lock customer record (`SELECT ... FOR UPDATE`) before calculating available store credit and deducting amount. |
+| Duplicate product references | Unique constraint violation in database | Handled explicitly in repository; throws `DuplicateReferenceException` mapped to 409 `DUPLICATE_REFERENCE`. |
 
 ## Proof
-| Requirement | Test or check that proves it |
-|-------------|------------------------------|
-| R11 (Stock restoration) | `SaleReversalIT.reversingSaleRestoresStockAndAppendsMovement()` |
-| R12 (Excess to store credit) | `SaleReversalIT.reversingPartiallyRepaidCreditSaleIssuesStoreCredit()` |
-| R13 (Oldest-first allocation) | `RepaymentAllocationIT.repaymentAllocatesToOldestSalesFirst()` |
-| R14 (Assistant authorization) | `SaleReversalIT.assistantRequiresValidSupervisorOtp()` |
-| R15 (Idempotency) | `SaleReversalIT.reversalIsIdempotentWithSameKey()` |
-| N1 (Integer kobo) | `SchemaRulesIT` asserts `BIGINT` columns on `sale` and `repayment_allocation`. |
-| N2 (Serialization) | `SaleReversalIT.concurrentReversalAndRepaymentDoesNotCorruptBalances()` |
-
-## Plan maintenance
-If implementation departs from this plan, update this file in the same commit as the code.
-
-## Measurement
-- Leading: Time from plan acceptance to green integration tests.
-- Lagging: Zero production bugs on reversal accounting or inventory movements.
+| Requirement | Test that proves it |
+|-------------|---------------------|
+| R1 (Product edit & 412) | `ProductEditIT.patchProductOptimisticLockSuccess` & `patchProductVersionMismatchReturns412` |
+| R9 (Repayments & oldest-first) | `CustomerRepaymentEndpointIT.recordRepaymentAllocatesOldestFirst` |
+| R12 (Store credit grant & checkout) | `StoreCreditSettlementIT.saleCheckoutDrawsDownStoreCreditAtomically` |
+| R18 (Archive/unarchive) | `ProductEditIT.archiveAndUnarchiveProduct` |
+| Contract validity | `@redocly/cli lint contract/openapi.yaml` (0 errors) |
+| Web compatibility | `npm run typecheck` (0 errors) & 58 Vitest tests passing |
