@@ -163,15 +163,28 @@ public class CustomerRepository {
      */
     @Transactional
     public List<RepaymentAllocation> recordRepayment(UUID customerId, long amountKobo, UUID createdBy) {
+        return recordRepayment(customerId, amountKobo, createdBy, null);
+    }
+
+    /**
+     * As above, with the {@code repayment} row that recorded it (contract v0.5.0,
+     * {@code POST /repayments}) as the ledger entry's {@code source_id}, so the ledger points at
+     * the repayment it came from (R10, R11). A repayment above the balance owed is
+     * {@link RepaymentExceedsBalance} (R9); the customer's row lock makes that check exact.
+     */
+    @Transactional
+    public List<RepaymentAllocation> recordRepayment(UUID customerId, long amountKobo, UUID createdBy, UUID repaymentId) {
         if (amountKobo <= 0) {
             throw new IllegalArgumentException("Repayment amount must be positive");
         }
         Instant now = clock.instant();
 
-        // Lock customer row to serialize concurrent debt changes
+        // Lock customer row to serialize concurrent debt changes. NO KEY UPDATE, because the
+        // repayment row inserted just before holds a KEY SHARE lock on this customer through its
+        // foreign key; FOR UPDATE would conflict with a parallel repayment's and deadlock.
         CustomerBalance balance = jdbc.sql("""
                 SELECT id, balance_kobo, store_credit_kobo
-                FROM customer WHERE id = :id FOR UPDATE
+                FROM customer WHERE id = :id FOR NO KEY UPDATE
                 """)
                 .param("id", customerId)
                 .query((rs, row) -> new CustomerBalance(
@@ -183,7 +196,7 @@ public class CustomerRepository {
                 .orElseThrow(() -> new NotFoundException("Customer not found: " + customerId));
 
         if (balance.balanceKobo < amountKobo) {
-            throw new IllegalArgumentException("Repayment amount (" + amountKobo + " kobo) exceeds outstanding debt (" + balance.balanceKobo + " kobo)");
+            throw new RepaymentExceedsBalance(amountKobo, balance.balanceKobo);
         }
 
         long newBalance = balance.balanceKobo - amountKobo;
@@ -191,10 +204,11 @@ public class CustomerRepository {
         // Append repayment ledger entry
         UUID ledgerEntryId = jdbc.sql("""
                 INSERT INTO ledger_entry (customer_id, delta_kobo, source_type, source_id, balance_after_kobo, created_at)
-                VALUES (:customerId, :delta, 'REPAYMENT', NULL, :balanceAfter, :createdAt)
+                VALUES (:customerId, :delta, 'REPAYMENT', CAST(:repaymentId AS uuid), :balanceAfter, :createdAt)
                 RETURNING id
                 """)
                 .param("customerId", customerId)
+                .param("repaymentId", repaymentId)
                 .param("delta", -amountKobo)
                 .param("balanceAfter", newBalance)
                 .param("createdAt", now.atOffset(ZoneOffset.UTC))

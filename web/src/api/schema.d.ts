@@ -105,7 +105,20 @@ export interface paths {
         delete?: never;
         options?: never;
         head?: never;
-        patch?: never;
+        /**
+         * Edit, archive or unarchive a product
+         * @description **Idempotent with `If-Match`.** OWNER only (spec R1, R18). Send only the fields to change;
+         *     an archive is `{"active": false}`. Quantity is not editable here: stock changes only
+         *     through sales, restocks and reversals, so it always equals the sum of the movements.
+         *
+         *     `If-Match` must carry the version the client edited, as `GET /products/{productId}` gave it
+         *     in its `ETag` (`"7"`, `W/"7"` and `7` are all accepted). The update happens only if the
+         *     product is still at that version, in one guarded statement; otherwise 412
+         *     `VERSION_CONFLICT` and nothing changes. The version also moves when stock changes (a sale or
+         *     a restock), so a screen must reload the product after a 412. The response carries the new
+         *     `ETag`. Without a usable `If-Match`: 428 `PRECONDITION_REQUIRED`.
+         */
+        patch: operations["updateProduct"];
         trace?: never;
     };
     "/products/{productId}/movements": {
@@ -258,6 +271,59 @@ export interface paths {
         get: operations["getCustomerLedger"];
         put?: never;
         post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/customers/{customerId}/store-credit": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /**
+         * Add store credit by hand
+         * @description **Idempotent via `Idempotency-Key`** (required). OWNER or ADMIN (DM74).
+         *
+         *     Adds `amountKobo` to the customer's store credit and writes a `STORE_CREDIT` ledger entry
+         *     pointing at the grant, in one transaction; the balance owed does not change. `reason` is
+         *     required so every grant can be explained later. A replay of the same key and body by the
+         *     same user returns the customer without adding again; another body or user is 422.
+         *     Store credit created by reversing a sale (DM5) needs no grant.
+         */
+        post: operations["grantStoreCredit"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/repayments": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /**
+         * Record money a customer pays back
+         * @description **Idempotent via `Idempotency-Key`** (required). OWNER or ASSISTANT (spec R9).
+         *
+         *     In one transaction, under the customer's row lock, the balance owed falls by `amountKobo`,
+         *     a `REPAYMENT` ledger entry is written pointing at the repayment, and the money is allocated
+         *     to the customer's oldest unpaid credit sales first. A repayment above the balance owed at
+         *     that moment is 409 `REPAYMENT_EXCEEDS_BALANCE`, so two parallel repayments that together
+         *     exceed it can't both succeed, and the balance never goes below zero. A replay of the same
+         *     key and body by the same user returns the original 201; another body or user is 422.
+         */
+        post: operations["recordRepayment"];
         delete?: never;
         options?: never;
         head?: never;
@@ -423,7 +489,7 @@ export interface components {
              *     `INTERNAL_ERROR` (500) means an unexpected failure; quote the `requestId` when reporting it.
              * @enum {string}
              */
-            code: "VALIDATION_FAILED" | "UNAUTHENTICATED" | "FORBIDDEN" | "NOT_FOUND" | "DUPLICATE_REFERENCE" | "INSUFFICIENT_STOCK" | "STOCK_LIMIT_EXCEEDED" | "IDEMPOTENCY_KEY_REUSED" | "SALE_ALREADY_REVERSED" | "INVALID_AUTHORIZATION_CODE" | "AUTHORIZATION_EXPIRED" | "AUTHORIZATION_ALREADY_USED" | "AUTHORIZATION_SALE_MISMATCH" | "REVERSAL_MANUAL_REVIEW_REQUIRED" | "REVERSAL_CONFLICT" | "DATABASE_UNAVAILABLE" | "INTERNAL_ERROR";
+            code: "VALIDATION_FAILED" | "UNAUTHENTICATED" | "FORBIDDEN" | "NOT_FOUND" | "DUPLICATE_REFERENCE" | "INSUFFICIENT_STOCK" | "STOCK_LIMIT_EXCEEDED" | "REPAYMENT_EXCEEDS_BALANCE" | "VERSION_CONFLICT" | "PRECONDITION_REQUIRED" | "IDEMPOTENCY_KEY_REUSED" | "SALE_ALREADY_REVERSED" | "INVALID_AUTHORIZATION_CODE" | "AUTHORIZATION_EXPIRED" | "AUTHORIZATION_ALREADY_USED" | "AUTHORIZATION_SALE_MISMATCH" | "REVERSAL_MANUAL_REVIEW_REQUIRED" | "REVERSAL_CONFLICT" | "DATABASE_UNAVAILABLE" | "INTERNAL_ERROR";
             /** Format: uuid */
             requestId: string;
             errors?: {
@@ -659,6 +725,44 @@ export interface components {
                 createdAt: string;
             }[];
         };
+        /** @description Only the fields sent change. Quantity is not editable here. */
+        ProductUpdate: {
+            reference?: string;
+            name?: string;
+            category?: string;
+            priceKobo?: components["schemas"]["Kobo"];
+            /** Format: int32 */
+            lowStockThreshold?: number;
+            /** @description false archives the product (it leaves the sale screen but keeps its history). */
+            active?: boolean;
+        };
+        RepaymentCreate: {
+            /** Format: uuid */
+            customerId: string;
+            amountKobo: components["schemas"]["Kobo"];
+            note?: string;
+        };
+        Repayment: {
+            /** Format: uuid */
+            id: string;
+            /** Format: uuid */
+            customerId: string;
+            amountKobo: components["schemas"]["Kobo"];
+            /** @description What the customer owed right after this repayment. */
+            balanceAfterKobo: components["schemas"]["Kobo"];
+            note?: string;
+            /** Format: uuid */
+            createdBy: string;
+            /** Format: date-time */
+            createdAt: string;
+        };
+        /** @enum {string} */
+        StoreCreditReason: "RETURN_REFUND" | "ADVANCE_DEPOSIT" | "CHANGE_SHORTAGE" | "LOYALTY_REWARD" | "MANUAL_ADJUSTMENT";
+        StoreCreditGrantCreate: {
+            amountKobo: components["schemas"]["Kobo"];
+            reason: components["schemas"]["StoreCreditReason"];
+            note?: string;
+        };
         CustomerCreate: {
             displayName: string;
             /** @description Fictional contact text only (demonstration data). */
@@ -712,6 +816,14 @@ export interface components {
              */
             dueDate?: string;
             lines: components["schemas"]["SaleLineCreate"][];
+            /**
+             * @description Draw the customer's store credit against this sale (R12, DM73). Requires `customerId`.
+             *     Omitted means false. The service decides the amount, `min(storeCreditKobo, totalKobo)`,
+             *     under the customer's row lock, so two tills can't spend the same credit; it is 0 when
+             *     none is left. A CREDIT sale owes only the remainder. Changing it on a retry with the
+             *     same key is a different body (422).
+             */
+            useStoreCredit?: boolean;
         };
         SaleLine: {
             /** Format: uuid */
@@ -745,6 +857,12 @@ export interface components {
             reversalReason?: components["schemas"]["ReversalReason"];
             reversalNotes?: string;
             unpaidKobo?: components["schemas"]["Kobo"];
+            /**
+             * @description Part of `totalKobo` paid from the customer's store credit; 0 when none was used. The
+             *     customer pays, or owes for a CREDIT sale, `totalKobo - storeCreditAppliedKobo`. Always
+             *     returned by the service; not in `required` so earlier clients and mocks stay valid.
+             */
+            storeCreditAppliedKobo?: components["schemas"]["Kobo"];
         };
         SalePage: {
             items: components["schemas"]["Sale"][];
@@ -1066,6 +1184,74 @@ export interface operations {
             404: components["responses"]["NotFound"];
         };
     };
+    updateProduct: {
+        parameters: {
+            query?: never;
+            header: {
+                /** @description Client-generated UUID used to trace one action across both tiers. */
+                "X-Request-Id"?: components["parameters"]["RequestId"];
+                /** @description The product version being edited, from the `ETag`. */
+                "If-Match": string;
+            };
+            path: {
+                productId: components["parameters"]["ProductId"];
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["ProductUpdate"];
+            };
+        };
+        responses: {
+            /** @description The updated product */
+            200: {
+                headers: {
+                    "X-Request-Id": components["headers"]["RequestId"];
+                    /** @description The new version. */
+                    ETag?: string;
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["Product"];
+                };
+            };
+            400: components["responses"]["BadRequest"];
+            401: components["responses"]["Unauthorized"];
+            403: components["responses"]["Forbidden"];
+            404: components["responses"]["NotFound"];
+            /** @description `DUPLICATE_REFERENCE`: another product already uses that reference; nothing changed. */
+            409: {
+                headers: {
+                    "X-Request-Id": components["headers"]["RequestId"];
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/problem+json": components["schemas"]["Problem"];
+                };
+            };
+            /** @description `VERSION_CONFLICT`: the product changed since the client read it; nothing changed. Reload it. */
+            412: {
+                headers: {
+                    "X-Request-Id": components["headers"]["RequestId"];
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/problem+json": components["schemas"]["Problem"];
+                };
+            };
+            /** @description `PRECONDITION_REQUIRED`: `If-Match` is missing or not a version. */
+            428: {
+                headers: {
+                    "X-Request-Id": components["headers"]["RequestId"];
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/problem+json": components["schemas"]["Problem"];
+                };
+            };
+        };
+    };
     listProductMovements: {
         parameters: {
             query?: {
@@ -1347,6 +1533,106 @@ export interface operations {
             400: components["responses"]["BadRequest"];
             401: components["responses"]["Unauthorized"];
             404: components["responses"]["NotFound"];
+        };
+    };
+    grantStoreCredit: {
+        parameters: {
+            query?: never;
+            header: {
+                /** @description Client-generated UUID used to trace one action across both tiers. */
+                "X-Request-Id"?: components["parameters"]["RequestId"];
+                /** @description Client-generated UUID, one per user attempt; reused on retry. */
+                "Idempotency-Key": components["parameters"]["IdempotencyKey"];
+            };
+            path: {
+                customerId: components["parameters"]["CustomerId"];
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["StoreCreditGrantCreate"];
+            };
+        };
+        responses: {
+            /** @description The customer with their new store credit */
+            200: {
+                headers: {
+                    "X-Request-Id": components["headers"]["RequestId"];
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["Customer"];
+                };
+            };
+            400: components["responses"]["BadRequest"];
+            401: components["responses"]["Unauthorized"];
+            403: components["responses"]["Forbidden"];
+            404: components["responses"]["NotFound"];
+            /** @description `IDEMPOTENCY_KEY_REUSED`: this key was already used with a different request body or by another user. */
+            422: {
+                headers: {
+                    "X-Request-Id": components["headers"]["RequestId"];
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/problem+json": components["schemas"]["Problem"];
+                };
+            };
+        };
+    };
+    recordRepayment: {
+        parameters: {
+            query?: never;
+            header: {
+                /** @description Client-generated UUID used to trace one action across both tiers. */
+                "X-Request-Id"?: components["parameters"]["RequestId"];
+                /** @description Client-generated UUID, one per user attempt; reused on retry. */
+                "Idempotency-Key": components["parameters"]["IdempotencyKey"];
+            };
+            path?: never;
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["RepaymentCreate"];
+            };
+        };
+        responses: {
+            /** @description Repayment recorded (or the original result of a replayed key) */
+            201: {
+                headers: {
+                    "X-Request-Id": components["headers"]["RequestId"];
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["Repayment"];
+                };
+            };
+            400: components["responses"]["BadRequest"];
+            401: components["responses"]["Unauthorized"];
+            403: components["responses"]["Forbidden"];
+            404: components["responses"]["NotFound"];
+            /** @description `REPAYMENT_EXCEEDS_BALANCE`: more than the customer owes right now; nothing was recorded. `errors` gives the balance. */
+            409: {
+                headers: {
+                    "X-Request-Id": components["headers"]["RequestId"];
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/problem+json": components["schemas"]["Problem"];
+                };
+            };
+            /** @description `IDEMPOTENCY_KEY_REUSED`: this key was already used with a different request body or by another user. */
+            422: {
+                headers: {
+                    "X-Request-Id": components["headers"]["RequestId"];
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/problem+json": components["schemas"]["Problem"];
+                };
+            };
         };
     };
     getDashboard: {

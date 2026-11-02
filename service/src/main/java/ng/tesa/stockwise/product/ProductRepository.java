@@ -75,6 +75,56 @@ public class ProductRepository {
         return findById(id).orElseThrow();
     }
 
+    /**
+     * R1, R18: applies the changes only if the product is still at {@code expectedVersion}, in one
+     * guarded UPDATE, and returns the updated product. Fields left null keep their value. Nothing
+     * is read first: a concurrent edit or sale moves the version and this update matches no row.
+     * Empty means the product does not exist; a version mismatch is {@link Product.VersionConflict}.
+     * A taken reference is refused by {@code product_reference_uq}.
+     */
+    @Transactional
+    public Optional<Product> update(UUID id, int expectedVersion, Product.Changes changes) {
+        Optional<UUID> updated;
+        try {
+            updated = jdbc.sql("""
+                            UPDATE product
+                            SET reference           = coalesce(CAST(:reference AS text), reference),
+                                name                = coalesce(CAST(:name AS text), name),
+                                category            = coalesce(CAST(:category AS text), category),
+                                price_kobo          = coalesce(CAST(:price AS bigint), price_kobo),
+                                low_stock_threshold = coalesce(CAST(:threshold AS integer), low_stock_threshold),
+                                active              = coalesce(CAST(:active AS boolean), active),
+                                version             = version + 1,
+                                updated_at          = now()
+                            WHERE id = :id AND version = :version
+                            RETURNING id
+                            """)
+                    .param("reference", changes.reference() == null ? null : changes.reference().trim())
+                    .param("name", changes.name() == null ? null : changes.name().trim())
+                    .param("category", changes.category() == null ? null : changes.category().trim())
+                    .param("price", changes.priceKobo())
+                    .param("threshold", changes.lowStockThreshold())
+                    .param("active", changes.active())
+                    .param("id", id)
+                    .param("version", expectedVersion)
+                    .query(UUID.class)
+                    .optional();
+        } catch (DuplicateKeyException e) {
+            if (e.getMessage() != null && e.getMessage().contains("product_reference_uq")) {
+                throw new Product.DuplicateReference(changes.reference().trim());
+            }
+            throw e;
+        }
+        if (updated.isPresent()) {
+            return findById(id);
+        }
+        Optional<Product> current = findById(id);
+        if (current.isPresent()) {
+            throw new Product.VersionConflict(current.get().version());
+        }
+        return Optional.empty();
+    }
+
     public Optional<Product> findById(UUID id) {
         return jdbc.sql("SELECT " + COLUMNS + " FROM product WHERE id = :id")
                 .param("id", id)

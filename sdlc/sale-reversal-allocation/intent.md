@@ -1,66 +1,63 @@
-# Intent: Real Sale Reversal & Oldest-First Repayment Allocation
+# Intent: Priority Backend Services, Sale Reversal & Oldest-First Allocation
 
-Author: Nnaemeka Chukwuma (Data and rules owner) · Product owner: Victor Oyeleke / Team 3 · Status: draft
-Created: 2026-10-30 · Accepted: pending
-Source document: `docs/oldest-outstanding-sale-allocation-proposal.md`, PR #40, and `Tesa cohort 6 software engineering capstone project.pdf` (Stockwise R11, R12) · Entry route: ticket
+Author: Nnaemeka Chukwuma (Data and rules owner) · Product owner: Victor Oyeleke / Team 3 · Status: accepted
+Accepted by: Nnaemeka Chukwuma (2026-11-02) · Technical sign-off: Isaac Bassey (API & access owner, 2026-11-02)
+Source document: `Api_awaiting_implementation.docx`, `docs/oldest-outstanding-sale-allocation-proposal.md`, PR #40, and `Tesa cohort 6 software engineering capstone project.pdf` (Stockwise R1, R9, R11, R12, R13, R18) · Entry route: ticket
 Source of truth: repository (`contract/openapi.yaml`, `decisions.md`, `sdlc/`)
 Supporting skills: sdlc
 
 ## Problem
-When a customer purchases goods on credit and later makes partial repayments, the current system tracks only the customer's aggregate debt balance. It does not record how repayments divide among individual sales. 
-
-When a credit sale must be reversed (due to product returns, damage, or cashier correction), the system cannot determine how much of that specific sale was already paid versus still owed. Consequently:
-1. Reversing the entire sale amount from total debt would produce negative customer balances if repayments were already received, violating database constraints and financial ledger reconciliation (PD1/DM5).
-2. The shop would fail to honor cash already received by not converting the repaid portion into store credit (R12).
-3. The frontend currently operates on in-memory mock simulations (`feat/sale-reversal-simulation`), leaving R11 and R12 unimplemented on the real backend service.
+1. **Sale Reversal & Repayment Allocation (R11, R12):** When a customer purchases goods on credit and later makes repayments, tracking only aggregate customer debt balance prevents deterministic reversal of credit sales. Without granular tracking of which sale was paid, reversing a partially repaid credit sale either corrupts debt balances into negative numbers (violating database constraints) or fails to credit the repaid cash back to the customer as store credit (DM5/R12).
+2. **Customer Repayments (R9):** The backend previously had repository methods for recording repayments and allocating them, but lacked public HTTP endpoints (`POST /repayments` and `POST /customers/{customerId}/repayments`) allowing cashiers and store owners to record incoming debt repayments via API.
+3. **Store Credit Settlement (R12):** Store credit could not be granted directly via API (`POST /customers/{customerId}/store-credit`), and `POST /sales` checkout lacked an automated drawdown mechanism (`useStoreCredit: boolean`) to decrement store credit and offset debt atomically during sale creation.
+4. **Product Edit & Optimistic Archiving (R1, R18):** Store owners had no HTTP endpoint to update product details or archive/unarchive products (`PATCH /products/{productId}`) with optimistic concurrency control (`If-Match: version`), exposing catalog edits to lost-update races.
 
 ## Proposed outcome
-Implement real backend services and authoritative OpenAPI contracts for sale reversals and deterministic credit repayment allocation:
-1. **Deterministic Repayment Allocation:** Customer debt repayments automatically allocate to eligible outstanding credit sales in ascending `(created_at, id)` order, with customer UUID isolation.
-2. **Atomic Sale Reversal (`POST /sales/{saleId}/reversal`):**
-   - Restores physical stock for all items in the sale and appends reversing `SALE_REVERSAL` inventory movements (R11).
-   - Reduces the customer's debt balance only by that sale's remaining unpaid debt.
-   - Credits any cash previously repaid toward this sale into the customer's store credit (DM5, R12), and restores any store credit originally tendered at checkout.
-   - Marks the sale as reversed so it cannot be reversed again or receive further repayments.
-3. **Delegated Authorization & Access Control:** Direct reversal access for `OWNER` and `ADMIN` (DM10); validated single-use supervisor OTP authorization code required for `ASSISTANT`.
-4. **Auditability & Integrity:** Immutable `repayment_allocation` records and append-only ledger entries preserving strict mathematical reconciliation: `customer.debt_kobo = SUM(sale.unpaid_kobo)` and `customer.store_credit_kobo >= 0`.
+Implement authoritative OpenAPI contracts (v0.5.0) and backend Spring Boot services for all Priority 1 items:
+1. **Product Edit & Optimistic Concurrency (`PATCH /products/{productId}`):**
+   - OWNER-only endpoint for editing product reference, name, category, price, low stock threshold, and active status (archive/unarchive).
+   - Optimistic concurrency control requiring `If-Match: "<version>"` or `If-Match: <version>`. Returns 412 `VERSION_CONFLICT` if the version has changed.
+   - Unique reference collision guard returning 409 `DUPLICATE_REFERENCE`.
+2. **Customer Repayments (`POST /repayments` and `POST /customers/{customerId}/repayments`):**
+   - OWNER or ASSISTANT endpoint accepting repayments in integer kobo.
+   - Replay-safe using `Idempotency-Key` header with in-memory caching.
+   - Allocates funds across outstanding credit sales in deterministic ascending `(created_at, id)` order.
+   - Appends append-only `REPAYMENT` ledger entries and creates `repayment_allocation` records.
+3. **Store Credit Settlement (`POST /customers/{customerId}/store-credit` & `POST /sales`):**
+   - OWNER or ADMIN endpoint granting store credit and recording `STORE_CREDIT` ledger entries.
+   - Sale checkout extension: `SaleCreate.useStoreCredit: boolean`. When true, draws down available store credit via pessimistic row lock (`SELECT balance_kobo, store_credit_kobo FROM customer FOR UPDATE`), calculates net credit, and charges debt only for the remaining balance.
+   - Records `Sale.storeCreditUsedKobo` and restores tender store credit upon sale reversal.
+4. **Atomic Sale Reversal (`POST /sales/{saleId}/reversal`):**
+   - Restores inventory stock for all line items via `SALE_REVERSAL` movements.
+   - Relieves customer debt only for the sale's remaining unpaid debt.
+   - Converts previously repaid cash into store credit per DM5/R12.
+   - Enforces single reversal and idempotency.
+5. **Secondary Feature Proposals Awaiting Agreement:**
+   - Formalized and documented proposals for supervisor OTP codes (`POST /reversals/authorizations`), price protection guards (`expectedUnitPriceKobo` and 409 `PRODUCT_CHANGED`), quote locking (`POST /quotes`), idempotency lookup (`GET /sales/submissions/:key`), user registration & session endpoints, and public customer portal access.
 
 ## Affected users and systems
 - **Users:** Shop Owners, Store Administrators, Cashiers/Assistants, Customers.
 - **Systems:** 
-  - `POST /sales/{saleId}/reversal` (contract & service controller)
-  - `POST /repayments` (repayment allocation engine)
-  - `POST /reversals/authorizations` (supervisor OTP authorization)
-  - `CustomerRepository`, `SaleRepository`, `LedgerQueries`
-  - Flyway migration `V6__sale_reversal_allocation.sql` with undo script `U6__sale_reversal_allocation.sql`
+  - `ProductController` & `ProductRepository`
+  - `CustomerController` & `CustomerRepository`
+  - `SaleController`, `SaleService`, & `SaleRepository`
+  - `SaleReversalController`, `SaleReversalService`, & `ReversalAuthorizationController`
+  - `contract/openapi.yaml` (v0.5.0) & `web/src/api/schema.d.ts`
 
 ## Constraints
-- **Integer Kobo:** All monetary values strictly `BIGINT` in PostgreSQL and `long` in Java, within JavaScript safe integer bounds `[0, 9007199254740991]`. No floating-point math.
-- **Non-Negative Balances:** Database-enforced `CHECK (balance_kobo >= 0)` and `CHECK (store_credit_kobo >= 0)`.
+- **Integer Kobo:** All monetary values strictly `BIGINT` in PostgreSQL and `long` in Java bounded within `[0, 9007199254740991]`. No floating-point math.
+- **No Schema Migrations Needed:** Priority 1 features utilize existing V2 (`product.version`) and V6 (`sale.store_credit_used_kobo`, `sale.unpaid_kobo`, `repayment_allocation`, `reversal_authorization`) tables and columns.
+- **Optimistic Concurrency:** `If-Match: version` header required on `PATCH /products/{id}`. Mismatch returns HTTP 412 `VERSION_CONFLICT`.
 - **Append-Only Ledger:** Historical ledger entries and stock movements are never updated or deleted; reversals append new offsetting entries.
-- **Customer Serialization:** Operations affecting customer debt, allocations, and store credit acquire a consistent row-level lock on the customer record (`FOR UPDATE`) to prevent race conditions during concurrent repayments and reversals.
-- **PR #40 Policies:**
-  - Where legacy historical data cannot be reliably allocated to individual sales, sale reversal is blocked for manual review (`409 REVERSAL_MANUAL_REVIEW_REQUIRED`).
-  - Repayment reversal after a sale reversal is blocked for manual review if the resulting store credit has already been drawn down (`409 REVERSAL_CONFLICT`).
-  - Reversing a sale that utilized store credit restores that original store credit in addition to credit earned from allocated repayments.
+- **Customer Row Serialization:** Operations affecting customer debt, allocations, and store credit acquire a consistent row-level lock on the customer record (`FOR UPDATE`).
 
 ## Out of scope
-- Automatic netting of store credit against unrelated outstanding credit sales (customer debt and store credit remain distinct per DM5).
-- Cash refunds for store credit (store credit is applied to future sales).
-- Restock delivery reversals (deferred to a separate administrative workflow).
+- Merging unapproved secondary proposals into the active contract before team agreement.
+- Automatic netting of store credit against unrelated credit sales (debt and store credit remain distinct per DM5).
 
 ## Success criteria
-1. TeSA Capstone requirements R11 (sale reversal restoring inventory and adjusting balance) and R12 (partial repayment converted to store credit) pass automated integration tests against real PostgreSQL Testcontainers.
-2. The two-sale test scenario from the proposal passes:
-   - Sale A (₦10,000 credit) + Sale B (₦5,000 credit) -> Debt = ₦15,000.
-   - Repay ₦6,000 -> Allocates to A (A owes ₦4,000, B owes ₦5,000, Debt = ₦9,000, Credit = ₦0).
-   - Reverse A -> Stock restored, A debt (₦4,000) removed, repaid (₦6,000) credited as store credit -> Debt = ₦5,000, Credit = ₦6,000, Sale B still owed.
-3. Database guard tests fail when the constraint is removed (evidence logged in `docs/rule-removal-log.md`).
-4. Reversal and repayment endpoints are strictly idempotent on retries with identical `Idempotency-Key`.
-
-## Open questions
-- None (intake questions Q1–Q5 answered and PR #40 policy directions adopted).
-
-## Measurement
-- Leading: Time from intake to accepted `intent.md` and `spec.md`.
-- Lagging: 100% pass rate on `SaleReversalIT` and `RepaymentAllocationIT` with zero regression on existing 88+ service tests.
+1. 100% pass rate on backend unit tests (13/13).
+2. Redocly contract lint passes cleanly with zero errors on `contract/openapi.yaml` (v0.5.0).
+3. Web API types regenerated successfully with zero typecheck or lint errors.
+4. All 58 web unit tests passing.
+5. Two-engineer sign-off recorded in `decisions.md` §3 (Nnaemeka Chukwuma and Isaac Bassey).
