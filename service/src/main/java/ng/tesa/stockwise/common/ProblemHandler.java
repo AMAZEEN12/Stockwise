@@ -28,6 +28,7 @@ import org.springframework.web.method.annotation.HandlerMethodValidationExceptio
 import org.springframework.web.method.annotation.MethodArgumentTypeMismatchException;
 
 import ng.tesa.stockwise.config.RequestIdFilter;
+import ng.tesa.stockwise.customer.RepaymentExceedsBalance;
 import ng.tesa.stockwise.product.Product;
 import ng.tesa.stockwise.restock.RestockExceptions;
 import ng.tesa.stockwise.sale.SaleExceptions;
@@ -114,6 +115,33 @@ public class ProblemHandler {
     ResponseEntity<Problem> referenceNotFound(SaleExceptions.ReferenceNotFound e, HttpServletRequest request) {
         return problem(request, ErrorCode.NOT_FOUND, e.getMessage(),
                 List.of(new Problem.FieldError(e.field(), "not found")));
+    }
+
+    // Product edit and archive (R1, R18).
+
+    @ExceptionHandler(Product.VersionConflict.class)
+    ResponseEntity<Problem> versionConflict(Product.VersionConflict e, HttpServletRequest request) {
+        return problem(request, ErrorCode.VERSION_CONFLICT, e.getMessage(), null);
+    }
+
+    @ExceptionHandler(Product.VersionRequired.class)
+    ResponseEntity<Problem> versionRequired(Product.VersionRequired e, HttpServletRequest request) {
+        return problem(request, ErrorCode.PRECONDITION_REQUIRED, e.getMessage(),
+                List.of(new Problem.FieldError("If-Match", "is required")));
+    }
+
+    @ExceptionHandler(Product.NoChanges.class)
+    ResponseEntity<Problem> noChanges(Product.NoChanges e, HttpServletRequest request) {
+        return problem(request, ErrorCode.VALIDATION_FAILED, e.getMessage(),
+                List.of(new Problem.FieldError("body", "has no field to change")));
+    }
+
+    // Repayments (R9).
+
+    @ExceptionHandler(RepaymentExceedsBalance.class)
+    ResponseEntity<Problem> repaymentExceedsBalance(RepaymentExceedsBalance e, HttpServletRequest request) {
+        return problem(request, ErrorCode.REPAYMENT_EXCEEDS_BALANCE, e.getMessage(),
+                List.of(new Problem.FieldError("amountKobo", "balanceKobo: " + e.balanceKobo())));
     }
 
     @ExceptionHandler(Product.DuplicateReference.class)

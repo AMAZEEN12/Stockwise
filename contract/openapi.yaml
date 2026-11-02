@@ -1,7 +1,7 @@
 openapi: 3.1.0
 info:
   title: Stockwise API
-  version: 0.4.0
+  version: 0.5.0
   summary: Stock and customer-credit ledger for one demonstration shop (TeSA Cohort 6, Team 3).
   description: |
     Contract v0.1 covers the **Monday 26 Oct MVP paths only** (EXECUTION.md step 2).
@@ -17,9 +17,12 @@ info:
     v0.4.0 adds real sale reversals and supervisor authorizations (R11, R12):
     - `POST /sales/{saleId}/reversal`, idempotent via required `Idempotency-Key`, restoring inventory, relieving debt, and crediting repaid amounts to store credit;
     - `POST /reversals/authorizations`, OWNER/ADMIN single-use 6-digit OTP codes.
-    A v0.1.0 client keeps working unchanged.
-    Remaining paths (repayments, product edit/archive) are added in later versions,
-    each logged in `decisions.md` §3.
+    v0.5.0 closes the paths the web screens already call (R1, R9, R12, R18; DM73, DM74):
+    - `PATCH /products/{productId}`, OWNER-only edit, archive and unarchive with `If-Match`;
+    - `POST /repayments`, OWNER or ASSISTANT, idempotent via a required `Idempotency-Key`;
+    - `POST /customers/{customerId}/store-credit`, OWNER or ADMIN, idempotent;
+    - optional `useStoreCredit` on `POST /sales` and `storeCreditAppliedKobo` on `Sale`.
+    A v0.1.0 client keeps working unchanged. Every change is logged in `decisions.md` §3.
 
     Conventions:
     - Every money field is an integer number of **kobo** (`x-unit: kobo`). ₦450.00 is `45000`.
@@ -250,6 +253,95 @@ paths:
           $ref: '#/components/responses/Unauthorized'
         '404':
           $ref: '#/components/responses/NotFound'
+    patch:
+      tags: [products]
+      operationId: updateProduct
+      summary: Edit, archive or unarchive a product
+      description: |
+        **Idempotent with `If-Match`.** OWNER only (spec R1, R18). Send only the fields to change;
+        an archive is `{"active": false}`. Quantity is not editable here: stock changes only
+        through sales, restocks and reversals, so it always equals the sum of the movements.
+
+        `If-Match` must carry the version the client edited, as `GET /products/{productId}` gave it
+        in its `ETag` (`"7"`, `W/"7"` and `7` are all accepted). The update happens only if the
+        product is still at that version, in one guarded statement; otherwise 412
+        `VERSION_CONFLICT` and nothing changes. The version also moves when stock changes (a sale or
+        a restock), so a screen must reload the product after a 412. The response carries the new
+        `ETag`. Without a usable `If-Match`: 428 `PRECONDITION_REQUIRED`.
+      parameters:
+        - $ref: '#/components/parameters/RequestId'
+        - $ref: '#/components/parameters/ProductId'
+        - name: If-Match
+          in: header
+          required: true
+          description: The product version being edited, from the `ETag`.
+          schema:
+            type: string
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/ProductUpdate'
+            examples:
+              archive:
+                summary: Archive a product
+                value:
+                  active: false
+              edit:
+                summary: Change the price and threshold
+                value:
+                  priceKobo: 125000
+                  lowStockThreshold: 4
+      responses:
+        '200':
+          description: The updated product
+          headers:
+            X-Request-Id:
+              $ref: '#/components/headers/RequestId'
+            ETag:
+              description: The new version.
+              schema:
+                type: string
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Product'
+        '400':
+          $ref: '#/components/responses/BadRequest'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '403':
+          $ref: '#/components/responses/Forbidden'
+        '404':
+          $ref: '#/components/responses/NotFound'
+        '409':
+          description: '`DUPLICATE_REFERENCE`: another product already uses that reference; nothing changed.'
+          headers:
+            X-Request-Id:
+              $ref: '#/components/headers/RequestId'
+          content:
+            application/problem+json:
+              schema:
+                $ref: '#/components/schemas/Problem'
+        '412':
+          description: '`VERSION_CONFLICT`: the product changed since the client read it; nothing changed. Reload it.'
+          headers:
+            X-Request-Id:
+              $ref: '#/components/headers/RequestId'
+          content:
+            application/problem+json:
+              schema:
+                $ref: '#/components/schemas/Problem'
+        '428':
+          description: '`PRECONDITION_REQUIRED`: `If-Match` is missing or not a version.'
+          headers:
+            X-Request-Id:
+              $ref: '#/components/headers/RequestId'
+          content:
+            application/problem+json:
+              schema:
+                $ref: '#/components/schemas/Problem'
 
   /products/{productId}/movements:
     get:
@@ -548,6 +640,117 @@ paths:
           $ref: '#/components/responses/Unauthorized'
         '404':
           $ref: '#/components/responses/NotFound'
+
+  /customers/{customerId}/store-credit:
+    post:
+      tags: [customers]
+      operationId: grantStoreCredit
+      summary: Add store credit by hand
+      description: |
+        **Idempotent via `Idempotency-Key`** (required). OWNER or ADMIN (DM74).
+
+        Adds `amountKobo` to the customer's store credit and writes a `STORE_CREDIT` ledger entry
+        pointing at the grant, in one transaction; the balance owed does not change. `reason` is
+        required so every grant can be explained later. A replay of the same key and body by the
+        same user returns the customer without adding again; another body or user is 422.
+        Store credit created by reversing a sale (DM5) needs no grant.
+      parameters:
+        - $ref: '#/components/parameters/RequestId'
+        - $ref: '#/components/parameters/CustomerId'
+        - $ref: '#/components/parameters/IdempotencyKey'
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/StoreCreditGrantCreate'
+      responses:
+        '200':
+          description: The customer with their new store credit
+          headers:
+            X-Request-Id:
+              $ref: '#/components/headers/RequestId'
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Customer'
+        '400':
+          $ref: '#/components/responses/BadRequest'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '403':
+          $ref: '#/components/responses/Forbidden'
+        '404':
+          $ref: '#/components/responses/NotFound'
+        '422':
+          description: '`IDEMPOTENCY_KEY_REUSED`: this key was already used with a different request body or by another user.'
+          headers:
+            X-Request-Id:
+              $ref: '#/components/headers/RequestId'
+          content:
+            application/problem+json:
+              schema:
+                $ref: '#/components/schemas/Problem'
+
+  /repayments:
+    post:
+      tags: [customers]
+      operationId: recordRepayment
+      summary: Record money a customer pays back
+      description: |
+        **Idempotent via `Idempotency-Key`** (required). OWNER or ASSISTANT (spec R9).
+
+        In one transaction, under the customer's row lock, the balance owed falls by `amountKobo`,
+        a `REPAYMENT` ledger entry is written pointing at the repayment, and the money is allocated
+        to the customer's oldest unpaid credit sales first. A repayment above the balance owed at
+        that moment is 409 `REPAYMENT_EXCEEDS_BALANCE`, so two parallel repayments that together
+        exceed it can't both succeed, and the balance never goes below zero. A replay of the same
+        key and body by the same user returns the original 201; another body or user is 422.
+      parameters:
+        - $ref: '#/components/parameters/RequestId'
+        - $ref: '#/components/parameters/IdempotencyKey'
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/RepaymentCreate'
+      responses:
+        '201':
+          description: Repayment recorded (or the original result of a replayed key)
+          headers:
+            X-Request-Id:
+              $ref: '#/components/headers/RequestId'
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Repayment'
+        '400':
+          $ref: '#/components/responses/BadRequest'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '403':
+          $ref: '#/components/responses/Forbidden'
+        '404':
+          $ref: '#/components/responses/NotFound'
+        '409':
+          description: '`REPAYMENT_EXCEEDS_BALANCE`: more than the customer owes right now; nothing was recorded. `errors` gives the balance.'
+          headers:
+            X-Request-Id:
+              $ref: '#/components/headers/RequestId'
+          content:
+            application/problem+json:
+              schema:
+                $ref: '#/components/schemas/Problem'
+        '422':
+          description: '`IDEMPOTENCY_KEY_REUSED`: this key was already used with a different request body or by another user.'
+          headers:
+            X-Request-Id:
+              $ref: '#/components/headers/RequestId'
+          content:
+            application/problem+json:
+              schema:
+                $ref: '#/components/schemas/Problem'
 
   /dashboard:
     get:
@@ -1009,6 +1212,9 @@ components:
             - DUPLICATE_REFERENCE
             - INSUFFICIENT_STOCK
             - STOCK_LIMIT_EXCEEDED
+            - REPAYMENT_EXCEEDS_BALANCE
+            - VERSION_CONFLICT
+            - PRECONDITION_REQUIRED
             - IDEMPOTENCY_KEY_REUSED
             - SALE_ALREADY_REVERSED
             - INVALID_AUTHORIZATION_CODE
@@ -1432,6 +1638,91 @@ components:
               createdAt:
                 type: string
                 format: date-time
+    ProductUpdate:
+      type: object
+      additionalProperties: false
+      minProperties: 1
+      description: Only the fields sent change. Quantity is not editable here.
+      properties:
+        reference:
+          type: string
+          minLength: 1
+          maxLength: 40
+        name:
+          type: string
+          minLength: 1
+          maxLength: 200
+        category:
+          type: string
+          minLength: 1
+          maxLength: 60
+        priceKobo:
+          $ref: '#/components/schemas/Kobo'
+        lowStockThreshold:
+          type: integer
+          format: int32
+          minimum: 0
+        active:
+          type: boolean
+          description: false archives the product (it leaves the sale screen but keeps its history).
+
+    RepaymentCreate:
+      type: object
+      required: [customerId, amountKobo]
+      additionalProperties: false
+      properties:
+        customerId:
+          type: string
+          format: uuid
+        amountKobo:
+          $ref: '#/components/schemas/Kobo'
+          minimum: 1
+        note:
+          type: string
+          maxLength: 200
+
+    Repayment:
+      type: object
+      required: [id, customerId, amountKobo, balanceAfterKobo, createdBy, createdAt]
+      properties:
+        id:
+          type: string
+          format: uuid
+        customerId:
+          type: string
+          format: uuid
+        amountKobo:
+          $ref: '#/components/schemas/Kobo'
+        balanceAfterKobo:
+          $ref: '#/components/schemas/Kobo'
+          description: What the customer owed right after this repayment.
+        note:
+          type: string
+        createdBy:
+          type: string
+          format: uuid
+        createdAt:
+          type: string
+          format: date-time
+
+    StoreCreditReason:
+      type: string
+      enum: [RETURN_REFUND, ADVANCE_DEPOSIT, CHANGE_SHORTAGE, LOYALTY_REWARD, MANUAL_ADJUSTMENT]
+
+    StoreCreditGrantCreate:
+      type: object
+      required: [amountKobo, reason]
+      additionalProperties: false
+      properties:
+        amountKobo:
+          $ref: '#/components/schemas/Kobo'
+          minimum: 1
+        reason:
+          $ref: '#/components/schemas/StoreCreditReason'
+        note:
+          type: string
+          maxLength: 200
+
     CustomerCreate:
       type: object
       required: [displayName]
@@ -1530,6 +1821,14 @@ components:
           maxItems: 50
           items:
             $ref: '#/components/schemas/SaleLineCreate'
+        useStoreCredit:
+          type: boolean
+          description: |
+            Draw the customer's store credit against this sale (R12, DM73). Requires `customerId`.
+            Omitted means false. The service decides the amount, `min(storeCreditKobo, totalKobo)`,
+            under the customer's row lock, so two tills can't spend the same credit; it is 0 when
+            none is left. A CREDIT sale owes only the remainder. Changing it on a retry with the
+            same key is a different body (422).
 
     SaleLine:
       type: object
@@ -1591,6 +1890,12 @@ components:
           type: string
         unpaidKobo:
           $ref: '#/components/schemas/Kobo'
+        storeCreditAppliedKobo:
+          $ref: '#/components/schemas/Kobo'
+          description: |
+            Part of `totalKobo` paid from the customer's store credit; 0 when none was used. The
+            customer pays, or owes for a CREDIT sale, `totalKobo - storeCreditAppliedKobo`. Always
+            returned by the service; not in `required` so earlier clients and mocks stay valid.
 
     SalePage:
       type: object

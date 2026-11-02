@@ -24,6 +24,11 @@ final class SaleRequestHash {
                 .collect(Collectors.joining(","));
         String canonical = String.join("|", "v1", String.valueOf(sale.paymentType()),
                 String.valueOf(sale.customerId()), String.valueOf(sale.dueDate()), lines);
+        // Added only when true, so a sale without store credit keeps the fingerprint it had before
+        // the field existed, and a retry that switches store credit on or off is a different body.
+        if (sale.useStoreCredit()) {
+            canonical += "|store-credit";
+        }
         try {
             byte[] digest = MessageDigest.getInstance("SHA-256").digest(canonical.getBytes(StandardCharsets.UTF_8));
             return HexFormat.of().formatHex(digest);

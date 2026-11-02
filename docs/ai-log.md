@@ -2,6 +2,14 @@
 
 Record actual AI use, human decisions and verification. Do not include credentials, tokens, passwords or real customer data.
 
+## 2026-11-02: Repayments, store credit, product edit and archive (R1, R9, R12, R18), and V8
+
+- Engineer and decision maker: Isaac Bassey (API and access). Assistant: Claude, used through a chat session; no AI runs in CI.
+- Human decisions: Isaac asked for Victor's "API awaiting implementation" list to be worked through before the presentation; he chose to build the three paths whose screens were already live in one PR, to leave the proposals (price guards, quotes, registration, portal) until after submission, and to fix the pre-V6 seed data in a migration.
+- Work: the assistant compared the list with main, drafted the contract (v0.5.0), V7, V8, the controllers, services and SQL, and the tests (`ProductEditIT`, `RepaymentApiIT`, `StoreCreditApiIT`, `StoreCreditIT`, one more `DashboardIT` case). Isaac applies, runs and commits them.
+- Checked-and-found-wrong: replaying production's migration order on a local Postgres 16 (V1 to V4, the seed, then V5 to V8) showed the seed's reversed sale had no `reversed_at` and that unpaid amounts were above every repaid customer's balance, so reversing a repaid seeded sale returned 500; V8 fixes the data. The store-credit draw was checked with three overlapping transactions (₦4,000, ₦2,000 and ₦0 drawn from ₦6,000). Numbers DM71 and DM72 were already taken, so the new rows are DM73 to DM75.
+- Verification: `redocly lint` valid; V7 and V8 applied, V7 undone and reapplied with an identical schema, V8 run twice with no further change; web types regenerated, typecheck, lint and 99 web unit tests green. The Java could not be compiled in the assistant's workspace (no Maven Central access); `mvnw verify` runs on Isaac's machine before the PR is opened.
+
 ## 2026-10-29: Movement history, customer ledger and dashboard (R13, R10, R14), and the v0.2.0 reviews
 
 - Engineer and decision maker: Isaac Bassey (API and access). Assistant: Claude, used through a chat session; no AI runs in CI.
