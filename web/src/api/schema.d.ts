@@ -105,7 +105,12 @@ export interface paths {
         delete?: never;
         options?: never;
         head?: never;
-        patch?: never;
+        /**
+         * Update product details or archive/unarchive (OWNER only)
+         * @description OWNER only. Optimistic concurrency control using `If-Match: "<version>"` or `If-Match: <version>`.
+         *     Returns 412 `VERSION_CONFLICT` if version does not match.
+         */
+        patch: operations["updateProduct"];
         trace?: never;
     };
     "/products/{productId}/movements": {
@@ -258,6 +263,68 @@ export interface paths {
         get: operations["getCustomerLedger"];
         put?: never;
         post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/customers/{customerId}/store-credit": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /**
+         * Issue store credit to a customer
+         * @description OWNER or ADMIN only. Credits customer store credit balance and appends a `STORE_CREDIT` ledger entry (R12).
+         *     Replay-safe with `Idempotency-Key`.
+         */
+        post: operations["issueStoreCredit"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/customers/{customerId}/repayments": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /**
+         * Record debt repayment for a specific customer
+         * @description OWNER or ASSISTANT. Convenient path equivalent to `POST /repayments` with `customerId` in the URL (R9, R13).
+         */
+        post: operations["recordCustomerRepayment"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/repayments": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /**
+         * Record customer debt repayment allocated oldest-first
+         * @description OWNER or ASSISTANT. Records customer cash repayment and allocates across oldest unpaid credit
+         *     sales in ascending `(created_at, id)` order (R9, R13). Replay-safe with `Idempotency-Key`.
+         */
+        post: operations["recordRepayment"];
         delete?: never;
         options?: never;
         head?: never;
@@ -423,7 +490,7 @@ export interface components {
              *     `INTERNAL_ERROR` (500) means an unexpected failure; quote the `requestId` when reporting it.
              * @enum {string}
              */
-            code: "VALIDATION_FAILED" | "UNAUTHENTICATED" | "FORBIDDEN" | "NOT_FOUND" | "DUPLICATE_REFERENCE" | "INSUFFICIENT_STOCK" | "STOCK_LIMIT_EXCEEDED" | "IDEMPOTENCY_KEY_REUSED" | "SALE_ALREADY_REVERSED" | "INVALID_AUTHORIZATION_CODE" | "AUTHORIZATION_EXPIRED" | "AUTHORIZATION_ALREADY_USED" | "AUTHORIZATION_SALE_MISMATCH" | "REVERSAL_MANUAL_REVIEW_REQUIRED" | "REVERSAL_CONFLICT" | "DATABASE_UNAVAILABLE" | "INTERNAL_ERROR";
+            code: "VALIDATION_FAILED" | "UNAUTHENTICATED" | "FORBIDDEN" | "NOT_FOUND" | "DUPLICATE_REFERENCE" | "VERSION_CONFLICT" | "INSUFFICIENT_STOCK" | "STOCK_LIMIT_EXCEEDED" | "IDEMPOTENCY_KEY_REUSED" | "SALE_ALREADY_REVERSED" | "INVALID_AUTHORIZATION_CODE" | "AUTHORIZATION_EXPIRED" | "AUTHORIZATION_ALREADY_USED" | "AUTHORIZATION_SALE_MISMATCH" | "REVERSAL_MANUAL_REVIEW_REQUIRED" | "REVERSAL_CONFLICT" | "DATABASE_UNAVAILABLE" | "INTERNAL_ERROR";
             /** Format: uuid */
             requestId: string;
             errors?: {
@@ -501,6 +568,20 @@ export interface components {
             size: number;
             /** Format: int64 */
             totalItems: number;
+        };
+        /**
+         * @description Fields to update on an existing product. All fields are optional; omitting a field leaves it unchanged.
+         *     Optimistic concurrency requires `If-Match: "<version>"`.
+         */
+        ProductUpdate: {
+            reference?: string;
+            name?: string;
+            category?: string;
+            priceKobo?: components["schemas"]["Kobo"];
+            /** Format: int32 */
+            lowStockThreshold?: number;
+            /** @description Set to false to archive the product, true to unarchive. */
+            active?: boolean;
         };
         RestockCreate: {
             /** Format: uuid */
@@ -692,6 +773,47 @@ export interface components {
              */
             asOf: string;
         };
+        /** @description Grant store credit to a customer (spec R12). */
+        StoreCreditGrantRequest: {
+            amountKobo: components["schemas"]["Kobo"];
+            reason: string;
+            note?: string;
+        };
+        /** @description Cash repayment allocated to outstanding credit sales oldest-first (spec R9, R13). */
+        RepaymentCreate: {
+            /** Format: uuid */
+            customerId: string;
+            amountKobo: components["schemas"]["Kobo"];
+        };
+        /** @description Amount for customer-specific repayment endpoint. */
+        RepaymentAmountRequest: {
+            amountKobo: components["schemas"]["Kobo"];
+        };
+        /** @description An allocation of repayment funds to an outstanding credit sale. */
+        RepaymentAllocationItem: {
+            /** Format: uuid */
+            id: string;
+            /** Format: uuid */
+            customerId: string;
+            /** Format: uuid */
+            saleId: string;
+            /** Format: uuid */
+            repaymentLedgerEntryId: string;
+            amountKobo: components["schemas"]["Kobo"];
+            /** Format: uuid */
+            createdBy: string;
+            /** Format: date-time */
+            createdAt: string;
+        };
+        RepaymentResponse: {
+            /** Format: uuid */
+            customerId: string;
+            amountKobo: components["schemas"]["Kobo"];
+            balanceAfterKobo: components["schemas"]["Kobo"];
+            allocations: components["schemas"]["RepaymentAllocationItem"][];
+            /** Format: date-time */
+            createdAt: string;
+        };
         SaleLineCreate: {
             /** Format: uuid */
             productId: string;
@@ -711,6 +833,8 @@ export interface components {
              * @description Optional; CREDIT sales only.
              */
             dueDate?: string;
+            /** @description Optional. If true and customerId is provided, draw down available customer store credit first. */
+            useStoreCredit?: boolean;
             lines: components["schemas"]["SaleLineCreate"][];
         };
         SaleLine: {
@@ -745,6 +869,7 @@ export interface components {
             reversalReason?: components["schemas"]["ReversalReason"];
             reversalNotes?: string;
             unpaidKobo?: components["schemas"]["Kobo"];
+            storeCreditUsedKobo?: components["schemas"]["Kobo"];
         };
         SalePage: {
             items: components["schemas"]["Sale"][];
@@ -842,6 +967,26 @@ export interface components {
                 "application/problem+json": components["schemas"]["Problem"];
             };
         };
+        /** @description `VERSION_CONFLICT`: the resource has been modified by another request; reload and retry with current version. */
+        PreconditionFailed: {
+            headers: {
+                "X-Request-Id": components["headers"]["RequestId"];
+                [name: string]: unknown;
+            };
+            content: {
+                "application/problem+json": components["schemas"]["Problem"];
+            };
+        };
+        /** @description `IDEMPOTENCY_KEY_REUSED`: this key was already used with a different request body */
+        IdempotencyKeyReused: {
+            headers: {
+                "X-Request-Id": components["headers"]["RequestId"];
+                [name: string]: unknown;
+            };
+            content: {
+                "application/problem+json": components["schemas"]["Problem"];
+            };
+        };
         /** @description `DATABASE_UNAVAILABLE`: the service is up but cannot reach the database. */
         ServiceUnavailable: {
             headers: {
@@ -865,6 +1010,8 @@ export interface components {
         /** @description Zero-based page number. */
         Page: number;
         Size: number;
+        /** @description Expected resource version for optimistic concurrency control (e.g. `1` or `"1"`). */
+        IfMatch: string;
     };
     requestBodies: never;
     headers: {
@@ -1064,6 +1211,55 @@ export interface operations {
             };
             401: components["responses"]["Unauthorized"];
             404: components["responses"]["NotFound"];
+        };
+    };
+    updateProduct: {
+        parameters: {
+            query?: never;
+            header: {
+                /** @description Client-generated UUID used to trace one action across both tiers. */
+                "X-Request-Id"?: components["parameters"]["RequestId"];
+                /** @description Expected resource version for optimistic concurrency control (e.g. `1` or `"1"`). */
+                "If-Match": components["parameters"]["IfMatch"];
+            };
+            path: {
+                productId: components["parameters"]["ProductId"];
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["ProductUpdate"];
+            };
+        };
+        responses: {
+            /** @description The updated product */
+            200: {
+                headers: {
+                    "X-Request-Id": components["headers"]["RequestId"];
+                    /** @description New product version */
+                    ETag?: string;
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["Product"];
+                };
+            };
+            400: components["responses"]["BadRequest"];
+            401: components["responses"]["Unauthorized"];
+            403: components["responses"]["Forbidden"];
+            404: components["responses"]["NotFound"];
+            /** @description `DUPLICATE_REFERENCE`: another product already has this reference */
+            409: {
+                headers: {
+                    "X-Request-Id": components["headers"]["RequestId"];
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/problem+json": components["schemas"]["Problem"];
+                };
+            };
+            412: components["responses"]["PreconditionFailed"];
         };
     };
     listProductMovements: {
@@ -1347,6 +1543,117 @@ export interface operations {
             400: components["responses"]["BadRequest"];
             401: components["responses"]["Unauthorized"];
             404: components["responses"]["NotFound"];
+        };
+    };
+    issueStoreCredit: {
+        parameters: {
+            query?: never;
+            header?: {
+                /** @description Client-generated UUID used to trace one action across both tiers. */
+                "X-Request-Id"?: components["parameters"]["RequestId"];
+                /** @description Optional client-generated UUID, one per user attempt; reuse it on retry to make the call safe to repeat. */
+                "Idempotency-Key"?: components["parameters"]["IdempotencyKeyOptional"];
+            };
+            path: {
+                customerId: components["parameters"]["CustomerId"];
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["StoreCreditGrantRequest"];
+            };
+        };
+        responses: {
+            /** @description Store credit issued and customer updated */
+            201: {
+                headers: {
+                    "X-Request-Id": components["headers"]["RequestId"];
+                    /** @description URL of the customer */
+                    Location?: string;
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["Customer"];
+                };
+            };
+            400: components["responses"]["BadRequest"];
+            401: components["responses"]["Unauthorized"];
+            403: components["responses"]["Forbidden"];
+            404: components["responses"]["NotFound"];
+            422: components["responses"]["IdempotencyKeyReused"];
+        };
+    };
+    recordCustomerRepayment: {
+        parameters: {
+            query?: never;
+            header?: {
+                /** @description Client-generated UUID used to trace one action across both tiers. */
+                "X-Request-Id"?: components["parameters"]["RequestId"];
+                /** @description Optional client-generated UUID, one per user attempt; reuse it on retry to make the call safe to repeat. */
+                "Idempotency-Key"?: components["parameters"]["IdempotencyKeyOptional"];
+            };
+            path: {
+                customerId: components["parameters"]["CustomerId"];
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["RepaymentAmountRequest"];
+            };
+        };
+        responses: {
+            /** @description Repayment recorded and allocated */
+            201: {
+                headers: {
+                    "X-Request-Id": components["headers"]["RequestId"];
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["RepaymentResponse"];
+                };
+            };
+            400: components["responses"]["BadRequest"];
+            401: components["responses"]["Unauthorized"];
+            403: components["responses"]["Forbidden"];
+            404: components["responses"]["NotFound"];
+            422: components["responses"]["IdempotencyKeyReused"];
+        };
+    };
+    recordRepayment: {
+        parameters: {
+            query?: never;
+            header?: {
+                /** @description Client-generated UUID used to trace one action across both tiers. */
+                "X-Request-Id"?: components["parameters"]["RequestId"];
+                /** @description Optional client-generated UUID, one per user attempt; reuse it on retry to make the call safe to repeat. */
+                "Idempotency-Key"?: components["parameters"]["IdempotencyKeyOptional"];
+            };
+            path?: never;
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["RepaymentCreate"];
+            };
+        };
+        responses: {
+            /** @description Repayment recorded and allocated */
+            201: {
+                headers: {
+                    "X-Request-Id": components["headers"]["RequestId"];
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["RepaymentResponse"];
+                };
+            };
+            400: components["responses"]["BadRequest"];
+            401: components["responses"]["Unauthorized"];
+            403: components["responses"]["Forbidden"];
+            404: components["responses"]["NotFound"];
+            422: components["responses"]["IdempotencyKeyReused"];
         };
     };
     getDashboard: {

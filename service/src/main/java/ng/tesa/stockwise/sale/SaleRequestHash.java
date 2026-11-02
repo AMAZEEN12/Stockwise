@@ -23,7 +23,8 @@ final class SaleRequestHash {
                 .map(line -> line.productId() + ":" + line.quantity())
                 .collect(Collectors.joining(","));
         String canonical = String.join("|", "v1", String.valueOf(sale.paymentType()),
-                String.valueOf(sale.customerId()), String.valueOf(sale.dueDate()), lines);
+                String.valueOf(sale.customerId()), String.valueOf(sale.dueDate()),
+                Boolean.TRUE.equals(sale.useStoreCredit()) ? "use_credit" : "no_credit", lines);
         try {
             byte[] digest = MessageDigest.getInstance("SHA-256").digest(canonical.getBytes(StandardCharsets.UTF_8));
             return HexFormat.of().formatHex(digest);

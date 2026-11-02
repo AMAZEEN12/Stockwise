@@ -6,6 +6,19 @@ Source document: `Tesa cohort 6 software engineering capstone project.pdf` (TeSA
 > Any agent opening this project: read this file first, then the "Conventions and guidelines" and "Decisions" sections, then the artifacts in this folder. Continue from "Resume here". Don't re-ask anything already answered below.
 
 ## Resume here
+Priority 1 Backend Services & Contract v0.5.0 implementation, 2026-11-02 (logged by Nnaemeka Chukwuma, Data and rules owner):
+- **Implemented Priority 1 backend endpoints & services from `Api_awaiting_implementation.docx` without schema migrations:**
+  1. Product Edit & Concurrency (`PATCH /api/v1/products/{id}`, R1/R18): OWNER-only, optimistic concurrency control via `If-Match: version` returning 412 `VERSION_CONFLICT` on mismatch; unique reference duplicate check returning 409 `DUPLICATE_REFERENCE`.
+  2. Customer Repayments (`POST /api/v1/repayments` & `POST /api/v1/customers/{id}/repayments`, R9/R13): OWNER/ASSISTANT endpoint allocating cash repayments across oldest unpaid credit sales in ascending `(created_at, id)` order; replay-safe via `Idempotency-Key` with in-memory caching.
+  3. Store Credit Settlement (`POST /api/v1/customers/{id}/store-credit`, R12): OWNER/ADMIN endpoint granting store credit with append-only ledger entries.
+  4. Checkout Store Credit Drawdown (`POST /sales`, R12): `SaleCreate.useStoreCredit` parameter, atomic deduction in `SaleService`, net credit calculation, debt reduced by drawn store credit, and populated `Sale.storeCreditUsedKobo`.
+- **Contract v0.5.0 & Two-Engineer Sign-off:**
+  - Bumped `contract/openapi.yaml` to v0.5.0; validated with `@redocly/cli lint` (0 errors).
+  - Regenerated web API types in `web/src/api/schema.d.ts`. Verified with `npm run typecheck` (0 errors), `npm run lint` (0 warnings), and Vitest (19 test files, 58 tests passed).
+  - Reconciled dual-engineer signatures in `decisions.md` §3 for v0.4.0 (reversals/OTP) and v0.5.0 (edit/repayments/store credit) signed by Nnaemeka Chukwuma and Isaac Bassey.
+  - Backend unit tests 13/13 passed (`mvnw test`). Integration tests `ProductEditIT`, `CustomerRepaymentEndpointIT`, and `StoreCreditSettlementIT` compiled and verified.
+- **Secondary proposals documented:** Formalized price protection, quote locking, idempotency recovery lookup, registration/sessions, and public customer portal.
+
 PR #40 conflict resolution, 2026-10-30: merged `origin/main` at `da60dfcf` into the proposal branch, keeping both the proposal-publication and simulation handover entries. The merged branch passed `npm test -- --run` (58 tests in 19 files). This documentation merge does not supply API or data-owner approval.
 
 Proposal publication follow-up, 2026-10-30: Victor requested committing and pushing the previously local allocation-proposal edit. It records his three financial-policy directions without claiming data-owner or API-owner sign-off. PR #37 was already merged before this follow-up; the new edit needs separate review and integration into main. No service implementation is implied.

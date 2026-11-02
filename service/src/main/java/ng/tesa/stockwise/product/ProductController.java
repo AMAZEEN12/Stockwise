@@ -13,15 +13,18 @@ import jakarta.validation.constraints.Size;
 
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.GetMapping;
+import org.springframework.web.bind.annotation.PatchMapping;
 import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestBody;
+import org.springframework.web.bind.annotation.RequestHeader;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
 
 import ng.tesa.stockwise.common.NotFoundException;
 import ng.tesa.stockwise.common.Page;
+import ng.tesa.stockwise.common.PreconditionFailedException;
 
 /** Catalogue endpoints (spec R1, R2). Adding a product is OWNER only (SecurityConfig). */
 @RestController
@@ -67,5 +70,41 @@ public class ProductController {
     public ResponseEntity<Product> get(@PathVariable UUID productId) {
         Product product = products.findById(productId).orElseThrow(() -> new NotFoundException("Product " + productId));
         return ResponseEntity.ok().eTag(String.valueOf(product.version())).body(product);
+    }
+
+    /** Contract {@code ProductUpdate}. Optional fields; null means unchanged. */
+    public record UpdateRequest(
+            @Size(max = 40) String reference,
+            @Size(max = 200) String name,
+            @Size(max = 60) String category,
+            @PositiveOrZero @Max(9007199254740991L) Long priceKobo,
+            @PositiveOrZero Integer lowStockThreshold,
+            Boolean active) {
+    }
+
+    /**
+     * R1/R18: Optimistic product edit and archive with If-Match: <version>.
+     * Returns 200 OK with ETag on success, 412 PRECONDITION_FAILED on version conflict.
+     */
+    @PatchMapping("/{productId}")
+    public ResponseEntity<Product> patch(
+            @PathVariable UUID productId,
+            @RequestHeader(name = "If-Match", required = false) String ifMatch,
+            @Valid @RequestBody UpdateRequest request) {
+        if (ifMatch == null || ifMatch.isBlank()) {
+            throw new PreconditionFailedException("If-Match header is required for product update");
+        }
+        int version;
+        try {
+            String clean = ifMatch.replace("\"", "").trim();
+            version = Integer.parseInt(clean);
+        } catch (NumberFormatException e) {
+            throw new PreconditionFailedException("If-Match header must be an integer version");
+        }
+
+        Product updated = products.update(productId, version, new Product.Update(
+                request.reference(), request.name(), request.category(),
+                request.priceKobo(), request.lowStockThreshold(), request.active()));
+        return ResponseEntity.ok().eTag(String.valueOf(updated.version())).body(updated);
     }
 }

@@ -20,12 +20,21 @@ public record Sale(
         UUID reversedBy,
         String reversalReason,
         String reversalNotes,
-        long unpaidKobo) {
+        long unpaidKobo,
+        long storeCreditUsedKobo) {
 
     public Sale(UUID id, String reference, PaymentType paymentType, UUID customerId, LocalDate dueDate,
                 long totalKobo, List<Line> lines, UUID createdBy, Instant createdAt) {
         this(id, reference, paymentType, customerId, dueDate, totalKobo, lines, createdBy, createdAt,
-                null, null, null, null, paymentType == PaymentType.CREDIT ? totalKobo : 0L);
+                null, null, null, null, paymentType == PaymentType.CREDIT ? totalKobo : 0L, 0L);
+    }
+
+    public Sale(UUID id, String reference, PaymentType paymentType, UUID customerId, LocalDate dueDate,
+                long totalKobo, List<Line> lines, UUID createdBy, Instant createdAt,
+                Instant reversedAt, UUID reversedBy, String reversalReason, String reversalNotes,
+                long unpaidKobo) {
+        this(id, reference, paymentType, customerId, dueDate, totalKobo, lines, createdBy, createdAt,
+                reversedAt, reversedBy, reversalReason, reversalNotes, unpaidKobo, 0L);
     }
 
     /** One line with the unit price copied at the time of sale (contract {@code SaleLine}). */

@@ -22,6 +22,10 @@ public record Product(
     public record New(String reference, String name, String category, long priceKobo, int quantity, int lowStockThreshold) {
     }
 
+    /** Contract {@code ProductUpdate}; optional fields to update. */
+    public record Update(String reference, String name, String category, Long priceKobo, Integer lowStockThreshold, Boolean active) {
+    }
+
     /** Contract query parameters of {@code GET /products}; a null filter is not applied. */
     public record Filter(String q, String category, StockState stockState, Boolean active) {
         public Filter(String q, String category, StockState stockState) {
