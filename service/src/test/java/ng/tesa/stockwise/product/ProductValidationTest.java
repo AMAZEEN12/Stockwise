@@ -57,4 +57,22 @@ class ProductValidationTest {
         assertThat(violations).isNotEmpty();
         assertThat(violations).anyMatch(v -> v.getPropertyPath().toString().equals("priceKobo"));
     }
+
+    @Test
+    void productUpdateRequestValidatesBounds() {
+        var valid = new ProductController.UpdateRequest("REF-1", "Name", "Cat", 50000L, 5, true);
+        assertThat(validator.validate(valid)).isEmpty();
+
+        var invalidPrice = new ProductController.UpdateRequest(null, null, null, 9007199254740992L, null, null);
+        assertThat(validator.validate(invalidPrice)).anyMatch(v -> v.getPropertyPath().toString().equals("priceKobo"));
+
+        var negPrice = new ProductController.UpdateRequest(null, null, null, -100L, null, null);
+        assertThat(validator.validate(negPrice)).anyMatch(v -> v.getPropertyPath().toString().equals("priceKobo"));
+
+        var negThreshold = new ProductController.UpdateRequest(null, null, null, null, -1, null);
+        assertThat(validator.validate(negThreshold)).anyMatch(v -> v.getPropertyPath().toString().equals("lowStockThreshold"));
+
+        var longRef = new ProductController.UpdateRequest("A".repeat(41), null, null, null, null, null);
+        assertThat(validator.validate(longRef)).anyMatch(v -> v.getPropertyPath().toString().equals("reference"));
+    }
 }

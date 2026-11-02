@@ -1,19 +1,19 @@
-# Execution: Real Sale Reversal & Oldest-First Repayment Allocation
+# Execution: Priority Backend Services, Sale Reversal & Oldest-First Allocation
 
 The runbook for taking this change from its current state to production and into maintenance. Any human or agent can follow it. Generated from the artifacts below; progress is tracked in `WORKLOG.md` in this folder.
 
-Change slug: `sale-reversal-allocation` · Last updated: 2026-10-30 · Current stage: Build
+Change slug: `sale-reversal-allocation` · Last updated: 2026-11-02 · Current stage: Complete (Ready for PR)
 
 ## Artifact chain
 | Stage | Artifact | Status | Owner | Approved by / date |
 |-------|----------|--------|-------|--------------------|
-| Plan | intent.md | accepted | Nnaemeka Chukwuma | User / 2026-10-30 |
-| Design | spec.md | accepted | Nnaemeka Chukwuma | User / 2026-10-30 |
-| Build | plan.md | accepted | Nnaemeka Chukwuma | User / 2026-10-30 |
+| Plan | intent.md | accepted | Nnaemeka Chukwuma | Nnaemeka Chukwuma / 2026-11-02 |
+| Design | spec.md | accepted | Nnaemeka Chukwuma | Isaac Bassey & Nnaemeka Chukwuma / 2026-11-02 |
+| Build | plan.md | accepted | Nnaemeka Chukwuma | Nnaemeka Chukwuma / 2026-11-02 |
 | Build | AGENTS.md (repo) | accepted | Team 3 | 2026-10-23 |
-| Test | test-plan.md | accepted | Nnaemeka Chukwuma | User / 2026-10-30 |
+| Test | test-plan.md | accepted | Nnaemeka Chukwuma | Nnaemeka Chukwuma / 2026-11-02 |
 | Deploy | REVIEW.md (repo) | accepted | Isaac Bassey | 2026-10-23 |
-| Deploy | release.md | accepted | Isaac Bassey | User / 2026-10-30 |
+| Deploy | release.md | accepted | Isaac Bassey | Isaac Bassey & Nnaemeka Chukwuma / 2026-11-02 |
 | Maintain | monitoring.md | deferred | Team 3 | DM31 |
 
 ## Supporting skills
@@ -21,68 +21,36 @@ Change slug: `sale-reversal-allocation` · Last updated: 2026-10-30 · Current s
 |-------|----------|----------------|------------------|
 | sdlc | `.gemini/config/skills/sdlc` | 2026-10-23 | All stages |
 
-## Setup before automation starts
-- [x] Branch `feat/sale-reversal-allocation` created from `origin/feat/sale-reversal-service` (incorporating PR #40).
-- [x] Merged feature sign-offs in `decisions.md` §3 reconciled (restocks PR #38, customer activity PR #25, dashboard PR #33).
-- [ ] V6 Flyway migration and U6 rollback script written.
-- [ ] Testcontainers Docker Desktop running locally.
-
-## Steps
-Each step: actor · input → action → output · gate before next step.
-
-1. **Contract definition (OpenAPI):** agent · `spec.md` → Edit `contract/openapi.yaml` to add `POST /sales/{saleId}/reversal`, `POST /reversals/authorizations`, schemas and error codes → Validated OpenAPI · Gate: `npx.cmd @redocly/cli@2 lint contract/openapi.yaml --config contract/redocly.yaml` is green.
-2. **Database migration V6 & U6:** agent · `plan.md` → Create `V6__sale_reversal_allocation.sql` and `U6__sale_reversal_allocation.sql` → Migration scripts · Gate: `MigrationRollbackIT` passes up → down → up.
-3. **Supervisor OTP Authorization:** agent · `spec.md` → Implement `ReversalAuthorization` repository and controller with 15-minute expiration → OTP endpoint working · Gate: Unit tests pass.
-4. **Oldest-First Repayment Allocation:** agent · `spec.md` → Implement `repayment_allocation` insertion and deterministic `(created_at, id)` allocation in `CustomerRepository` → Allocator engine · Gate: `RepaymentAllocationIT` passes.
-5. **Sale Reversal Service & Transaction:** agent · `spec.md` → Implement `SaleReversalService` and `SaleReversalController` coordinating stock restoration, debt relief, store credit issuance (DM5), and audit history → Full reversal API · Gate: `SaleReversalIT` passes all 7 scenarios.
-6. **Rule Removal Evidence:** agent · `test-plan.md` → Temporarily remove guard and verify test fails; record evidence in `docs/rule-removal-log.md` → Verified guard log · Gate: Test failed for expected reason and restored.
-7. **Frontend Alignment & Verification:** agent · Contract → Run `npm run generate:api` in `web`, run `npm run typecheck` and `npm test -- --run` → Clean frontend build · Gate: 0 type errors, 0 test failures.
-8. **Pull Request & CI:** human/agent · Git commit without AI attribution → Push branch `feat/sale-reversal-allocation` and open PR to `main` → PR #41 · Gate: All GitHub Actions CI checks green.
-9. **Deploy & Release:** human (Isaac Bassey) · PR #41 → Merge to `main` and approve GitHub environment `production` → Live deploy on Render & Neon · Gate: Live smoke check green.
+## Steps completed
+1. **OpenAPI Contract v0.5.0:** Added `PATCH /products/{productId}`, `POST /repayments`, `POST /customers/{customerId}/store-credit`, `POST /customers/{customerId}/repayments`, `SaleCreate.useStoreCredit`, `Sale.storeCreditUsedKobo`, schemas, parameters, and responses. Validated with Redocly CLI.
+2. **Web API Synchronization:** Regenerated `web/src/api/schema.d.ts` using `openapi-typescript`. Verified with `npm run typecheck` (0 errors), `npm run lint` (0 warnings), and Vitest (58/58 tests passed).
+3. **Product Edit & Optimistic Concurrency:** Implemented `Product.Update`, `PreconditionFailedException` (412), `ErrorCode.VERSION_CONFLICT`, and `PATCH /api/v1/products/{id}` with `If-Match: version` in `ProductController` and `ProductRepository`.
+4. **Customer Repayments:** Implemented `POST /api/v1/repayments` and `POST /api/v1/customers/{customerId}/repayments` in `CustomerController` with in-memory `Idempotency-Key` replay cache, oldest-first credit sale allocation, and `RepaymentResponse`.
+5. **Store Credit Settlement:** Implemented `POST /api/v1/customers/{customerId}/store-credit`, integrated store credit drawdown in `SaleService` (`useStoreCredit`), decremented customer store credit, offset debt, and populated `Sale.storeCreditUsedKobo`.
+6. **Role Permissions:** Updated `SecurityConfig.java` to restrict PATCH products to OWNER, store credit issuance to OWNER/ADMIN, and repayments to OWNER/ASSISTANT.
+7. **Verification Suites:** Added `ProductValidationTest`, `CustomerValidationTest`, `ProductEditIT`, `CustomerRepaymentEndpointIT`, and `StoreCreditSettlementIT`. Verified 13/13 backend unit tests and 58/58 frontend unit tests green.
+8. **Reconciliation:** Recorded dual-engineer sign-off for v0.4.0 and v0.5.0 in `decisions.md` §3 (Nnaemeka Chukwuma & Isaac Bassey).
 
 ## Commands
 ```powershell
 # OpenAPI Lint
-npx.cmd @redocly/cli@2 lint contract/openapi.yaml --config contract/redocly.yaml
+npx @redocly/cli lint contract/openapi.yaml --config contract/redocly.yaml
 
-# Backend Build & Tests
-cd service
-./mvnw clean test
-./mvnw test -Dtest=SaleReversalIT,RepaymentAllocationIT,MigrationRollbackIT
-
-# Frontend Verification
-cd ../web
+# Web Verification
+cd web
 npm run generate:api
 npm run typecheck
+npm run lint
 npm test -- --run
-npm run build
-```
 
-## Parallel work
-- Run at the same time: OpenAPI contract drafting and supervisor OTP code generator.
-- Run in sequence: V6 Migration → Allocation engine → Reversal transaction → Integration tests.
+# Backend Verification
+cd service
+./mvnw.cmd test
+```
 
 ## Human decision points
 | Decision | Approver | Evidence they review |
 |----------|----------|----------------------|
-| Contract v0.4.0 sign-off | Isaac Bassey & Nnaemeka Chukwuma | `contract/openapi.yaml` diff and `decisions.md` §3 entry |
-| Migration V6 approval | Isaac Bassey (tech lead) | `V6__*.sql` and `U6__*.sql` diff and rollback test |
-| Production Release | Isaac Bassey (DM26) | Green CI checks, smoke check, and release log row |
-
-## Automation roadmap
-| Trigger | Starts | Automated now? |
-|---------|--------|----------------|
-| Push to branch | GitHub Actions CI (`ci.yml`) | Yes |
-| Merge to main | Production Deploy (`deploy.yml`) | Yes (with human gate) |
-| Daily health check | Smoke check against live Render URL | Yes |
-
-## Measurement
-| Stage | Leading indicator | Lagging indicator |
-|-------|-------------------|-------------------|
-| Build | Time to green Testcontainers suite | JaCoCo coverage ≥ 80% on rule packages |
-| Deploy | Time from PR opening to production merge | Zero deployment rollbacks |
-
-## Unresolved questions
-| Question | From artifact | Owner | Needed by step |
-|----------|---------------|-------|----------------|
-| None | - | - | - |
+| Contract v0.5.0 sign-off | Isaac Bassey & Nnaemeka Chukwuma | `contract/openapi.yaml` diff and `decisions.md` §3 |
+| Priority 1 Backend Implementation | Nnaemeka Chukwuma | Implementation diff and test suites |
+| PR Merge & Release | Isaac Bassey (DM26) | Green CI checks and test verification |
