@@ -27,14 +27,8 @@ function PaymentBadge({ sale }: { sale: Sale }) {
   return (
     <StatusBadge
       appearance="outline"
+      tone={sale.paymentType === "PAID" ? "success" : "neutral"}
       className="history-payment"
-      icon={
-        <span
-          className={sale.paymentType === "PAID" ? "history-paid-icon" : ""}
-        >
-          {sale.paymentType === "PAID" ? "✓" : "◷"}
-        </span>
-      }
     >
       {sale.paymentType === "PAID" ? "Paid" : "Credit"}
     </StatusBadge>
@@ -262,7 +256,9 @@ function SalesResults({
                         } else if (event.key === "ArrowDown") {
                           event.preventDefault();
                           const nextLi =
-                            event.currentTarget.closest("li")?.nextElementSibling;
+                            event.currentTarget.closest(
+                              "li",
+                            )?.nextElementSibling;
                           (
                             nextLi?.querySelector(
                               ".history-card-clickable",
@@ -271,8 +267,9 @@ function SalesResults({
                         } else if (event.key === "ArrowUp") {
                           event.preventDefault();
                           const prevLi =
-                            event.currentTarget.closest("li")
-                              ?.previousElementSibling;
+                            event.currentTarget.closest(
+                              "li",
+                            )?.previousElementSibling;
                           (
                             prevLi?.querySelector(
                               ".history-card-clickable",
@@ -327,7 +324,6 @@ function SalesResults({
             <EmptyState
               layout="panel"
               className="history-state"
-              icon={<CustomerIcon kind="empty" />}
               titleClassName="history-state-title"
               title={
                 filters.paymentType
@@ -366,7 +362,7 @@ export function SalesHistoryPage() {
         }}
       >
         <div className="history-controls">
-          <FormField label="Date range">
+          <FormField label="Date range" labelClassName="sr-only">
             {(field) => (
               <Select
                 {...field}
@@ -410,9 +406,7 @@ export function SalesHistoryPage() {
           </div>
         </div>
       </SalesResults>
-      <p className="history-contract-note micro">
-        Customer and staff shown by ID. Totals are recorded sale amounts.
-      </p>
+
     </section>
   );
 }

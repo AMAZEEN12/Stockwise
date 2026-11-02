@@ -48,14 +48,16 @@ public class SaleController {
             @NotNull PaymentType paymentType,
             UUID customerId,
             LocalDate dueDate,
-            @NotEmpty @Size(max = SaleService.MAX_LINES) List<@Valid @NotNull Line> lines) {
+            @NotEmpty @Size(max = SaleService.MAX_LINES) List<@Valid @NotNull Line> lines,
+            Boolean useStoreCredit) {
 
         public record Line(@NotNull UUID productId, @NotNull @Min(1) @Max(SaleService.MAX_QUANTITY) Integer quantity) {
         }
 
         NewSale toNewSale() {
             return new NewSale(paymentType, customerId, dueDate,
-                    lines.stream().map(l -> new NewSale.Line(l.productId(), l.quantity())).toList());
+                    lines.stream().map(l -> new NewSale.Line(l.productId(), l.quantity())).toList(),
+                    Boolean.TRUE.equals(useStoreCredit));
         }
     }
 

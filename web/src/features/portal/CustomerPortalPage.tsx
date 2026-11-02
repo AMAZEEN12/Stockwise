@@ -9,9 +9,12 @@ import { formatMoney, sumKobo } from "../../lib/money";
 import { Button } from "../../components/ui/button";
 import { Dialog } from "../../components/ui/dialog";
 import { Skeleton } from "../../components/ui/skeleton";
+import { StatusBadge } from "../../components/ui/status-badge";
+import { formatLagosDateTime } from "../customers/customer-ledger";
 import type { PortalProduct } from "../../models/responses/portal.response";
 import type { PortalPaymentPreference } from "../../models/requests/portal.request";
 import type { HttpError } from "../../service/http-client";
+import { isPaymentDueIn48Hours } from "./portal-due";
 import "../../styles/customer-portal.css";
 
 export function CustomerPortalPage() {
@@ -123,7 +126,7 @@ export function CustomerPortalPage() {
         <div className="portal-wrapper">
           <div className="portal-header text-center p-8">
             <h1 className="text-xl font-bold">Invalid Portal Link</h1>
-            <p className="text-sm text-[var(--color-text-muted)] mt-2">
+            <p className="text-sm text-(--color-text-muted) mt-2">
               No customer link token was provided in the URL.
             </p>
           </div>
@@ -156,7 +159,7 @@ export function CustomerPortalPage() {
       <main className="portal-container">
         <div className="portal-wrapper">
           <div className="portal-header p-6">
-            <span className="portal-brand-badge text-[var(--color-danger)] bg-[var(--color-danger-subtle)]">
+            <span className="portal-brand-badge text-(--color-danger) bg-[var(--color-danger-subtle)]">
               {isExpired ? "Link Expired" : "Portal Unavailable"}
             </span>
             <h1 className="portal-shop-title mt-2">
@@ -195,23 +198,45 @@ export function CustomerPortalPage() {
   return (
     <main className="portal-container">
       <div className="portal-wrapper">
-        {/* Header / Shop Identity */}
+        {/* Payment Due Soon Banner - at the top */}
+        {isPaymentDueIn48Hours(customer) && (
+          <aside
+            className="portal-due-banner"
+            role="region"
+            aria-label="Payment due notification"
+            data-testid="portal-due-banner"
+          >
+            <div className="portal-due-banner-content">
+              <svg
+                className="portal-due-banner-icon"
+                aria-hidden="true"
+                viewBox="0 0 24 24"
+                fill="none"
+                stroke="currentColor"
+                strokeWidth="2"
+                strokeLinecap="round"
+                strokeLinejoin="round"
+              >
+                <circle cx="12" cy="12" r="10" />
+                <polyline points="12 6 12 12 16 14" />
+              </svg>
+              <div className="portal-due-banner-text">
+                <h2 className="portal-due-banner-title">
+                  Payment Due in 48 Hours
+                </h2>
+                <p className="portal-due-banner-desc">
+                  Your outstanding balance of {formatMoney(customer.balanceKobo)} is due within 48 hours. Please settle at the shop or via bank transfer.
+                </p>
+              </div>
+            </div>
+          </aside>
+        )}
+
+        {/* Header - Welcome back only */}
         <header className="portal-header">
-          <div className="flex items-center justify-between">
-            <span className="portal-brand-badge">Customer Self-Service Portal</span>
-            {portalData.tokenExpiresAt && (
-              <span className="text-xs text-[var(--color-text-muted)] font-mono">
-                Active link
-              </span>
-            )}
-          </div>
-          <div>
-            <h1 className="portal-shop-title">{shop.name}</h1>
-            <p className="portal-shop-meta">{shop.address}</p>
-          </div>
-          <p className="portal-customer-greeting">
+          <h1 className="portal-customer-greeting">
             Welcome back, <strong>{customer.displayName}</strong>
-          </p>
+          </h1>
         </header>
 
         {/* Customer Balance Summary Cards */}
@@ -289,7 +314,7 @@ export function CustomerPortalPage() {
               </div>
             ) : !productsData?.items.length ? (
               <div className="portal-header text-center py-8">
-                <p className="text-sm text-[var(--color-text-muted)]">
+                <p className="text-sm text-(--color-text-muted)">
                   {search ? `No products matching "${search}"` : "No products available for online ordering right now."}
                 </p>
               </div>
@@ -347,7 +372,7 @@ export function CustomerPortalPage() {
           <section className="portal-catalogue-section" aria-label="Customer Statement">
             <div className="portal-header">
               <h2 className="text-lg font-bold">Ledger Balance Summary</h2>
-              <p className="text-xs text-[var(--color-text-muted)]">
+              <p className="text-xs text-(--color-text-muted)">
                 Live balances maintained in real time with Ngozi Provisions Store.
               </p>
 
@@ -376,10 +401,74 @@ export function CustomerPortalPage() {
                 </div>
               </div>
 
-              <p className="text-xs text-[var(--color-text-muted)] mt-4">
+              <p className="text-xs text-(--color-text-muted) mt-4">
                 Payments made in cash or bank transfer at the shop are credited to your account ledger upon receipt.
               </p>
             </div>
+
+            {portalData.statement && portalData.statement.length > 0 && (
+              <div className="portal-header mt-4">
+                <h3 className="text-base font-semibold">Transaction Activity</h3>
+                <div className="portal-statement-table-wrapper">
+                  <table className="portal-statement-table">
+                    <thead>
+                      <tr>
+                        <th>Date & Time</th>
+                        <th>Type</th>
+                        <th className="text-right">Amount</th>
+                        <th className="text-right">Balance After</th>
+                      </tr>
+                    </thead>
+                    <tbody>
+                      {portalData.statement.map((entry) => (
+                        <tr key={entry.id}>
+                          <td>
+                            <time dateTime={entry.createdAt} className="text-xs text-(--color-text-muted)">
+                              {formatLagosDateTime(entry.createdAt)}
+                            </time>
+                          </td>
+                          <td>
+                            <StatusBadge
+                              appearance="outline"
+                              tone={
+                                entry.sourceType === "CREDIT_SALE"
+                                  ? "danger"
+                                  : entry.sourceType === "REPAYMENT"
+                                  ? "success"
+                                  : "neutral"
+                              }
+                            >
+                              {entry.sourceType === "CREDIT_SALE"
+                                ? "Credit sale"
+                                : entry.sourceType === "REPAYMENT"
+                                ? "Repayment"
+                                : entry.sourceType === "STORE_CREDIT"
+                                ? "Store credit"
+                                : entry.sourceType}
+                            </StatusBadge>
+                          </td>
+                          <td className="text-right font-mono text-sm">
+                            <span
+                              className={
+                                entry.sourceType === "CREDIT_SALE"
+                                  ? "text-(--color-danger)"
+                                  : "text-(--color-primary)"
+                              }
+                            >
+                              {entry.sourceType === "CREDIT_SALE" ? "+" : "-"}
+                              {formatMoney(Math.abs(entry.deltaKobo))}
+                            </span>
+                          </td>
+                          <td className="text-right font-mono text-sm font-medium">
+                            {formatMoney(entry.balanceAfterKobo)}
+                          </td>
+                        </tr>
+                      ))}
+                    </tbody>
+                  </table>
+                </div>
+              </div>
+            )}
           </section>
         )}
 
@@ -388,13 +477,13 @@ export function CustomerPortalPage() {
           <section className="portal-catalogue-section" aria-label="Contact Shop">
             <div className="portal-header">
               <h2 className="text-lg font-bold">Contact Store</h2>
-              <p className="text-sm text-[var(--color-text-muted)]">
+              <p className="text-sm text-(--color-text-muted)">
                 Have questions about your order, account statement, or special items? Reach out directly.
               </p>
 
               <div className="mt-4 flex flex-col gap-4">
                 <div className="p-3 bg-[var(--color-bg)] rounded-md border border-[var(--color-border)]">
-                  <p className="text-xs text-[var(--color-text-muted)]">Shop Address</p>
+                  <p className="text-xs text-(--color-text-muted)">Shop Address</p>
                   <p className="text-sm font-medium mt-1">{shop.address}</p>
                 </div>
 
@@ -467,7 +556,7 @@ export function CustomerPortalPage() {
               {cartLines.map(({ product, quantity }) => (
                 <div key={product.id} className="portal-order-line">
                   <span className="portal-order-line-name">
-                    {product.name} <small className="text-xs text-[var(--color-text-muted)]">× {quantity}</small>
+                    {product.name} <small className="text-xs text-(--color-text-muted)">× {quantity}</small>
                   </span>
                   <span className="portal-order-line-price">
                     {formatMoney(product.priceKobo * quantity)}
@@ -599,14 +688,14 @@ export function CustomerPortalPage() {
               ✓
             </div>
             <div>
-              <p className="text-xs text-[var(--color-text-muted)] font-mono uppercase">
+              <p className="text-xs text-(--color-text-muted) font-mono uppercase">
                 Order Reference
               </p>
               <h3 className="text-2xl font-bold font-mono text-[var(--color-primary)] mt-1">
                 {lastOrderNumber}
               </h3>
             </div>
-            <p className="text-sm text-[var(--color-text-muted)] max-w-sm">
+            <p className="text-sm text-(--color-text-muted) max-w-sm">
               {shop.name} is preparing your items. You will receive an update when your package is ready for pickup.
             </p>
 

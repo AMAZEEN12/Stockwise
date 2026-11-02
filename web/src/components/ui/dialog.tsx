@@ -105,7 +105,7 @@ export const Dialog = React.forwardRef<HTMLDivElement, DialogProps>(function Dia
           onOpenAutoFocus={onOpenAutoFocus}
           onCloseAutoFocus={onCloseAutoFocus}
           className={cn(
-            "shared-dialog fixed z-50 flex flex-col overflow-y-auto overscroll-contain border border-[var(--color-border)] bg-[var(--color-surface)] text-[var(--color-text)] shadow-lg",
+            "shared-dialog fixed z-50 flex flex-col overflow-y-auto overscroll-contain border border-[var(--color-border)] bg-[var(--color-surface)] text-(--color-text) shadow-lg",
             placement === "center" && "left-1/2 top-1/2 -translate-x-1/2 -translate-y-1/2 max-h-[calc(100dvh-2rem)] w-[calc(100vw-2rem)] max-w-lg gap-4 rounded-md p-6",
             placement === "right" && "inset-y-0 right-0 h-full max-h-screen w-full max-w-lg border-l rounded-none p-0 gap-0",
             placement === "left" && "inset-y-0 left-0 h-full max-h-screen w-full max-w-lg border-r rounded-none p-0 gap-0",
@@ -115,7 +115,7 @@ export const Dialog = React.forwardRef<HTMLDivElement, DialogProps>(function Dia
           <div className={cn("flex items-start justify-between gap-4", headerClassName)}>
             <div className="flex flex-col gap-1">
               <DialogPrimitive.Title className={cn("text-lg font-semibold", titleClassName)}>{title}</DialogPrimitive.Title>
-              <DialogPrimitive.Description className={cn("text-sm text-[var(--color-text-muted)]", descriptionClassName)}>
+              <DialogPrimitive.Description className={cn("text-sm text-(--color-text-muted)", descriptionClassName)}>
                 {description}
               </DialogPrimitive.Description>
             </div>
@@ -123,7 +123,7 @@ export const Dialog = React.forwardRef<HTMLDivElement, DialogProps>(function Dia
               aria-label={closeLabel}
               disabled={!dismissible}
               className={cn(
-                "inline-flex h-8 w-8 shrink-0 items-center justify-center rounded-[var(--radius)] text-[var(--color-text)] hover:bg-[var(--color-border)]",
+                "inline-flex h-8 w-8 shrink-0 items-center justify-center rounded-[var(--radius)] text-(--color-text) hover:bg-[var(--color-border)]",
                 focusRing,
                 closeClassName,
               )}
