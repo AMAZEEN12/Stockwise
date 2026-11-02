@@ -37,6 +37,12 @@ import {
   validSale,
 } from "./sale-draft";
 import type { CartLine, PendingSale } from "./sale-draft";
+import {
+  useGetPickupOrdersQuery,
+  useFulfillOrderMutation,
+} from "../../service/api/orders.api";
+import type { PickupOrder } from "../../models/responses/orders.response";
+import { PickupOrdersDialog } from "./PickupOrdersDialog";
 import "../../styles/sales.css";
 
 type State =
@@ -81,6 +87,69 @@ export function NewSalePage() {
   const { toast } = useToast();
   const customers = useCustomersQuery();
   const [createSale] = useCreateSaleMutation();
+  const [ordersModalOpen, setOrdersModalOpen] = useState(false);
+  const [activeOrder, setActiveOrder] = useState<PickupOrder | null>(null);
+  const [loadingOrderId, setLoadingOrderId] = useState<string | null>(null);
+  const pickupOrders = useGetPickupOrdersQuery(undefined, {
+    pollingInterval: 10000,
+  });
+  const [fulfillOrder] = useFulfillOrderMutation();
+
+  const handleLoadOrder = async (order: PickupOrder) => {
+    setLoadingOrderId(order.id);
+    try {
+      const loadedLines: CartLine[] = [];
+      for (const line of order.lines) {
+        try {
+          const res = await httpClient.get<Product>(
+            productsEndpoints.detail(line.productId),
+          );
+          loadedLines.push({
+            product: res.data,
+            quantity: line.quantity,
+          });
+        } catch {
+          // If a product lookup fails, omit
+        }
+      }
+      if (loadedLines.length === 0) {
+        toast({
+          variant: "error",
+          title: "Could not load order items into cart",
+        });
+        return;
+      }
+      setCart(loadedLines);
+      setCustomerId(order.customerId);
+      const matchedCustomer = customers.data?.find(
+        (c) => c.id === order.customerId,
+      );
+      if (matchedCustomer) {
+        setSelectedCustomer(matchedCustomer);
+      }
+      if (order.paymentPreference === "ON_ACCOUNT") {
+        setPaymentType("CREDIT");
+      } else {
+        setPaymentType("PAID");
+      }
+      if (order.paymentPreference === "USE_STORE_CREDIT") {
+        setApplyStoreCredit(true);
+      }
+      setActiveOrder(order);
+      setOrdersModalOpen(false);
+      toast({
+        variant: "success",
+        title: `Order #${order.orderNumber} loaded`,
+      });
+    } catch {
+      toast({
+        variant: "error",
+        title: "Failed to load pre-order",
+      });
+    } finally {
+      setLoadingOrderId(null);
+    }
+  };
   useEffect(() => {
     if (!pending)
       saveCartDraft(user.id, { cart, paymentType, customerId, dueDate });
@@ -300,6 +369,17 @@ export function NewSalePage() {
         },
         user.id,
       );
+      if (activeOrder) {
+        try {
+          await fulfillOrder({
+            orderId: activeOrder.id,
+            saleId: sale.id,
+          }).unwrap();
+        } catch {
+          // Handled or already fulfilled by backend createSale
+        }
+        setActiveOrder(null);
+      }
       clearPending();
       setPending(null);
       setCart([]);
@@ -410,6 +490,7 @@ export function NewSalePage() {
         ...(customerId ? { customerId } : {}),
         ...(paymentType === "CREDIT" && dueDate ? { dueDate } : {}),
         ...(applyStoreCredit && credit > 0 ? { useStoreCredit: true } : {}),
+        ...(activeOrder ? { orderId: activeOrder.id } : {}),
         lines: cart.map((line) => ({
           productId: line.product.id,
           quantity: line.quantity,
@@ -445,9 +526,50 @@ export function NewSalePage() {
     );
   return (
     <div className="sale-page">
-      <h1>New sale</h1>
+      <header className="page-heading">
+        <div>
+          <h1>New sale</h1>
+        </div>
+        {Boolean(pickupOrders.data && pickupOrders.data.length > 0) && (
+          <Button
+            type="button"
+            variant="secondary"
+            size="lg"
+            className="pickup-orders-trigger"
+            onClick={() => setOrdersModalOpen(true)}
+          >
+            <span>📦 Pickup orders ({pickupOrders.data!.length})</span>
+          </Button>
+        )}
+      </header>
       <div className="sale-grid">
         <section className="sale-items" aria-label="Sale items">
+          {activeOrder && (
+            <div className="active-order-banner" role="status">
+              <div className="active-order-info">
+                <span className="active-order-tag">Fulfilling Pre-Order</span>
+                <strong className="active-order-number">
+                  {activeOrder.orderNumber}
+                </strong>
+                <span className="active-order-customer">
+                  for {activeOrder.customerName}
+                </span>
+                {activeOrder.pickupNote && (
+                  <span className="active-order-note">
+                    Note: &ldquo;{activeOrder.pickupNote}&rdquo;
+                  </span>
+                )}
+              </div>
+              <Button
+                variant="ghost"
+                size="sm"
+                onClick={() => setActiveOrder(null)}
+                className="active-order-detach"
+              >
+                Clear order
+              </Button>
+            </div>
+          )}
           {invalidRecovery && (
             <StatusPanel error title="An unfinished sale needs attention">
               <p>
@@ -781,6 +903,14 @@ export function NewSalePage() {
           {customer ? ` · ${customer.displayName}` : ""}
         </p>
       </ConfirmDialog>
+      <PickupOrdersDialog
+        open={ordersModalOpen}
+        onOpenChange={setOrdersModalOpen}
+        orders={pickupOrders.data || []}
+        isLoading={pickupOrders.isLoading}
+        onSelectOrder={handleLoadOrder}
+        loadingOrderId={loadingOrderId}
+      />
     </div>
   );
 }
