@@ -16,6 +16,9 @@ public enum ErrorCode {
     DUPLICATE_REFERENCE(HttpStatus.CONFLICT, "duplicate-reference", "Reference already in use"),
     INSUFFICIENT_STOCK(HttpStatus.CONFLICT, "insufficient-stock", "Not enough stock"),
     STOCK_LIMIT_EXCEEDED(HttpStatus.CONFLICT, "stock-limit-exceeded", "Stock limit exceeded"),
+    REPAYMENT_EXCEEDS_BALANCE(HttpStatus.CONFLICT, "repayment-exceeds-balance", "Repayment exceeds the balance owed"),
+    VERSION_CONFLICT(HttpStatus.PRECONDITION_FAILED, "version-conflict", "Changed by someone else"),
+    PRECONDITION_REQUIRED(HttpStatus.PRECONDITION_REQUIRED, "precondition-required", "If-Match is required"),
     IDEMPOTENCY_KEY_REUSED(HttpStatus.UNPROCESSABLE_CONTENT, "idempotency-key-reused", "Idempotency-Key already used"),
     SALE_ALREADY_REVERSED(HttpStatus.CONFLICT, "sale-already-reversed", "Sale already reversed"),
     INVALID_AUTHORIZATION_CODE(HttpStatus.CONFLICT, "invalid-authorization-code", "Invalid authorization code"),
@@ -24,7 +27,6 @@ public enum ErrorCode {
     AUTHORIZATION_SALE_MISMATCH(HttpStatus.CONFLICT, "authorization-sale-mismatch", "Authorization code was issued for another sale"),
     REVERSAL_MANUAL_REVIEW_REQUIRED(HttpStatus.CONFLICT, "reversal-manual-review-required", "Reversal requires manual review"),
     REVERSAL_CONFLICT(HttpStatus.CONFLICT, "reversal-conflict", "Reversal conflict"),
-    VERSION_CONFLICT(HttpStatus.PRECONDITION_FAILED, "version-conflict", "Resource version conflict"),
     DATABASE_UNAVAILABLE(HttpStatus.SERVICE_UNAVAILABLE, "database-unavailable", "Database unavailable"),
     INTERNAL_ERROR(HttpStatus.INTERNAL_SERVER_ERROR, "internal-error", "Something went wrong");
 

@@ -11,8 +11,8 @@ import org.springframework.stereotype.Repository;
  * Read-only queries behind the dashboard (spec R14). Nothing here writes and nothing is cached:
  * each figure is computed from the records on every read.
  *
- * <p>When reversals arrive (R11), {@link #todaySales} must leave reversed sales out, so that
- * reversing a sale moves today's total on the next load (R14 acceptance).
+ * <p>{@link #todaySales} leaves reversed sales out (R11), so reversing a sale moves today's
+ * total on the next load (R14 acceptance). {@link #recentSales} still lists them, as activity.
  */
 @Repository
 public class DashboardQueries {
@@ -31,7 +31,7 @@ public class DashboardQueries {
         this.jdbc = jdbc;
     }
 
-    /** Sales created in [start, end): one query over index {@code sale_created_at_idx}. */
+    /** Sales created in [start, end) and not reversed: one query over index {@code sale_created_at_idx}. */
     public Dashboard.TodaySales todaySales(OffsetDateTime start, OffsetDateTime end) {
         return jdbc.sql("""
                         SELECT count(*) AS sales,
@@ -41,7 +41,7 @@ public class DashboardQueries {
                                count(*) FILTER (WHERE payment_type = 'CREDIT') AS credit,
                                coalesce(sum(total_kobo) FILTER (WHERE payment_type = 'CREDIT'), 0) AS credit_total
                         FROM sale
-                        WHERE created_at >= :start AND created_at < :end
+                        WHERE created_at >= :start AND created_at < :end AND reversed_at IS NULL
                         """)
                 .param("start", start)
                 .param("end", end)

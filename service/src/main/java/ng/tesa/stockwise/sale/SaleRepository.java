@@ -170,86 +170,95 @@ public class SaleRepository {
      * no re-read. The lines are the ones this transaction just wrote.
      */
     public Sale finishSale(UUID saleId, long totalKobo, List<Sale.Line> lines) {
-        return finishSale(saleId, totalKobo, totalKobo, 0L, lines);
-    }
-
-    public Sale finishSale(UUID saleId, long totalKobo, long unpaidKobo, long storeCreditUsedKobo, List<Sale.Line> lines) {
         List<Sale.Line> ordered = lines.stream().sorted(LINE_ORDER).toList();
         return jdbc.sql("""
                     UPDATE sale
                     SET total_kobo = :total,
-                        unpaid_kobo = CASE WHEN payment_type = 'CREDIT' THEN :unpaid ELSE 0 END,
-                        store_credit_used_kobo = :storeCreditUsed
+                        unpaid_kobo = CASE WHEN payment_type = 'CREDIT' THEN :total ELSE 0 END
                     WHERE id = :id
                     RETURNING id, reference, payment_type, customer_id, due_date, total_kobo,
                               created_by, created_at,
                               reversed_at, reversed_by, reversal_reason, reversal_notes, unpaid_kobo, store_credit_used_kobo
                     """)
                 .param("total", totalKobo)
-                .param("unpaid", unpaidKobo)
-                .param("storeCreditUsed", storeCreditUsedKobo)
                 .param("id", saleId)
                 .query((rs, row) -> mapSale(rs, ordered))
                 .single();
     }
 
-    public void setTotal(UUID saleId, long totalKobo) {
-        setTotal(saleId, totalKobo, totalKobo, 0L);
+    /**
+     * R12, DM5, DM73: draws up to {@code totalKobo} from the customer's store credit for this sale
+     * and returns the amount drawn (0 when they have none).
+     *
+     * <p>The amount is computed in SQL from the customer's row, read {@code FOR NO KEY UPDATE}: a second
+     * sale for the same customer waits here until the first commits, then sees what is left, so
+     * two tills can't spend the same credit. {@code store_credit_kobo >= applied} is the guard R12
+     * names and {@code customer_store_credit_non_negative} the backstop. The draw is written three
+     * times in this transaction: a {@code STORE_CREDIT} ledger row of {@code -applied} pointing at
+     * the sale (the balance owed doesn't change, DM5 convention), {@code sale.store_credit_used_kobo}
+     * so a reversal can give it back, and for a CREDIT sale {@code unpaid_kobo} lowered by the
+     * same amount, so repayments are only allocated to what is really owed.
+     *
+     * <p>{@code NO KEY UPDATE}, not {@code UPDATE}: inserting this sale already took a
+     * {@code KEY SHARE} lock on the customer through {@code sale.customer_id}, and so did every
+     * other open sale for them. {@code FOR UPDATE} conflicts with those, so two sales would each
+     * wait for the other (deadlock). {@code NO KEY UPDATE} doesn't, and still queues the draws.
+     */
+    public long drawStoreCredit(UUID customerId, UUID saleId, long totalKobo) {
+        record Draw(long applied, long balanceKobo) {
+        }
+        Optional<Draw> draw = jdbc.sql("""
+                        WITH held AS (
+                            SELECT store_credit_kobo AS credit FROM customer WHERE id = :id FOR NO KEY UPDATE
+                        ), amount AS (
+                            SELECT LEAST(credit, :total) AS applied FROM held WHERE credit > 0
+                        )
+                        UPDATE customer c
+                        SET store_credit_kobo = c.store_credit_kobo - amount.applied
+                        FROM amount
+                        WHERE c.id = :id AND c.store_credit_kobo >= amount.applied
+                        RETURNING amount.applied, c.balance_kobo
+                        """)
+                .param("id", customerId)
+                .param("total", totalKobo)
+                .query((rs, row) -> new Draw(rs.getLong("applied"), rs.getLong("balance_kobo")))
+                .optional();
+        if (draw.isEmpty()) {
+            return 0;
+        }
+        long applied = draw.get().applied();
+        jdbc.sql("""
+                        INSERT INTO ledger_entry (customer_id, delta_kobo, source_type, source_id, balance_after_kobo,
+                                                  created_at)
+                        VALUES (:customerId, :delta, 'STORE_CREDIT', :saleId, :balanceAfter, clock_timestamp())
+                        """)
+                .param("customerId", customerId)
+                .param("delta", -applied)
+                .param("saleId", saleId)
+                .param("balanceAfter", draw.get().balanceKobo())
+                .update();
+        jdbc.sql("""
+                        UPDATE sale
+                        SET store_credit_used_kobo = :applied,
+                            unpaid_kobo = CASE WHEN payment_type = 'CREDIT' THEN total_kobo - :applied ELSE 0 END
+                        WHERE id = :id
+                        """)
+                .param("applied", applied)
+                .param("id", saleId)
+                .update();
+        return applied;
     }
 
-    public void setTotal(UUID saleId, long totalKobo, long unpaidKobo, long storeCreditUsedKobo) {
+    public void setTotal(UUID saleId, long totalKobo) {
         jdbc.sql("""
                 UPDATE sale
                 SET total_kobo = :total,
-                    unpaid_kobo = CASE WHEN payment_type = 'CREDIT' THEN :unpaid ELSE 0 END,
-                    store_credit_used_kobo = :storeCreditUsed
+                    unpaid_kobo = CASE WHEN payment_type = 'CREDIT' THEN :total ELSE 0 END
                 WHERE id = :id
                 """)
                 .param("total", totalKobo)
-                .param("unpaid", unpaidKobo)
-                .param("storeCreditUsed", storeCreditUsedKobo)
                 .param("id", saleId)
                 .update();
-    }
-
-    /**
-     * R12: Atomically applies store credit up to maxKobo, deducts from customer balance,
-     * and writes a STORE_CREDIT ledger entry.
-     */
-    public long applyStoreCredit(UUID customerId, UUID saleId, long maxKobo) {
-        CustomerBalance balance = jdbc.sql("""
-                SELECT balance_kobo, store_credit_kobo
-                FROM customer WHERE id = :id FOR UPDATE
-                """)
-                .param("id", customerId)
-                .query((rs, row) -> new CustomerBalance(rs.getLong("balance_kobo"), rs.getLong("store_credit_kobo")))
-                .single();
-
-        long drawn = Math.min(balance.storeCreditKobo(), maxKobo);
-        if (drawn <= 0) {
-            return 0;
-        }
-
-        jdbc.sql("""
-                UPDATE customer
-                SET store_credit_kobo = store_credit_kobo - :drawn
-                WHERE id = :id
-                """)
-                .param("drawn", drawn)
-                .param("id", customerId)
-                .update();
-
-        jdbc.sql("""
-                INSERT INTO ledger_entry (customer_id, delta_kobo, source_type, source_id, balance_after_kobo)
-                VALUES (:customerId, :delta, 'STORE_CREDIT', :saleId, :balanceAfter)
-                """)
-                .param("customerId", customerId)
-                .param("delta", -drawn)
-                .param("saleId", saleId)
-                .param("balanceAfter", balance.balanceKobo())
-                .update();
-
-        return drawn;
     }
 
     public boolean customerExists(UUID customerId) {
@@ -275,8 +284,9 @@ public class SaleRepository {
                 .query(Long.class)
                 .single();
         jdbc.sql("""
-                        INSERT INTO ledger_entry (customer_id, delta_kobo, source_type, source_id, balance_after_kobo)
-                        VALUES (:customerId, :delta, 'CREDIT_SALE', :saleId, :balanceAfter)
+                        INSERT INTO ledger_entry (customer_id, delta_kobo, source_type, source_id, balance_after_kobo,
+                                                  created_at)
+                        VALUES (:customerId, :delta, 'CREDIT_SALE', :saleId, :balanceAfter, clock_timestamp())
                         """)
                 .param("customerId", customerId)
                 .param("delta", totalKobo)
@@ -387,6 +397,4 @@ public class SaleRepository {
                 rs.getLong("unpaid_kobo"),
                 rs.getLong("store_credit_used_kobo"));
     }
-
-    private record CustomerBalance(long balanceKobo, long storeCreditKobo) {}
 }

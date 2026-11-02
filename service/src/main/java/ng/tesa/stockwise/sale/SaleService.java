@@ -24,10 +24,12 @@ import ng.tesa.stockwise.sale.SaleExceptions.ReferenceNotFound;
  *
  * <p>Order inside the transaction: claim the Idempotency-Key, take stock line by line in
  * product-ID order (so two multi-line sales can't deadlock), write lines and movements, set the
- * total, then charge credit. Any refusal throws and rolls everything back.
+ * total, draw store credit if asked, then charge credit for what is left. Any refusal throws and
+ * rolls everything back, store credit included.
  *
- * <p>Store credit (R12) is not drawn yet: it only exists after reversals, which come after
- * Monday (plan step 16, {@code StoreCreditIT}).
+ * <p>Store credit (R12, DM5, DM73): with {@code useStoreCredit}, the customer's store credit pays
+ * for up to the whole total. The amount is decided by {@link SaleRepository#drawStoreCredit}
+ * under the customer's row lock, so two tills can't spend the same credit twice.
  */
 @Service
 public class SaleService {
@@ -74,17 +76,22 @@ public class SaleService {
             soldLines.add(new Sale.Line(line.productId(), done.productName(), line.quantity(),
                     done.unitPriceKobo(), done.lineTotalKobo()));
         }
-        long storeCreditUsed = 0;
-        if (Boolean.TRUE.equals(request.useStoreCredit()) && request.customerId() != null && total > 0) {
-            storeCreditUsed = sales.applyStoreCredit(request.customerId(), saleId, total);
+        // Writes the total and returns the finished sale in one statement (no re-read).
+        Sale sale = sales.finishSale(saleId, total, soldLines);
+
+        // Store credit first (R12, DM73), so a CREDIT sale only owes what the credit did not cover.
+        // A zero amount has no ledger entry: ledger deltas are never zero (ledger_entry_delta_non_zero).
+        long storeCreditApplied = 0;
+        if (request.useStoreCredit() && total > 0) {
+            storeCreditApplied = sales.drawStoreCredit(request.customerId(), saleId, total);
         }
-
-        long netCredit = total - storeCreditUsed;
-        Sale sale = sales.finishSale(saleId, total, netCredit, storeCreditUsed, soldLines);
-
-        // A zero total has no ledger entry: ledger deltas are never zero (ledger_entry_delta_non_zero).
-        if (request.paymentType() == PaymentType.CREDIT && netCredit > 0) {
-            sales.chargeCredit(request.customerId(), saleId, netCredit);
+        long owed = total - storeCreditApplied;
+        if (request.paymentType() == PaymentType.CREDIT && owed > 0) {
+            sales.chargeCredit(request.customerId(), saleId, owed);
+        }
+        if (storeCreditApplied > 0) {
+            // The draw changed store_credit_used_kobo and unpaid_kobo after finishSale returned.
+            sale = sales.findSale(saleId).orElseThrow();
         }
         return new RecordedSale(sale, false);
     }
@@ -118,6 +125,10 @@ public class SaleService {
         }
         if (request.paymentType() == PaymentType.CREDIT && request.customerId() == null) {
             errors.add(new FieldError("customerId", "is required for a CREDIT sale"));
+        }
+        // A CREDIT sale without a customer is already reported above; one message per field.
+        if (request.useStoreCredit() && request.customerId() == null && request.paymentType() != PaymentType.CREDIT) {
+            errors.add(new FieldError("customerId", "is required to use store credit"));
         }
         if (request.dueDate() != null && request.paymentType() != PaymentType.CREDIT) {
             errors.add(new FieldError("dueDate", "is only allowed on a CREDIT sale"));

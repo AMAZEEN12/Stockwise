@@ -5,122 +5,168 @@ import static org.assertj.core.api.Assertions.assertThat;
 import java.util.UUID;
 
 import org.junit.jupiter.api.Test;
-import org.springframework.beans.factory.annotation.Autowired;
 
 import ng.tesa.stockwise.support.ApiTestSupport;
 
+/**
+ * Spec R1 and R18: the owner edits, archives and unarchives a product, and an edit made from a
+ * stale screen is refused with 412 instead of overwriting someone else's change. Over HTTP, as
+ * the edit screen and the archive toggle send it.
+ */
 class ProductEditIT extends ApiTestSupport {
 
-    @Autowired
-    private ProductRepository productRepository;
+    private Response patch(String token, UUID productId, String ifMatch, String body) {
+        return ifMatch == null
+                ? send("PATCH", "/api/v1/products/" + productId, token, body)
+                : send("PATCH", "/api/v1/products/" + productId, token, body, "If-Match", ifMatch);
+    }
 
-    @Test
-    void ownerCanUpdateProductDetailsWithIfMatch() {
-        String ownerToken = login(OWNER);
-        UUID milkId = product("MILK-EDIT-1", 100_000, 20);
-
-        Response getResp = get("/api/v1/products/" + milkId, ownerToken);
-        assertThat(getResp.status()).isEqualTo(200);
-        assertThat(getResp.header("ETag")).isEqualTo("\"0\"");
-
-        Response patchResp = send("PATCH", "/api/v1/products/" + milkId, ownerToken, """
-                {
-                    "name": "Peak Evaporated Milk 400g",
-                    "priceKobo": 150000,
-                    "lowStockThreshold": 8
-                }
-                """, "If-Match", "0");
-
-        assertThat(patchResp.status()).isEqualTo(200);
-        assertThat(patchResp.header("ETag")).isEqualTo("\"1\"");
-        assertThat(patchResp.body().get("name").asString()).isEqualTo("Peak Evaporated Milk 400g");
-        assertThat(patchResp.body().get("priceKobo").asLong()).isEqualTo(150_000L);
-        assertThat(patchResp.body().get("lowStockThreshold").asInt()).isEqualTo(8);
-        assertThat(patchResp.body().get("version").asInt()).isEqualTo(1);
-
-        Product updated = productRepository.findById(milkId).orElseThrow();
-        assertThat(updated.name()).isEqualTo("Peak Evaporated Milk 400g");
-        assertThat(updated.priceKobo()).isEqualTo(150_000L);
-        assertThat(updated.lowStockThreshold()).isEqualTo(8);
-        assertThat(updated.version()).isEqualTo(1);
+    private String etag(String token, UUID productId) {
+        var response = get("/api/v1/products/" + productId, token);
+        assertThat(response.status()).isEqualTo(200);
+        return response.header("ETag");
     }
 
     @Test
-    void versionMismatchReturns412() {
-        String ownerToken = login(OWNER);
-        UUID milkId = product("MILK-EDIT-2", 100_000, 20);
+    void theOwnerEditsAProductAndGetsTheNewVersion() {
+        String owner = login(OWNER);
+        UUID milk = product("MILK-400", 100_000, 10);
+        String before = etag(owner, milk);
 
-        Response patchResp = send("PATCH", "/api/v1/products/" + milkId, ownerToken, """
-                {"priceKobo": 120000}
-                """, "If-Match", "99");
+        var edited = patch(owner, milk, before, """
+                {"name":"Peak Milk 400g","priceKobo":125000,"lowStockThreshold":4}""");
 
-        assertThat(patchResp.status()).isEqualTo(412);
-        assertThat(patchResp.code()).isEqualTo("VERSION_CONFLICT");
+        assertThat(edited.status()).as("edit %s", edited.body()).isEqualTo(200);
+        assertThat(edited.body().get("name").asString()).isEqualTo("Peak Milk 400g");
+        assertThat(edited.body().get("priceKobo").asLong()).isEqualTo(125_000);
+        assertThat(edited.body().get("lowStockThreshold").asInt()).isEqualTo(4);
+        assertThat(edited.body().get("reference").asString()).isEqualTo("MILK-400");
+        assertThat(edited.body().get("quantity").asInt()).isEqualTo(10);
+        assertThat(edited.header("ETag")).isNotEqualTo(before).isEqualTo(etag(owner, milk));
+        assertThat(get("/api/v1/products/" + milk, owner).body().get("name").asString()).isEqualTo("Peak Milk 400g");
+    }
+
+    /** R1: an archived product leaves the sale screen but keeps its history; unarchive brings it back. */
+    @Test
+    void archiveAndUnarchive() {
+        String owner = login(OWNER);
+        UUID oil = product("OIL-1L", 300_000, 5);
+
+        var archived = patch(owner, oil, etag(owner, oil), """
+                {"active":false}""");
+        assertThat(archived.status()).isEqualTo(200);
+        assertThat(archived.body().get("active").asBoolean()).isFalse();
+        assertThat(archived.body().get("stockState").asString()).isEqualTo("ARCHIVED");
+        var sale = sell(owner, """
+                {"paymentType":"PAID","lines":[{"productId":"%s","quantity":1}]}""".formatted(oil));
+        assertThat(sale.status()).isEqualTo(404);
+        assertThat(get("/api/v1/products/" + oil, owner).status()).isEqualTo(200);
+
+        var restored = patch(owner, oil, etag(owner, oil), """
+                {"active":true}""");
+        assertThat(restored.status()).isEqualTo(200);
+        assertThat(restored.body().get("active").asBoolean()).isTrue();
+    }
+
+    /** R18 two-tab test: tab A edits, tab B archives from the version it read; B gets 412 and nothing changes. */
+    @Test
+    void aStaleVersionIs412AndNothingChanges() {
+        String owner = login(OWNER);
+        UUID rice = product("RICE-5KG", 850_000, 5);
+        String readByBothTabs = etag(owner, rice);
+
+        assertThat(patch(owner, rice, readByBothTabs, """
+                {"priceKobo":900000}""").status()).isEqualTo(200);
+        var stale = patch(owner, rice, readByBothTabs, """
+                {"active":false}""");
+
+        assertThat(stale.status()).isEqualTo(412);
+        assertThat(stale.code()).isEqualTo("VERSION_CONFLICT");
+        var now = get("/api/v1/products/" + rice, owner).body();
+        assertThat(now.get("active").asBoolean()).isTrue();
+        assertThat(now.get("priceKobo").asLong()).isEqualTo(900_000);
+    }
+
+    /** A sale moves the version too, so a screen opened before the sale must reload first. */
+    @Test
+    void aSaleInBetweenAlsoMakesTheVersionStale() {
+        String owner = login(OWNER);
+        UUID salt = product("SALT-500", 20_000, 5);
+        String before = etag(owner, salt);
+        assertThat(sell(owner, """
+                {"paymentType":"PAID","lines":[{"productId":"%s","quantity":1}]}""".formatted(salt)).status()).isEqualTo(201);
+
+        assertThat(patch(owner, salt, before, """
+                {"priceKobo":25000}""").status()).isEqualTo(412);
+        assertThat(patch(owner, salt, etag(owner, salt), """
+                {"priceKobo":25000}""").status()).isEqualTo(200);
     }
 
     @Test
-    void missingIfMatchReturns412() {
-        String ownerToken = login(OWNER);
-        UUID milkId = product("MILK-EDIT-3", 100_000, 20);
+    void ifMatchIsRequiredAndAcceptsTheUsualForms() {
+        String owner = login(OWNER);
+        UUID milk = product("MILK-400", 100_000, 10);
 
-        Response patchResp = send("PATCH", "/api/v1/products/" + milkId, ownerToken, """
-                {"priceKobo": 120000}
-                """);
+        var missing = patch(owner, milk, null, """
+                {"priceKobo":1}""");
+        assertThat(missing.status()).isEqualTo(428);
+        assertThat(missing.code()).isEqualTo("PRECONDITION_REQUIRED");
+        assertThat(patch(owner, milk, "latest", """
+                {"priceKobo":1}""").status()).isEqualTo(428);
 
-        assertThat(patchResp.status()).isEqualTo(412);
-        assertThat(patchResp.code()).isEqualTo("VERSION_CONFLICT");
+        int version = get("/api/v1/products/" + milk, owner).body().get("version").asInt();
+        assertThat(patch(owner, milk, String.valueOf(version), """
+                {"priceKobo":2}""").status()).isEqualTo(200);
+        assertThat(patch(owner, milk, "W/\"" + (version + 1) + "\"", """
+                {"priceKobo":3}""").status()).isEqualTo(200);
     }
 
     @Test
-    void nonOwnerCannotPatchProduct() {
-        String assistantToken = login(ASSISTANT);
-        String adminToken = login(ADMIN);
-        UUID milkId = product("MILK-EDIT-4", 100_000, 20);
+    void aTakenReferenceIs409() {
+        String owner = login(OWNER);
+        product("MILK-400", 100_000, 10);
+        UUID rice = product("RICE-5KG", 850_000, 5);
 
-        Response asstResp = send("PATCH", "/api/v1/products/" + milkId, assistantToken, """
-                {"priceKobo": 120000}
-                """, "If-Match", "0");
-        assertThat(asstResp.status()).isEqualTo(403);
+        var taken = patch(owner, rice, etag(owner, rice), """
+                {"reference":"MILK-400"}""");
 
-        Response adminResp = send("PATCH", "/api/v1/products/" + milkId, adminToken, """
-                {"priceKobo": 120000}
-                """, "If-Match", "0");
-        assertThat(adminResp.status()).isEqualTo(403);
+        assertThat(taken.status()).isEqualTo(409);
+        assertThat(taken.code()).isEqualTo("DUPLICATE_REFERENCE");
+        assertThat(get("/api/v1/products/" + rice, owner).body().get("reference").asString()).isEqualTo("RICE-5KG");
     }
 
     @Test
-    void archiveAndUnarchiveProduct() {
-        String ownerToken = login(OWNER);
-        UUID milkId = product("MILK-EDIT-5", 100_000, 20);
+    void invalidEditsAreRefused() {
+        String owner = login(OWNER);
+        UUID milk = product("MILK-400", 100_000, 10);
+        String version = etag(owner, milk);
 
-        // Archive
-        Response archiveResp = send("PATCH", "/api/v1/products/" + milkId, ownerToken, """
-                {"active": false}
-                """, "If-Match", "0");
-        assertThat(archiveResp.status()).isEqualTo(200);
-        assertThat(archiveResp.body().get("active").asBoolean()).isFalse();
-        assertThat(archiveResp.body().get("stockState").asString()).isEqualTo("ARCHIVED");
-
-        // Unarchive
-        Response unarchiveResp = send("PATCH", "/api/v1/products/" + milkId, ownerToken, """
-                {"active": true}
-                """, "If-Match", "1");
-        assertThat(unarchiveResp.status()).isEqualTo(200);
-        assertThat(unarchiveResp.body().get("active").asBoolean()).isTrue();
-        assertThat(unarchiveResp.body().get("stockState").asString()).isEqualTo("IN_STOCK");
+        assertThat(patch(owner, milk, version, "{}").status()).isEqualTo(400);
+        var quantity = patch(owner, milk, version, """
+                {"quantity":99}""");
+        assertThat(quantity.status()).isEqualTo(400);
+        assertThat(quantity.body().get("errors").get(0).get("field").asString()).isEqualTo("quantity");
+        assertThat(patch(owner, milk, version, """
+                {"name":"   "}""").status()).isEqualTo(400);
+        assertThat(patch(owner, milk, version, """
+                {"priceKobo":-1}""").status()).isEqualTo(400);
+        assertThat(patch(owner, UUID.randomUUID(), "0", """
+                {"priceKobo":1}""").status()).isEqualTo(404);
+        assertThat(etag(owner, milk)).isEqualTo(version);
     }
 
     @Test
-    void duplicateReferenceReturns409() {
-        String ownerToken = login(OWNER);
-        product("MILK-EXISTS", 100_000, 20);
-        UUID otherId = product("MILK-OTHER", 100_000, 20);
+    void onlyTheOwnerMayEdit() {
+        String owner = login(OWNER);
+        UUID milk = product("MILK-400", 100_000, 10);
+        String version = etag(owner, milk);
 
-        Response patchResp = send("PATCH", "/api/v1/products/" + otherId, ownerToken, """
-                {"reference": "MILK-EXISTS"}
-                """, "If-Match", "0");
-
-        assertThat(patchResp.status()).isEqualTo(409);
-        assertThat(patchResp.code()).isEqualTo("DUPLICATE_REFERENCE");
+        assertThat(patch(login(ASSISTANT), milk, version, """
+                {"active":false}""").status()).isEqualTo(403);
+        assertThat(patch(login(ADMIN), milk, version, """
+                {"active":false}""").status()).isEqualTo(403);
+        assertThat(patch(null, milk, version, """
+                {"active":false}""").status()).isEqualTo(401);
+        assertThat(etag(owner, milk)).isEqualTo(version);
     }
 }
