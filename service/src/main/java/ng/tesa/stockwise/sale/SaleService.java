@@ -74,12 +74,17 @@ public class SaleService {
             soldLines.add(new Sale.Line(line.productId(), done.productName(), line.quantity(),
                     done.unitPriceKobo(), done.lineTotalKobo()));
         }
-        // Writes the total and returns the finished sale in one statement (no re-read).
-        Sale sale = sales.finishSale(saleId, total, soldLines);
+        long storeCreditUsed = 0;
+        if (Boolean.TRUE.equals(request.useStoreCredit()) && request.customerId() != null && total > 0) {
+            storeCreditUsed = sales.applyStoreCredit(request.customerId(), saleId, total);
+        }
+
+        long netCredit = total - storeCreditUsed;
+        Sale sale = sales.finishSale(saleId, total, netCredit, storeCreditUsed, soldLines);
 
         // A zero total has no ledger entry: ledger deltas are never zero (ledger_entry_delta_non_zero).
-        if (request.paymentType() == PaymentType.CREDIT && total > 0) {
-            sales.chargeCredit(request.customerId(), saleId, total);
+        if (request.paymentType() == PaymentType.CREDIT && netCredit > 0) {
+            sales.chargeCredit(request.customerId(), saleId, netCredit);
         }
         return new RecordedSale(sale, false);
     }
