@@ -1,6 +1,5 @@
 import { authApi } from './auth.api';
 import { reversalsEndpoints } from '../endpoints/reversals.endpoints';
-import { isReversalSimulation } from '../../features/sales/reversal-simulation';
 import type {
   ReversalAuthorizationCreate,
   SaleReversalRequest,
@@ -14,7 +13,6 @@ export const reversalsApi = authApi.injectEndpoints({
   endpoints: (builder) => ({
     generateReversalCode: builder.mutation<ReversalAuthorization, ReversalAuthorizationCreate>({
       queryFn: async (body, _api, _options, baseQuery) => {
-        if (!isReversalSimulation()) return {error:{status:403,code:'SIMULATION_ONLY',fields:{}}};
         const result = await baseQuery({
         url: reversalsEndpoints.authorizations,
         method: 'POST',
@@ -28,7 +26,6 @@ export const reversalsApi = authApi.injectEndpoints({
       { saleId: string; body: SaleReversalRequest; key: string }
     >({
       queryFn: async ({ saleId, body, key }, _api, _options, baseQuery) => {
-        if (!isReversalSimulation()) return {error:{status:403,code:'SIMULATION_ONLY',fields:{}}};
         const result = await baseQuery({
         url: reversalsEndpoints.reversal(saleId),
         method: 'POST',
