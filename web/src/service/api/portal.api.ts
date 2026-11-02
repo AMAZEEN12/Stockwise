@@ -1,3 +1,4 @@
+import { createUuid } from '../../shared/utils/uuid';
 import { authApi } from "./auth.api";
 import { portalEndpoints } from "../endpoints/portal.endpoints";
 import type { CreatePortalOrderRequest } from "../../models/requests/portal.request";
@@ -33,7 +34,7 @@ export const portalApi = authApi.injectEndpoints({
         method: "POST",
         data: body,
         headers: {
-          "Idempotency-Key": idempotencyKey || crypto.randomUUID(),
+          "Idempotency-Key": idempotencyKey || createUuid(),
         },
       }),
       invalidatesTags: ["Customers", "Products", "Sales"],

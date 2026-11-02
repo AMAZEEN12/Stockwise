@@ -16,4 +16,9 @@ Rehearse on **staging** (Neon `staging` branch, Render `stockwise-api-staging`, 
 ## Record
 | Date | Environment | What was rolled back | Minutes taken | What went wrong or was unclear | By |
 |---|---|---|---|---|---|
-| | | | | | |
+| 2026-10-31 | Production (web and service); Neon branch copy `rollback-check` (database) | Vercel deployment, Render deploy, V6 undo on the branch copy | About 2.6 minutes of platform processing time (rollback about 1.2 min: web 5 s, service 54 s, database 10 s; roll-forward about 1.5 min: web 5 s, service 55 s, database 28 s). Clicking between dashboards is not counted. | No staging environment existed, so web and service were rehearsed on production. The Neon copy needed the `demo` profile when the service started, because the live database includes the demo seed migration. Smoke check after roll-forward: passed, about 66 s. | Blessing Nwafor |
+
+Commands used on the Neon branch copy (connection details set as environment variables, not recorded here):
+- Undo V6: `./mvnw "-Pundo" "-Dundo.target=5" exec:java`
+- Reapply V6: `./mvnw spring-boot:run "-Dspring-boot.run.profiles=local,demo"` with `FLYWAY_ON_STARTUP=true`
+- Smoke check: `scripts/smoke.sh` with `API_URL` and `WEB_URL` set

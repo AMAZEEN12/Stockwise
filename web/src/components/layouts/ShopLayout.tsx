@@ -21,6 +21,9 @@ export function ShopLayout() {
   const canSell = user.role !== "ADMIN";
   const navigation = (
     <nav aria-label="Shop navigation">
+      <NavLink to="/app/dashboard" onClick={() => setMenu(false)}>
+        Dashboard
+      </NavLink>
       {canSell && (
         <NavLink to="/app/sell" onClick={() => setMenu(false)}>
           Sell

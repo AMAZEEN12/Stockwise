@@ -1,3 +1,4 @@
+import { createUuid } from '../../shared/utils/uuid';
 import type { RestockCreate } from '../../models/requests/restocks.request';
 import { httpClient } from '../../service/http-client';
 import { isCalendarDate } from '../../shared/lagos-date';
@@ -37,7 +38,7 @@ export function readRestockAttempt(userId: string): RestockAttempt | 'other' | '
 export function persistRestockAttempt(userId: string, body: RestockCreate): RestockAttempt {
   if (readRestockAttempt(userId)) throw new Error('An earlier restock needs checking.');
   const attempt: RestockAttempt = {
-    key: crypto.randomUUID(), userId, apiBase: httpClient.defaults.baseURL || '', body, createdAt: new Date().toISOString(),
+    key: createUuid(), userId, apiBase: httpClient.defaults.baseURL || '', body, createdAt: new Date().toISOString(),
   };
   const serialized = JSON.stringify(attempt);
   sessionStorage.setItem(storageKey, serialized);

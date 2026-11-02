@@ -59,8 +59,12 @@ Failure causes are not recorded here; each run's log is in the Actions tab.
 
 ## Rollback rehearsals
 
-None on record yet. docs/rollback-rehearsal.md has the steps; the first rehearsal goes in this table with its real date and minutes.
-
 | Date | Environment | What was rolled back | Minutes taken | By |
 |----|----|----|----|----|
-| | | | | |
+| 2026-10-31 | Production (web and service); Neon branch copy `rollback-check` (database) | Vercel deployment, Render deploy, V6 undo on the branch copy | About 2.6 minutes of platform processing time (rollback about 1.2 min: web 5 s, service 54 s, database 10 s; roll-forward about 1.5 min: web 5 s, service 55 s, database 28 s). Clicking between dashboards is not counted. | No staging environment existed, so web and service were rehearsed on production. The Neon copy needed the `demo` profile when the service started, because the live database includes the demo seed migration. [Smoke check after roll-forward: passed / failed.] [Versions checked: `/health` showed the starting commit again after roll-forward.] | Blessing Nwafor |
+
+## Commands Used
+Undo:       ./mvnw "-Pundo" "-Dundo.target=5" exec:java
+Roll-fwd:   ./mvnw spring-boot:run "-Dspring-boot.run.profiles=local,demo"   (with FLYWAY_ON_STARTUP=true, DATABASE_JDBC_URL and DATABASE_JDBC_URL_DIRECT pointing at the branch copy)
+
+Smoke check after roll-forward: passed, about 66 s (mostly waiting for the service to answer).

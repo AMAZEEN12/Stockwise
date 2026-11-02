@@ -1,4 +1,4 @@
-﻿import {test,expect} from '@playwright/test';
+import {test,expect} from '@playwright/test';
 import type {Page,TestInfo} from '@playwright/test';
 import AxeBuilder from '@axe-core/playwright';
 
@@ -59,6 +59,107 @@ test('directory and form fit narrow and short viewports with long names',async({
   for(const width of [320,360,768,1024,1440]){await page.setViewportSize({width,height:1000});await expect(page.getByRole('heading',{name:'Customers',exact:true})).toBeVisible();expect(await page.evaluate(()=>document.documentElement.scrollWidth)).toBeLessThanOrEqual(width);}
   await page.setViewportSize({width:360,height:500});await add(page);await page.getByRole('textbox',{name:'Display name (required)'}).fill('Short screen');await expect(page.getByRole('button',{name:'Save customer',exact:true})).toBeInViewport();
 });
+
+test('customer ledger dedicated page navigates, displays statement and passes axe check', async ({ page }, info) => {
+  await setup(page);
+  await page.route('**/customers?*', (route) =>
+    route.fulfill({ json: { items: customers, page: 0, size: 100, totalItems: customers.length } })
+  );
+  await page.route('**/customers/*/ledger*', (route) =>
+    route.fulfill({
+      json: {
+        customerId: customers[0].id,
+        balanceKobo: 1230000,
+        storeCreditKobo: 0,
+        page: 0,
+        size: 50,
+        totalItems: 1,
+        items: [
+          {
+            id: '11111111-1111-4111-8111-111111111111',
+            sourceType: 'CREDIT_SALE',
+            sourceId: '22222222-2222-4222-8222-222222222222',
+            deltaKobo: 1230000,
+            balanceAfterKobo: 1230000,
+            storeCreditAfterKobo: 0,
+            createdAt: '2026-10-24T08:00:00Z',
+          },
+        ],
+      },
+    })
+  );
+
+  await page.goto('/app/customers');
+  await expect(page.getByText('Chinedu Obi', { exact: true }).filter({ visible: true })).toBeVisible();
+
+  // Click on customer name/row
+  await page.getByText('Chinedu Obi', { exact: true }).filter({ visible: true }).click();
+
+  await expect(page).toHaveURL(new RegExp(`/app/customers/${customers[0].id}`));
+  await expect(page.getByRole('heading', { name: /Chinedu Obi.*Ledger/ })).toBeVisible();
+  await expect(page.getByText('Current debt owed')).toBeVisible();
+  await expect(page.getByText('Credit sale', { exact: true }).filter({ visible: true })).toBeVisible();
+  await expect(page.getByText('+₦12,300.00').filter({ visible: true })).toBeVisible();
+  await capture(page, info, 'ledger-page');
+
+  const axe = await new AxeBuilder({ page }).analyze();
+  expect(axe.violations.filter((v) => ['serious', 'critical'].includes(v.impact || ''))).toEqual([]);
+
+  // Back link returns to customers list
+  await page.getByRole('link', { name: /Back to customers/i }).click();
+  await expect(page).toHaveURL(/\/app\/customers$/);
+  await expect(page.getByText('Chinedu Obi', { exact: true }).filter({ visible: true })).toBeVisible();
+});
+
+test('customer list rows and mobile cards contain no action buttons and issue store credit is on dedicated page', async ({ page }) => {
+  await setup(page);
+  await page.route('**/customers?*', (route) =>
+    route.fulfill({ json: { items: customers, page: 0, size: 100, totalItems: customers.length } })
+  );
+  await page.route('**/customers/*/ledger*', (route) =>
+    route.fulfill({
+      json: {
+        customerId: customers[0].id,
+        balanceKobo: 1230000,
+        storeCreditKobo: 0,
+        page: 0,
+        size: 50,
+        totalItems: 0,
+        items: [],
+      },
+    })
+  );
+
+  await page.goto('/app/customers');
+  await expect(page.getByRole('heading', { name: 'Customers', exact: true })).toBeVisible();
+
+  // STANDING RULE: Customer list rows and mobile cards must NOT have "+ Issue store credit", "+ Credit", or "View ledger →"
+  await expect(page.getByRole('button', { name: /Issue store credit/i })).toHaveCount(0);
+  await expect(page.getByRole('button', { name: /Credit/i })).toHaveCount(0);
+  await expect(page.getByText(/View ledger/i)).toHaveCount(0);
+
+  // Clicking customer navigates to dedicated page
+  await page.getByText('Chinedu Obi', { exact: true }).filter({ visible: true }).click();
+  await expect(page).toHaveURL(new RegExp(`/app/customers/${customers[0].id}`));
+
+  // Dedicated page contains "Issue store credit" button in header
+  const issueCreditBtn = page.getByRole('button', { name: 'Issue store credit', exact: true });
+  await expect(issueCreditBtn).toBeVisible();
+  await issueCreditBtn.click();
+
+  // Dialog opens
+  const dialog = page.getByRole('dialog', { name: 'Issue store credit' });
+  await expect(dialog).toBeVisible();
+  await expect(dialog.getByLabel('Credit amount to add', { exact: false })).toBeVisible();
+
+  // Close dialog
+  await dialog.getByRole('button', { name: 'Cancel', exact: true }).click();
+  await expect(dialog).not.toBeVisible();
+
+  const axe = await new AxeBuilder({ page }).analyze();
+  expect(axe.violations.filter((v) => ['serious', 'critical'].includes(v.impact || ''))).toEqual([]);
+});
+
 
 
 

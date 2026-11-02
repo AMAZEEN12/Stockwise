@@ -7,3 +7,9 @@ export interface StoreCreditGrantRequest {
   note?: string;
 }
 
+export interface CustomerRepaymentRequest {
+  customerId: string;
+  amountKobo: number;
+  note?: string;
+}
+

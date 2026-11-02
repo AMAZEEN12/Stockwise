@@ -1,3 +1,4 @@
+import { createUuid } from '../shared/utils/uuid';
 import axios from 'axios';
 import type { BaseQueryFn } from '@reduxjs/toolkit/query';
 import type { AxiosRequestConfig } from 'axios';
@@ -18,7 +19,7 @@ export const httpClient = axios.create({
 });
 
 httpClient.interceptors.request.use((config) => {
-  if (!config.headers.has('X-Request-Id')) config.headers.set('X-Request-Id', crypto.randomUUID());
+  if (!config.headers.has('X-Request-Id')) config.headers.set('X-Request-Id', createUuid());
   const session = readSession();
   if (session && !config.headers.has('Authorization')) config.headers.set('Authorization', `Bearer ${session.accessToken}`);
   return config;

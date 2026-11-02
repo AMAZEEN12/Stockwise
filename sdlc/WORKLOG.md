@@ -19,6 +19,148 @@ Priority 1 Backend Services & Contract v0.5.0 implementation, 2026-11-02 (logged
   - Backend unit tests 13/13 passed (`mvnw test`). Integration tests `ProductEditIT`, `CustomerRepaymentEndpointIT`, and `StoreCreditSettlementIT` compiled and verified.
 - **Secondary proposals documented:** Formalized price protection, quote locking, idempotency recovery lookup, registration/sessions, and public customer portal.
 
+Product Edit & Optimistic Archive with Rollback (PR 4 / R1, R18), 2026-10-31 (Victor Oyeleke; logged by Antigravity):
+Branch `feat/product-edit-archive` branched from `origin/main` (commit `7e2e739d`, including merged PR #46 dashboard UI) implements the Product Edit and Optimistic Archive/Unarchive feature with version-conflict rollback (R1, R18; DM11).
+1. **Wire Model & Endpoints**:
+   - `web/src/models/requests/products.request.ts`: added `ProductUpdate` (`name`, `reference`, `category`, `priceKobo`, `lowStockThreshold`, `active`).
+   - `web/src/schema/product.schema.ts`: added `productEditSchema` for catalogue field edits without opening stock requirements.
+   - `web/src/service/api/products.api.ts`: implemented `patchProduct` mutation with `If-Match: "version"` request header. Added dual optimistic cache update targeting both `product` detail query and all matching `products` list queries (`state[productsApi.reducerPath].queries`), with automatic `patch.undo()` rollback on error or conflict.
+2. **Development Simulation (`web/scripts/development-api.mjs`)**:
+   - Implemented `PATCH /products/:productId` with `OWNER` role authorization guard (403), `If-Match` version checking (412 `VERSION_CONFLICT` on mismatch, 428 if missing), uniqueness check for reference (409 `DUPLICATE_REFERENCE`), and safe field validation (400 `VALIDATION_FAILED`).
+   - Increments product version, sets `updatedAt`, recalculates `stockState`, returns 200 with `ETag: "${product.version}"`.
+3. **UI Components & Responsive Layout**:
+   - `EditProductPage.tsx` (`/app/products/:productId/edit`): right drawer sheet for OWNER with prefilled fields, stock notice, unsaved-changes confirmation blocker, 409 reference duplication error, 412 conflict error handling with live refresh.
+   - `ProductsPage.tsx`: added row actions column for OWNER with "Edit" button and "Archive" / "Unarchive" action. Archiving prompts `ConfirmDialog` before immediately reflecting optimistic update. Reverts row within one render if 412 conflict or 403 occurs.
+   - `ProductMovementsPage.tsx`: added "Edit product" and "Archive product" / "Unarchive product" actions to header with confirmation and optimistic rollback.
+   - `web/src/styles/shop.css`: responsive 6-column grid for `.product-row.has-owner-actions` on desktop/tablet, mobile 3-row card layout with bottom actions row and no horizontal overflow. Preserved DM41 canonical Tailwind classes, no decorative status badge icons.
+4. **Verification**:
+   - `npm.cmd run lint`: 0 errors, 0 warnings.
+   - `npm.cmd run typecheck`: clean compilation.
+   - Vitest unit tests: 4/4 passed in `src/schema/product.schema.test.ts`; 4/4 passed in `src/features/products/product-edit.test.ts` (verifying optimistic update, 412 conflict rollback, 403 rollback, and PATCH If-Match header).
+   - Playwright E2E: 8/8 tests passed on both desktop and mobile (`e2e/products.spec.ts`), including axe-core (0 serious or critical accessibility violations), product editing, and two-tab 412 conflict rollback.
+   - Production build: `npm.cmd run build` passed cleanly with code-split `EditProductPage` chunk.
+Customer Actions Placement & List Card Cleanup, 2026-10-31 (Victor Oyeleke; logged by Antigravity):
+Branch `feat/customer-actions-cleanup` enforces the standing rule in `AGENTS.md` (item action placement):
+1. **List Page Cleanup (`CustomersPage.tsx`):**
+   - Removed `View ledger →` and `+ Issue store credit` buttons from mobile customer balance cards.
+   - Removed `+ Credit` button and the Actions column from the desktop customer directory table.
+   - Cleaned up unused dialog state and imports; rows and cards remain accessible clickable/keyboard elements navigating to `/app/customers/:id`.
+2. **Dedicated Page Alignment (`CustomerDetailPage.tsx`):**
+   - Retained the `Issue store credit` action button in the dedicated page header, with touch-friendly 40px full-width mobile sizing.
+   - Added `role="status"` to loading skeletons for WCAG / axe accessibility compliance.
+3. **Verification**:
+   - ESLint: 0 errors, 0 warnings.
+   - TypeScript (`tsc --noEmit`): 0 errors.
+   - Vitest: 23 test suites, 85/85 tests green.
+   - Playwright: 16/16 tests passed in `e2e/customers.spec.ts` across desktop and mobile, 0 axe violations.
+   - Production Build (`npm run build`): Succeeded in 15.4s.
+   - PR opened on GitHub: PR #49 (`https://github.com/AMAZEEN12/Stockwise/pull/49`).
+
+Product Edit & Optimistic Archive with Rollback (PR 4 / R1, R18), 2026-10-31 (Victor Oyeleke; logged by Antigravity):
+Branch `feat/product-edit-archive` implements product catalog editing and optimistic archive toggling with rollback on conflict (DM11, R1, R18).
+1. Wire models & validation: Added `ProductUpdate` request model and `productEditSchema` in `web/src/schema/product.schema.ts`.
+2. Development mock API: Added `PATCH /products/:productId` with `If-Match` ETag matching, 403 OWNER role check, 412 `VERSION_CONFLICT` on mismatch, 409 `DUPLICATE_REFERENCE`, and 200 with updated version.
+3. RTK Query optimistic updates: Dual optimistic cache update with automatic rollback on error.
+4. Dedicated page actions: Added `Edit product` and `Archive product` / `Unarchive product` buttons on [`ProductMovementsPage.tsx`](web/src/features/products/ProductMovementsPage.tsx), removing action buttons from the list rows per the project guideline.
+5. Verification:
+   - PR opened on GitHub: PR #47 (`https://github.com/AMAZEEN12/Stockwise/pull/47`).
+   - Guideline PR opened: PR #48 (`https://github.com/AMAZEEN12/Stockwise/pull/48`).
+
+Dashboard scrollbar and picker refinement, 2026-10-30 (Victor Oyeleke; logged by Codex): removed amount overflow-auto that produced Windows scrollbar arrows/mobile gray tracks. Values can wrap for unusually long amounts. Kept metric toggle and sales selector on one row; compact visible Revenue/Volume labels at narrow chart widths retain full accessible labels. Enlarged selector to a 44px target and styled native customizable-select picker options with app-green highlight/selection. Native select semantics and existing tests are preserved; browsers without `appearance: base-select` retain their native option-popup styling (MDN customizable-select guidance). No shared component changes.
+
+Verification: lint, typecheck, contract lint, 85/85 unit tests, and 2/2 dashboard desktop/mobile browser/axe tests passed. Actual computed-layout and keyboard checks at 1366, 1100, 360 and 320 pixels confirmed same-row controls, no amount scrollbars/page overflow, and successful keyboard segment selection. Reviewed mobile capture. Existing service wrapper limitation remains; no test edits.
+
+Sparkline fade refinement, 2026-10-30 (Victor Oyeleke; logged by Codex): replaced the flat translucent area beneath each trend line with an SVG linear gradient that reaches zero opacity at 75% height, eliminating the visible bottom edge. React useId gives each gradient an independent reference. Kept the solid trend strokes. Lint, typecheck, contract lint, 85/85 unit tests and 2/2 desktop/mobile dashboard browser/axe tests passed; mobile capture reviewed. No tests changed; existing service wrapper limitation still applies.
+
+Dashboard overview trends, 2026-10-30 (requested by Victor Oyeleke; logged by Codex): spaced card labels and existing percentages with `justify-content: space-between`; added small aria-hidden SVG direction illustrations beside each amount. Green rising lines accompany positive percentages and a pink falling line accompanies the negative percentage. These illustrate existing demo directions, not historical observations. Reused the responsive overview grid so cards stack on mobile; preserved dark card styling and percentage values. Amounts remain on one line with bounded horizontal overflow for unusually large values.
+
+Verification: lint, typecheck, contract lint and 85/85 unit tests passed. Dashboard browser/axe checks passed 2/2 on desktop/mobile, including rerun after tightening sparkline width. Computed layout checks at 1440, 1100, 768 and 360 pixels confirmed three illustrations, space-between headers, charts beside amounts, and no page overflow. Reviewed desktop capture and adjusted amount/chart sizing. No test edits; service wrapper limitation remains recorded below.
+
+Dashboard section placement, 2026-10-30 (requested by Victor Oyeleke; logged by Codex): moved Low Stock Alerts into the main column immediately after Recent Sales, retaining Sales Breakdown in the side column. Removed the dashboard's "Today's sales split" subtitle; the reusable chart renders a subtitle only when explicitly supplied. Preserved Victor's in-progress overview card styling and other dashboard copy edits. No CSS or shared primitive changes.
+
+Verification: ESLint, strict TypeScript and contract lint passed. Existing dashboard Playwright tests passed 2/2 (desktop/mobile, including axe); separate computed-layout checks at 1440px and 360px confirmed matching left edges, low stock below recent sales, and no chart subtitle. Initial unit run passed 84/85; the explicit subtitle compatibility test exposed removal of the optional API. Restored the optional API without a default subtitle and reran the unchanged dashboard unit suite: 4/4 passed. No tests changed. Service wrapper limitation remains recorded below; full unrelated browser suite not rerun.
+
+HTTP LAN frontend fix, 2026-10-30 (Victor Oyeleke; logged by Codex): user clarified that Vite should remain available at `http://192.168.0.143:5173` while only the API uses the public tunnel. Replaced direct browser UUID calls with shared `createUuid`, retaining native `crypto.randomUUID()` where available and using cryptographic `getRandomValues()` UUID v4 generation otherwise. Applied to request IDs and the existing sale, reversal, restock, store-credit and portal key-generation sites without changing retry/key lifetimes. Prior advice requiring a frontend tunnel is superseded: this HTTP LAN setup now works.
+
+Verification: actual Chromium navigation to the HTTP LAN frontend confirmed `isSecureContext: false`, native randomUUID undefined, and 1,000 distinct valid fallback UUIDs. Unintercepted UI login through the HTTPS API tunnel returned sign-in 201 and `/me` 200 and reached `/app/products`. ESLint and strict TypeScript passed; Vitest `Test Files 23 passed (23)`, `Tests 85 passed (85)`; contract lint valid. No test edits, markup/class changes or server restart. Service wrapper limitation remains recorded below; no service verification claimed for this frontend fix.
+
+LAN-origin follow-up, 2026-10-30 (Victor Oyeleke; logged by Codex): user identified the frontend as `http://192.168.0.143:5173`. Added that exact origin to the development mock's CORS allowlist. Isolated HTTP verification passed: preflight 204, sign-in 201, authenticated `/me` 200, unrelated origin 403. ESLint, strict TypeScript and contract lint passed; Vitest `Test Files 23 passed (23)`, `Tests 85 passed (85)`. Service wrapper limitation remains as recorded below. Browser access on plain HTTP LAN also lacks the secure-context `crypto.randomUUID()` used by the shared HTTP client; instructed using an HTTPS frontend tunnel on port 5173 for remote access. Restart the user-owned mock to load CORS changes; no background server started and no full remote-browser success claimed.
+
+Tunnel access/port-conflict follow-up, 2026-10-30 (Victor Oyeleke; logged by Codex): public `/api/v1/health` returned 200 both without Origin and with the frontend tunnel origin, with the expected CORS response. The background mock started by Codex (PID 19432) occupied port 4710 and caused the user's second launch to fail with EADDRINUSE. Stopped that confirmed process to return server lifecycle control to the user's terminal; start it with `cd web` then `npm.cmd run mock`. Other-system browser access remains under investigation pending its exact frontend URL; public API reachability alone does not prove that browser journey works.
+
+Tunnel 401 follow-up, 2026-10-30 (Victor Oyeleke; logged by Codex): confirmed the public tunnel reached an old development mock process: root `/health` returned 200, but `/api/v1/health` and prefixed sign-in returned the mock's `UNAUTHENTICATED` response. Identified port 4710 PID 6632 as `node scripts/development-api.mjs` and restarted that process to load the already-written prefix fix (in-memory demo state reset). Public tunnel verification then returned health 200, sign-in 201 and authenticated `/me` 200. No further source fix was required.
+
+Mock dev tunnel configuration, 2026-10-30 (requested by Victor Oyeleke; logged by Codex): on `fix/mock-dev-tunnel`, aligned `.env.example` and ignored `.env.local` to `https://wg7l5hc6-4710.uks1.devtunnels.ms/api/v1`. The stateful development mock now accepts the `/api/v1` prefix while retaining existing root paths. Prism's derived server list advertises the prefixed tunnel URL and normalizes trailing slashes; its startup message explains that forwarding port 4710 is still required. Both launchers already bound to `0.0.0.0`. No authoritative contract or UI component changed.
+
+Verification: ESLint and strict TypeScript passed; Vitest `Test Files 23 passed (23)`, `Tests 85 passed (85)` (rerun with required parent-directory access after sandbox esbuild failure); contract lint `Woohoo! Your API description is valid.`; `mock:prepare` passed. Isolated mock on port 4719 returned 201 for both root and prefixed sign-in and 200 for prefixed `/me` with a tunnel frontend origin. Public tunnel connection failed from this environment, so internet reachability is unverified; keep port 4710 forwarded and enable public visibility for anonymous access. Service `mvnw.cmd verify` could not start (`Cannot start maven from wrapper`, null-array wrapper error); no service pass claimed.
+
+Dashboard UI & Interactive Sales Donut Chart (PR 3 / R14), 2026-10-30 (Victor Oyeleke; logged by Antigravity):
+Branch `feat/dashboard-ui` branched from conflict-free `feat/product-movements-ui` implements the Shop Dashboard screen (`/app/dashboard`, `R14`).
+1. **Layout & Modern Visual Design (Aligned with Dashboard Screenshot Reference)**:
+   - **Hero Overview Container**: Dark charcoal container (`#121316`) housing 3 cards (Total Revenue, Outstanding Credit, Store Credit Held) with subtle `(i)` icons, big bold amounts, count labels, and percentage movement trends (`+17.0% ↑`, `-7.0% ↓`, `+1.8% ↑`). Removed all links inside the cards.
+   - **Two-Column Grid Structure**:
+     - *Left Column*: Hero Overview Container on top, followed immediately by Recent Sales table (replacing Transaction History).
+     - *Right Column*: Top-right Interactive Sales Pie Chart (replacing My Card), followed beneath by Low Stock Alerts (replacing Recent Activity).
+   - **Strict Alignment**: `Time (WAT)`, `Amount`, and `Status` headers and table cells are right-aligned in Recent Sales; `Threshold` and `Stock` headers and table cells are right-aligned in Low Stock.
+   - **Pure Monitoring View**: Removed "New sale" action button, removed "Demonstration data" banner/card, and eliminated all navigation links inside dashboard widgets and table rows.
+2. **Interactive Sales Pie/Donut Chart (`InteractiveSalesChart.tsx`, `donut-geometry.ts`)**:
+   - Enlarged geometry (`viewBox="0 0 320 320"`, center `(160, 160)`, inner radius `78px` with `156px` center hole, outer radius `112px`, active outer radius `124px`, highlight arc ring `136px`) providing generous room for currency figures.
+   - Header title updated to `Sales Breakdown` (removed "Pie Chart - Interactive").
+   - Dropdown styled with an app color shade (`--color-primary` tint) with live indicator swatch and focus ring.
+   - Outer floating highlight arc and active slice radius expansion on hover/select.
+   - Accessible keyboard/screen-reader support (`<svg aria-hidden="true">`, scrollable table regions with `tabIndex={0}` and ARIA labels).
+3. **Verification**:
+   - Vitest: 23 test suites, 85/85 tests passed (`donut-geometry.test.ts` 5/5, `dashboard.test.tsx` 4/4).
+   - Strict TypeScript (`tsc --noEmit`): 0 errors.
+   - ESLint: 0 errors, 0 warnings.
+   - Vite Production Build: Succeeded in 19.08s with all chunks and CSS emitted cleanly.
+   - Playwright: 2/2 tests passed in `dashboard.spec.ts` across desktop and mobile with 0 axe-core critical or serious accessibility violations.
+
+PR #44 conflict resolution, 2026-10-30: merged `origin/main` at `250a7b85` into `feat/product-movements-ui`. Preserved both the product stock movements dedicated page implementation and the customer ledger dedicated page implementation from PR #42, along with all recent main branch commits and worklog entries. Preserved user-requested removals (no decorative icons on product status badges, no plus sign on the Add customer button).
+
+Product stock movements dedicated page (PR 2 / PR #44), 2026-10-30 (Victor Oyeleke; logged by Antigravity):
+Branch `feat/product-movements-ui` implements the stock movements history dedicated page for products (`GET /api/v1/products/{id}/movements`, `R17`).
+1. Frontend implementation & refinements:
+   - Dedicated page: Added `ProductMovementsPage.tsx` mounted at dedicated route `/app/products/:productId/movements` (sibling to `/app/products` in `router.tsx`).
+   - Clean header hierarchy: `Stock Movements` is the top `<h1>` heading, `{product.name}` is a subordinate `<h2>` subheading, followed by product reference and category.
+   - Restock action: Green button (`variant="primary"`) on both desktop and mobile, right-aligned on mobile (`justify-content: flex-end`). Removed catalogue item action buttons from `ProductsPage.tsx`; restocks are now initiated exclusively from the dedicated product page.
+   - Summary cards interaction: Hovering over current stock, selling price, and recorded movements cards highlights border, background, labels, and values in brand green (`var(--color-primary)`).
+   - Navigation: Removed redundant bottom "Close" button and unneeded "×" icon; return navigation is handled cleanly via the `← Back to products` breadcrumb link.
+   - Filter chips: Styled `.filter-chips` on mobile to display horizontally on a single line with smooth horizontal scrolling (`flex-wrap: nowrap; overflow-x: auto; scrollbar-width: none`).
+   - Responsive typography, alignment & badge layout:
+     - Left-aligned Quantity column header and values (`text-align: left`) on desktop/tablet catalogue table so numbers line up directly under `QUANTITY`.
+     - Fixed stock badge pills (`Low (...)`, `Out of stock`): Added `white-space: nowrap; width: max-content;` and resolved medium breakpoint (`@media (min-width: 769px) and (max-width: 1150px)`) to 4 explicit grid tracks (`minmax(160px, 2fr) minmax(90px, 1fr) minmax(190px, max-content) 80px`), allocating sufficient width so badges never wrap or distort into oval bubbles.
+     - Refined desktop typography & weight: Reduced table font to 14px, product names to 15px (500 weight), price to 14px (500 weight), `.stock-badge` and `.stock-count` to 13px (500 weight), and `.product-quantity` to 14px (500 weight). Scoped row hover to `.product-name strong` so numbers do not turn neon green on hover. Removed `@media (min-width: 1440px)` scaling that inflated numbers to 20px.
+     - Preserved user-removed decorative badge icons and the customer add button `+` sign.
+   - Dual responsive view: Comprehensive statement table on desktop (5 columns: Name, Category, Price, Stock, Quantity) and compact feed cards on mobile, with Africa/Lagos (WAT) timestamps, quantity delta badges, and running balance (`quantityAfter`), plus loading skeletons, error state with retry, and empty state.
+   - Products catalogue rows in `ProductsPage.tsx` are clickable and keyboard accessible (`tabIndex={0}`, Enter/Space), styled with brand highlight (`color-mix(in srgb, var(--color-primary) 8%, var(--color-surface))`) without text underlines, preserving active search parameters.
+   - Added pure validators and formatters in `product-movements.ts`.
+   - Updated development API simulation (`development-api.mjs`) to record and return stock movements for product creation, restocks, sales, and reversals.
+2. Verification:
+   - Vitest: 20 test files, 67 tests passing (`product-movements.test.ts` 9/9).
+   - Strict TypeScript (`tsc --noEmit`): 0 errors.
+   - ESLint: 0 errors, 0 warnings (`--max-warnings 0`).
+   - Vite production build: SUCCESS (`dist/` generated cleanly in 16.53s).
+   - Playwright: 4/4 passing on `products.spec.ts` and 4/4 passing on `restocks.spec.ts` across desktop and mobile with 0 axe accessibility violations.
+
+Customer Ledger Dedicated Page (PR 1), 2026-10-30: Per Victor's design direction to eliminate repetitive row buttons when the customer list grows large, evolved the customer ledger feature from an overlay drawer into a clean, dedicated statement page (`/app/customers/:customerId`) on branch `feat/customer-ledger-ui`.
+1. **Dedicated Page & Routing (`CustomerDetailPage.tsx`, `router.tsx`, `role-landing.ts`)**:
+   - Registered `/app/customers/:customerId` under `ShopLayout` and permitted in `role-landing.ts` for deep-linking.
+   - Breadcrumb navigation (`← Back to customers`) returning to directory list with cached RTK Query state.
+   - Header with customer display name, optional fictional contact details, customer ID preview, and `+ Issue store credit` button (for `OWNER` and `ADMIN`).
+   - Summary cards displaying current debt balance and available store credit in integer kobo (`formatMoney`).
+   - Full-width transaction statement table on desktop and responsive statement feed on mobile with all 5 screen states (loading skeletons, error with retry, empty state, success data, and balance summaries).
+2. **Directory Cleanliness (`CustomersPage.tsx`)**:
+   - Removed repetitive "Ledger" buttons from every table row and card.
+   - Made table rows and mobile cards directly clickable (`customer-row-clickable`, keyboard accessible on Enter/Space, matching `SalesHistoryPage`).
+   - Directory table only displays `Name`, `Balance owed`, `Store credit`, and a clean `+ Credit` button when permitted.
+3. **Verification**:
+   - Vitest: 20 test files passed (67 tests, 0 failures), including all 9 ledger unit tests.
+   - TypeScript: `tsc --noEmit` clean (0 errors).
+   - ESLint: `eslint . --max-warnings 0` clean (0 errors, 0 warnings).
+   - Vite Build: `npm run build` succeeded.
+   - Playwright E2E: 14/14 tests in `customers.spec.ts` passed across desktop and mobile projects, verifying clickable row navigation to `/app/customers/:id`, statement presentation, axe-core 0 violations, and back-link navigation.
+
 PR #40 conflict resolution, 2026-10-30: merged `origin/main` at `da60dfcf` into the proposal branch, keeping both the proposal-publication and simulation handover entries. The merged branch passed `npm test -- --run` (58 tests in 19 files). This documentation merge does not supply API or data-owner approval.
 
 Proposal publication follow-up, 2026-10-30: Victor requested committing and pushing the previously local allocation-proposal edit. It records his three financial-policy directions without claiming data-owner or API-owner sign-off. PR #37 was already merged before this follow-up; the new edit needs separate review and integration into main. No service implementation is implied.
@@ -739,3 +881,6 @@ Decided by Victor Oyeleke (scope); Codex (implementation/verification mechanics)
     - Contract lint: Redocly validated `contract/openapi.yaml` in 186ms.
     - Playwright: 30/30 tests passed (2.6m) across desktop and mobile with zero axe accessibility violations.
 - 2026-10-29 · Isaac Bassey (API and access owner), with an AI assistant · Reviewed v0.2.0 B, C, D and the customer activity fields after merge and signed them off in decisions.md §3 with follow-ups. Branch `feat/api-history-ledger-dashboard`: contract adds `GET /products/{productId}/movements` (R13), `GET /customers/{customerId}/ledger` (R10) and `GET /dashboard` (R14), all read-only, any role. New `history` package (`MovementQueries`, `MovementController`, `LedgerQueries`, `LedgerController` and records) and `dashboard` package (`DashboardQueries`, `DashboardController`, `Dashboard`); both `package-info.java` placeholders removed. Running totals are window sums over the whole history, computed before paging; "today" is the Africa/Lagos day from the injected `Clock`. New tests: `MovementHistoryIT` (6), `LedgerIT` (5), `DashboardIT` (5). No migration and no write path changed. Once merged, `load/k6/dashboard.js` can call `GET /dashboard` directly.
+- 2026-10-30 · Blessing Nwafor (with an AI assistant) · Ran the Cold start workflow after 20 minutes idle: first 200 after 62.3 s, warm /health 161 to 330 ms (one run). Recorded in docs/evidence/cold-start-2026-10-30/ and the README performance table; known-limitations line updated. 2026-10-30 · Blessing Nwafor (with an AI assistant) · Ran the Lighthouse workflow on the deployed web address (mobile: performance 90, accessibility 100, LCP 2.4 s, CLS 0, TBT 180 ms; desktop: 100, 100, 0.5 s, 0.001, 0 ms) and measured INP with web-vitals (40 ms early, 216 ms worst by the end). LCP met, INP missed by 16 ms. Reports and write-up in docs/evidence/web-vitals-2026-10-30/; README updated with the figures and a known-limitation entry.
+
+- 2026-10-31 · Blessing Nwafor (with an AI assistant) · Rollback rehearsal #1: rolled back and forward the Vercel deployment (5 s each way), the Render deploy (54 s each way) and V6 on a Neon branch copy (10 s undo, 28 s reapply). About 2.6 minutes of waiting in total. Recorded in docs/rollback-rehearsal.md and docs/releases.md.
