@@ -133,6 +133,16 @@ public class ProblemHandler {
         return problem(request, ErrorCode.NOT_FOUND, e.getMessage(), null);
     }
 
+    @ExceptionHandler(PreconditionFailedException.class)
+    ResponseEntity<Problem> preconditionFailed(PreconditionFailedException e, HttpServletRequest request) {
+        return problem(request, ErrorCode.VERSION_CONFLICT, e.getMessage(), null);
+    }
+
+    @ExceptionHandler(IllegalArgumentException.class)
+    ResponseEntity<Problem> illegalArgument(IllegalArgumentException e, HttpServletRequest request) {
+        return problem(request, ErrorCode.VALIDATION_FAILED, e.getMessage(), null);
+    }
+
     // Malformed requests: always 400 VALIDATION_FAILED with the offending field.
 
     @ExceptionHandler(MethodArgumentNotValidException.class)

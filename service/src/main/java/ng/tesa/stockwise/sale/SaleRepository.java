@@ -170,32 +170,86 @@ public class SaleRepository {
      * no re-read. The lines are the ones this transaction just wrote.
      */
     public Sale finishSale(UUID saleId, long totalKobo, List<Sale.Line> lines) {
+        return finishSale(saleId, totalKobo, totalKobo, 0L, lines);
+    }
+
+    public Sale finishSale(UUID saleId, long totalKobo, long unpaidKobo, long storeCreditUsedKobo, List<Sale.Line> lines) {
         List<Sale.Line> ordered = lines.stream().sorted(LINE_ORDER).toList();
         return jdbc.sql("""
                     UPDATE sale
                     SET total_kobo = :total,
-                        unpaid_kobo = CASE WHEN payment_type = 'CREDIT' THEN :total ELSE 0 END
+                        unpaid_kobo = CASE WHEN payment_type = 'CREDIT' THEN :unpaid ELSE 0 END,
+                        store_credit_used_kobo = :storeCreditUsed
                     WHERE id = :id
                     RETURNING id, reference, payment_type, customer_id, due_date, total_kobo,
                               created_by, created_at,
-                              reversed_at, reversed_by, reversal_reason, reversal_notes, unpaid_kobo
+                              reversed_at, reversed_by, reversal_reason, reversal_notes, unpaid_kobo, store_credit_used_kobo
                     """)
                 .param("total", totalKobo)
+                .param("unpaid", unpaidKobo)
+                .param("storeCreditUsed", storeCreditUsedKobo)
                 .param("id", saleId)
                 .query((rs, row) -> mapSale(rs, ordered))
                 .single();
     }
 
     public void setTotal(UUID saleId, long totalKobo) {
+        setTotal(saleId, totalKobo, totalKobo, 0L);
+    }
+
+    public void setTotal(UUID saleId, long totalKobo, long unpaidKobo, long storeCreditUsedKobo) {
         jdbc.sql("""
                 UPDATE sale
                 SET total_kobo = :total,
-                    unpaid_kobo = CASE WHEN payment_type = 'CREDIT' THEN :total ELSE 0 END
+                    unpaid_kobo = CASE WHEN payment_type = 'CREDIT' THEN :unpaid ELSE 0 END,
+                    store_credit_used_kobo = :storeCreditUsed
                 WHERE id = :id
                 """)
                 .param("total", totalKobo)
+                .param("unpaid", unpaidKobo)
+                .param("storeCreditUsed", storeCreditUsedKobo)
                 .param("id", saleId)
                 .update();
+    }
+
+    /**
+     * R12: Atomically applies store credit up to maxKobo, deducts from customer balance,
+     * and writes a STORE_CREDIT ledger entry.
+     */
+    public long applyStoreCredit(UUID customerId, UUID saleId, long maxKobo) {
+        CustomerBalance balance = jdbc.sql("""
+                SELECT balance_kobo, store_credit_kobo
+                FROM customer WHERE id = :id FOR UPDATE
+                """)
+                .param("id", customerId)
+                .query((rs, row) -> new CustomerBalance(rs.getLong("balance_kobo"), rs.getLong("store_credit_kobo")))
+                .single();
+
+        long drawn = Math.min(balance.storeCreditKobo(), maxKobo);
+        if (drawn <= 0) {
+            return 0;
+        }
+
+        jdbc.sql("""
+                UPDATE customer
+                SET store_credit_kobo = store_credit_kobo - :drawn
+                WHERE id = :id
+                """)
+                .param("drawn", drawn)
+                .param("id", customerId)
+                .update();
+
+        jdbc.sql("""
+                INSERT INTO ledger_entry (customer_id, delta_kobo, source_type, source_id, balance_after_kobo)
+                VALUES (:customerId, :delta, 'STORE_CREDIT', :saleId, :balanceAfter)
+                """)
+                .param("customerId", customerId)
+                .param("delta", -drawn)
+                .param("saleId", saleId)
+                .param("balanceAfter", balance.balanceKobo())
+                .update();
+
+        return drawn;
     }
 
     public boolean customerExists(UUID customerId) {
@@ -244,7 +298,7 @@ public class SaleRepository {
                 .list();
         return jdbc.sql("""
                         SELECT id, reference, payment_type, customer_id, due_date, total_kobo, created_by, created_at,
-                               reversed_at, reversed_by, reversal_reason, reversal_notes, unpaid_kobo
+                               reversed_at, reversed_by, reversal_reason, reversal_notes, unpaid_kobo, store_credit_used_kobo
                         FROM sale WHERE id = :id
                         """)
                 .param("id", saleId)
@@ -286,7 +340,7 @@ public class SaleRepository {
         Map<UUID, List<Sale.Line>> lines = new LinkedHashMap<>();
         List<Sale> headers = jdbc.sql("""
                         SELECT id, reference, payment_type, customer_id, due_date, total_kobo, created_by, created_at,
-                               reversed_at, reversed_by, reversal_reason, reversal_notes, unpaid_kobo
+                               reversed_at, reversed_by, reversal_reason, reversal_notes, unpaid_kobo, store_credit_used_kobo
                         FROM sale""" + whereClause + " ORDER BY created_at DESC, id LIMIT :limit OFFSET :offset")
                 .params(params)
                 .param("limit", page.size())
@@ -330,6 +384,9 @@ public class SaleRepository {
                 rs.getObject("reversed_by", UUID.class),
                 rs.getString("reversal_reason"),
                 rs.getString("reversal_notes"),
-                rs.getLong("unpaid_kobo"));
+                rs.getLong("unpaid_kobo"),
+                rs.getLong("store_credit_used_kobo"));
     }
+
+    private record CustomerBalance(long balanceKobo, long storeCreditKobo) {}
 }

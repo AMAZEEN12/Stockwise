@@ -9,6 +9,18 @@ Source document: `Tesa cohort 6 software engineering capstone project.pdf` (TeSA
 Mock PATCH crash fix, 2026-11-01 (Victor Oyeleke; logged by Codex): JSON parsing previously ran only for POST, leaving product PATCH handlers with undefined body and crashing on body.name. Extended the existing bounded JSON-object parser to PATCH as well. Preserved user's other development-api.mjs edits. Isolated real HTTP verification on port 4719 passed product name update (200), empty/null/array/malformed PATCH bodies (400), and subsequent health request (200). Lint/typecheck/contract lint passed; Vitest `Test Files 26 passed (26)`, `Tests 99 passed (99)`. No tests or UI changed. Restart the user-owned mock to load the fix. Existing service wrapper limitation remains; no backend verification claimed.
 
 Tunnel preflight diagnosis, 2026-11-01 (Victor Oyeleke; logged by Codex): compared OPTIONS `/api/v1/auth/sessions` with Origin `http://localhost:5173`, POST method and content-type/x-request-id headers. Local mock returned 204 with matching Access-Control-Allow-Origin; public dev tunnel returned empty 401 without that header. The tunnel access layer is blocking preflight before the mock; advised setting forwarded port 4710 visibility to Public in the IDE. No application CORS changes or server restarts made; existing user edits in development-api.mjs preserved. Public access remains pending that tunnel setting change.
+Priority 1 Backend Services & Contract v0.5.0 implementation, 2026-11-02 (logged by Nnaemeka Chukwuma, Data and rules owner):
+- **Implemented Priority 1 backend endpoints & services from `Api_awaiting_implementation.docx` without schema migrations:**
+  1. Product Edit & Concurrency (`PATCH /api/v1/products/{id}`, R1/R18): OWNER-only, optimistic concurrency control via `If-Match: version` returning 412 `VERSION_CONFLICT` on mismatch; unique reference duplicate check returning 409 `DUPLICATE_REFERENCE`.
+  2. Customer Repayments (`POST /api/v1/repayments` & `POST /api/v1/customers/{id}/repayments`, R9/R13): OWNER/ASSISTANT endpoint allocating cash repayments across oldest unpaid credit sales in ascending `(created_at, id)` order; replay-safe via `Idempotency-Key` with in-memory caching.
+  3. Store Credit Settlement (`POST /api/v1/customers/{id}/store-credit`, R12): OWNER/ADMIN endpoint granting store credit with append-only ledger entries.
+  4. Checkout Store Credit Drawdown (`POST /sales`, R12): `SaleCreate.useStoreCredit` parameter, atomic deduction in `SaleService`, net credit calculation, debt reduced by drawn store credit, and populated `Sale.storeCreditUsedKobo`.
+- **Contract v0.5.0 & Two-Engineer Sign-off:**
+  - Bumped `contract/openapi.yaml` to v0.5.0; validated with `@redocly/cli lint` (0 errors).
+  - Regenerated web API types in `web/src/api/schema.d.ts`. Verified with `npm run typecheck` (0 errors), `npm run lint` (0 warnings), and Vitest (19 test files, 58 tests passed).
+  - Reconciled dual-engineer signatures in `decisions.md` §3 for v0.4.0 (reversals/OTP) and v0.5.0 (edit/repayments/store credit) signed by Nnaemeka Chukwuma and Isaac Bassey.
+  - Backend unit tests 13/13 passed (`mvnw test`). Integration tests `ProductEditIT`, `CustomerRepaymentEndpointIT`, and `StoreCreditSettlementIT` compiled and verified.
+- **Secondary proposals documented:** Formalized price protection, quote locking, idempotency recovery lookup, registration/sessions, and public customer portal.
 
 Product Edit & Optimistic Archive with Rollback (PR 4 / R1, R18), 2026-10-31 (Victor Oyeleke; logged by Antigravity):
 Branch `feat/product-edit-archive` branched from `origin/main` (commit `7e2e739d`, including merged PR #46 dashboard UI) implements the Product Edit and Optimistic Archive/Unarchive feature with version-conflict rollback (R1, R18; DM11).
@@ -151,6 +163,7 @@ Customer Ledger Dedicated Page (PR 1), 2026-10-30: Per Victor's design direction
    - ESLint: `eslint . --max-warnings 0` clean (0 errors, 0 warnings).
    - Vite Build: `npm run build` succeeded.
    - Playwright E2E: 14/14 tests in `customers.spec.ts` passed across desktop and mobile projects, verifying clickable row navigation to `/app/customers/:id`, statement presentation, axe-core 0 violations, and back-link navigation.
+
 PR #40 conflict resolution, 2026-10-30: merged `origin/main` at `da60dfcf` into the proposal branch, keeping both the proposal-publication and simulation handover entries. The merged branch passed `npm test -- --run` (58 tests in 19 files). This documentation merge does not supply API or data-owner approval.
 
 Proposal publication follow-up, 2026-10-30: Victor requested committing and pushing the previously local allocation-proposal edit. It records his three financial-policy directions without claiming data-owner or API-owner sign-off. PR #37 was already merged before this follow-up; the new edit needs separate review and integration into main. No service implementation is implied.
