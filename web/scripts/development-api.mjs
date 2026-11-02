@@ -658,10 +658,9 @@ const server = createServer(async (request, response) => {
   }
   const user = session.user;
   if (url.pathname === "/orders" && request.method === "GET") {
-    const status = url.searchParams.get("status");
-    const filtered = status
-      ? orders.filter((o) => o.status === status)
-      : orders;
+    const status = url.searchParams.get("status") || "PENDING_PICKUP";
+    const filtered =
+      status === "ALL" ? orders : orders.filter((o) => o.status === status);
     send(200, filtered);
     return;
   }
@@ -1605,6 +1604,7 @@ const server = createServer(async (request, response) => {
             "customerId",
             "dueDate",
             "useStoreCredit",
+            "orderId",
           ].includes(key),
       ) ||
       (body.paymentType === "CREDIT" && !body.customerId) ||

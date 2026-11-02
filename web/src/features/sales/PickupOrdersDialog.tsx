@@ -32,6 +32,8 @@ export function PickupOrdersDialog({
   onSelectOrder,
   loadingOrderId,
 }: PickupOrdersDialogProps) {
+  const pendingOrders = orders.filter((o) => o.status === "PENDING_PICKUP");
+
   return (
     <Dialog
       open={open}
@@ -39,7 +41,7 @@ export function PickupOrdersDialog({
       title="Pickup orders"
       description="Customer pre-orders waiting to be fulfilled at the counter."
       className="pickup-orders-dialog"
-      overlayClassName="shop-confirm-backdrop"
+      overlayClassName="pickup-orders-backdrop"
     >
       <div className="pickup-orders-content">
         {isLoading && (
@@ -48,7 +50,7 @@ export function PickupOrdersDialog({
           </p>
         )}
 
-        {!isLoading && orders.length === 0 && (
+        {!isLoading && pendingOrders.length === 0 && (
           <div className="pickup-orders-empty">
             <p className="font-semibold text-(--color-text)">
               No pending pickup orders
@@ -60,9 +62,9 @@ export function PickupOrdersDialog({
           </div>
         )}
 
-        {!isLoading && orders.length > 0 && (
+        {!isLoading && pendingOrders.length > 0 && (
           <ul className="pickup-orders-list" aria-label="Pending pickup orders">
-            {orders.map((order) => {
+            {pendingOrders.map((order) => {
               const isProcessing = loadingOrderId === order.id;
               return (
                 <li key={order.id} className="pickup-order-card">
@@ -147,3 +149,4 @@ export function PickupOrdersDialog({
     </Dialog>
   );
 }
+
