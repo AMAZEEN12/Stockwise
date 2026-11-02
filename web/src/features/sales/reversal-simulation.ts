@@ -1,7 +1,7 @@
 import { readSession } from '../../auth/session';
 import { httpClient } from '../../service/http-client';
 
-/** Only the local stateful development simulation may execute this unapproved operation. */
+/** Identifies the local simulation for demonstration labels and its existing recovery storage. */
 export function isReversalSimulation(): boolean {
   try {
     const base = new URL(httpClient.defaults.baseURL || '');

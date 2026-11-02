@@ -62,6 +62,30 @@ const customers = [
     createdAt: "2026-10-24T08:41:00Z",
   },
 ];
+const orders = [
+  {
+    id: "44444444-4444-4444-8444-000000000001",
+    orderNumber: "ORD-849201",
+    customerId: "22222222-2222-4222-8222-222222222223",
+    customerName: "Ngozi Okoro",
+    lines: [
+      {
+        productId: "11111111-1111-4111-8111-000000000002",
+        productName: "Indomie Instant Noodles Chicken Flavour 70g",
+        quantity: 2,
+        unitPriceKobo: 45000,
+        lineTotalKobo: 90000,
+      },
+    ],
+    itemsCount: 2,
+    totalKobo: 90000,
+    storeCreditAppliedKobo: 0,
+    paymentPreference: "ON_ACCOUNT",
+    pickupNote: "Will pick up around 6:00 PM today",
+    status: "PENDING_PICKUP",
+    createdAt: new Date(Date.now() - 15 * 60 * 1000).toISOString(),
+  },
+];
 const sales = [
   {
     id: "33333333-3333-4333-8333-000000000003",
@@ -591,31 +615,38 @@ const server = createServer(async (request, response) => {
       totalKobo += product.priceKobo * line.quantity;
       itemsCount += line.quantity;
     }
-    let storeCreditAppliedKobo = 0;
-    if (body.paymentPreference === "USE_STORE_CREDIT") {
-      storeCreditAppliedKobo = Math.min(customer.storeCreditKobo, totalKobo);
-      customer.storeCreditKobo -= storeCreditAppliedKobo;
-      customer.hasStoreCreditActivity = true;
-    } else if (body.paymentPreference === "ON_ACCOUNT") {
-      customer.balanceKobo += totalKobo;
-      customer.hasDebtActivity = true;
-    }
     const orderNumber = `ORD-${Date.now().toString().slice(-6)}`;
     const formattedAmount = `₦${(totalKobo / 100).toLocaleString("en-US", { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`;
     const whatsappMsg = `Hello Ngozi Provisions Store, I placed pre-order ${orderNumber} for ${itemsCount} items (${formattedAmount}). ${body.pickupNote ? `Pickup note: ${body.pickupNote}` : ""}`;
     const whatsappUrl = `https://wa.me/2348021234567?text=${encodeURIComponent(whatsappMsg)}`;
 
-    send(201, {
+    const newOrder = {
+      id: randomUUID(),
       orderNumber,
+      customerId: customer.id,
       customerName: customer.displayName,
+      lines: body.lines.map((line) => {
+        const prod = products.find((p) => p.id === line.productId);
+        return {
+          productId: line.productId,
+          productName: prod ? prod.name : "Product",
+          quantity: line.quantity,
+          unitPriceKobo: prod ? prod.priceKobo : 0,
+          lineTotalKobo: (prod ? prod.priceKobo : 0) * line.quantity,
+        };
+      }),
       itemsCount,
       totalKobo,
-      storeCreditAppliedKobo,
+      storeCreditAppliedKobo: 0,
       paymentPreference: body.paymentPreference || "PAY_ON_PICKUP",
       pickupNote: body.pickupNote || "",
+      status: "PENDING_PICKUP",
       createdAt: new Date().toISOString(),
       whatsappUrl,
-    });
+    };
+    orders.unshift(newOrder);
+
+    send(201, newOrder);
     return;
   }
   const session = sessions.get(
@@ -626,6 +657,29 @@ const server = createServer(async (request, response) => {
     return;
   }
   const user = session.user;
+  if (url.pathname === "/orders" && request.method === "GET") {
+    const status = url.searchParams.get("status") || "PENDING_PICKUP";
+    const filtered =
+      status === "ALL" ? orders : orders.filter((o) => o.status === status);
+    send(200, filtered);
+    return;
+  }
+  const fulfillOrderMatch = url.pathname.match(
+    /^\/orders\/([^/]+)\/fulfill$/,
+  );
+  if (fulfillOrderMatch && request.method === "POST") {
+    const orderId = fulfillOrderMatch[1];
+    const order = orders.find((o) => o.id === orderId);
+    if (!order) {
+      problem(404, "NOT_FOUND", "Order not found.");
+      return;
+    }
+    order.status = "FULFILLED";
+    order.fulfilledAt = new Date().toISOString();
+    order.saleId = body?.saleId || null;
+    send(200, order);
+    return;
+  }
   if (url.pathname === "/me" && request.method === "GET") {
     send(200, user);
     return;
@@ -1550,6 +1604,7 @@ const server = createServer(async (request, response) => {
             "customerId",
             "dueDate",
             "useStoreCredit",
+            "orderId",
           ].includes(key),
       ) ||
       (body.paymentType === "CREDIT" && !body.customerId) ||
@@ -1699,7 +1754,17 @@ const server = createServer(async (request, response) => {
         sourceId: sale.id,
         createdAt: sale.createdAt,
       });
-    submissions.set(submissionKey, { body: serialized, sale });
+      submissions.set(submissionKey, { body: serialized, sale });
+    if (body.orderId) {
+      const order = orders.find(
+        (o) => o.id === body.orderId || o.orderNumber === body.orderId,
+      );
+      if (order) {
+        order.status = "FULFILLED";
+        order.fulfilledAt = sale.createdAt;
+        order.saleId = sale.id;
+      }
+    }
     response.setHeader("Location", `/sales/${sale.id}`);
     send(201, sale);
     return;

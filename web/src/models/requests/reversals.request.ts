@@ -1,17 +1,5 @@
-export type ReversalReason =
-  | 'CUSTOMER_RETURN'
-  | 'BILLING_ERROR'
-  | 'DAMAGED_PRODUCT'
-  | 'OTHER';
+import type { components } from '../../api/schema';
 
-export interface ReversalAuthorizationCreate {
-  saleId: string;
-  validMinutes?: number;
-}
-
-export interface SaleReversalRequest {
-  reason: ReversalReason;
-  note?: string;
-  authorizationCode?: string;
-}
-
+export type ReversalReason = components['schemas']['ReversalReason'];
+export type ReversalAuthorizationCreate = Omit<components['schemas']['ReversalAuthorizationCreate'], 'validMinutes'> & { validMinutes?: number };
+export type SaleReversalRequest = components['schemas']['SaleReversalRequest'];

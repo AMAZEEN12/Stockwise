@@ -89,7 +89,7 @@ export function GenerateReversalCodeDialog({
       className="reversal-code-dialog rounded-md max-w-md w-full font-sans"
     >
       <div className="flex flex-col gap-4 py-2">
-        <p className="text-sm" role="status">{simulation ? 'Simulation only: this code cannot authorize a real sale reversal.' : 'Code generation is unavailable until the service contract is approved.'}</p>
+        {simulation && <p className="text-sm" role="status">Simulation only: this code cannot authorize a real sale reversal.</p>}
         <p className="text-sm text-(--color-text-muted)">
           Give this 6-digit authorization code to the cashier to authorize reversing sale{' '}
           <strong className="text-(--color-text)">{saleReference}</strong>. The code is single-use and expires in 15 minutes.
@@ -111,7 +111,7 @@ export function GenerateReversalCodeDialog({
               variant="primary"
               size="md"
               loading={isLoading}
-              disabled={!simulation}
+              disabled={isLoading}
               loadingLabel="Generating code…"
               onClick={() => void handleGenerate()}
             >
