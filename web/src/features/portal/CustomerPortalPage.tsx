@@ -695,9 +695,6 @@ export function CustomerPortalPage() {
                 {lastOrderNumber}
               </h3>
             </div>
-            <p className="text-sm text-(--color-text-muted) max-w-sm">
-              {shop.name} is preparing your items. You will receive an update when your package is ready for pickup.
-            </p>
 
             {lastWhatsappUrl && (
               <a
