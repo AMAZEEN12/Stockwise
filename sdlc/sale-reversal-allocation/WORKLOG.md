@@ -63,3 +63,5 @@ Append-only, newest last.
 - 2026-11-02 13:35 · agent · Regenerated web API types in `web/src/api/schema.d.ts`. Verified with `npm run typecheck` (0 errors), `npm run lint` (0 warnings), and Vitest (58/58 tests passed).
 - 2026-11-02 13:38 · agent · Reconciled two-engineer sign-offs for v0.4.0 and v0.5.0 in `decisions.md` §3 (Nnaemeka Chukwuma and Isaac Bassey).
 - 2026-11-02 13:40 · agent · Updated all SDLC artifacts in `sdlc/sale-reversal-allocation/` (`intent.md`, `spec.md`, `plan.md`, `test-plan.md`, `release.md`, `EXECUTION.md`, `WORKLOG.md`).
+- 2026-11-02 13:42 · agent · Committed implementation changes (`b9f0e88`) as `feat(backend): implement product edit/archive, customer repayments, and store credit settlement` authored by Nnaemeka Chukwuma.
+- 2026-11-02 13:44 · agent · Pushed branch `feat/sale-reversal-allocation` to origin (PR #41).
