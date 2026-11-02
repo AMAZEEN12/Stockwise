@@ -20,7 +20,7 @@ export function ReceiptPage() {
   const navigate = useNavigate();
   const simulation = isReversalSimulation();
   const [saved] = useState(() => readReceipt(saleId, user.id));
-  const query = useSaleQuery(saleId, { skip: !!saved && !simulation });
+  const query = useSaleQuery(saleId);
   const sale = query.data || saved?.sale;
 
   const handleBack = () => {
@@ -41,7 +41,7 @@ export function ReceiptPage() {
   const [isReversed, setIsReversed] = useState(false);
   const [reversalResult, setReversalResult] = useState<SaleReversalResponse | null>(null);
   const reversed =
-    isReversed || Boolean((sale as { reversed?: boolean } | undefined)?.reversed);
+    isReversed || Boolean(sale?.reversedAt || (sale as { reversed?: boolean } | undefined)?.reversed);
 
   return (
     <div className="receipt-page">
@@ -55,7 +55,7 @@ export function ReceiptPage() {
         </button>
       </nav>
       <h1>Receipt</h1>
-      {query.isError ? (
+      {query.isError && !sale ? (
         <StatusPanel error title="Could not load this receipt">
           <div className="flex gap-3">
             <Button
@@ -112,7 +112,7 @@ export function ReceiptPage() {
                 This sale has been reversed. Inventory items have been returned to stock.
               </div>
             )}
-            {reversalResult && simulation && <p className="micro" role="status">Simulated debt removed: {formatMoney(reversalResult.debtRemovedKobo || 0)} · Store credit returned: {formatMoney(reversalResult.storeCreditAddedKobo || 0)}</p>}
+            {reversalResult && <p className="micro" role="status">{simulation ? "Simulated debt removed:" : "Debt removed:"} {formatMoney(reversalResult.debtRemovedKobo || 0)} · Store credit returned: {formatMoney(reversalResult.storeCreditAddedKobo || 0)}; Original store credit restored: {formatMoney(reversalResult.storeCreditRestoredKobo || 0)}</p>}
             <div className="receipt-lines">
               {sale.lines.map((line, index) => (
                 <div key={`${line.productId}-${index}`}>
@@ -176,7 +176,7 @@ export function ReceiptPage() {
             )}
             
           </div>
-          {!reversed && <p className="micro">{simulation ? 'Sale reversal is a simulation; no real shop data is changed.' : 'Sale reversal is unavailable until the service contract is approved.'}</p>}
+          {!reversed && simulation && <p className="micro">Sale reversal is a simulation; no real shop data is changed.</p>}
           <p id="history-note" className="micro">
             Open Sales from the menu to view history. Receipt linking is coming
             later.

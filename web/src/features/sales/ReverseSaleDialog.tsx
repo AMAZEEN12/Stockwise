@@ -10,7 +10,7 @@ import { formatMoney } from '../../lib/money';
 import { useReverseSaleMutation } from '../../service/api/reversals.api';
 import type { ReversalReason } from '../../models/requests/reversals.request';
 import type { Role } from '../../models/responses/auth.response';
-import type { HttpError } from '../../service/http-client';
+import { httpClient, type HttpError } from '../../service/http-client';
 import { readSession } from '../../auth/session';
 import type { SaleReversalRequest } from '../../models/requests/reversals.request';
 import type { SaleReversalResponse } from '../../models/responses/reversals.response';
@@ -51,7 +51,7 @@ export function ReverseSaleDialog({
   const [errorMsg, setErrorMsg] = useState<string | null>(null);
   const sending = useRef(false);
   const simulation = isReversalSimulation();
-  const storageKey = `stockwise.simulated-reversal.${readSession()?.user.id}.${saleId}`;
+  const storageKey = simulation ? `stockwise.simulated-reversal.${readSession()?.user.id}.${saleId}` : `stockwise.reversal.${encodeURIComponent(httpClient.defaults.baseURL || '')}.${readSession()?.user.id}.${saleId}`;
   const [pending, setPending] = useState<{key:string;body:SaleReversalRequest} | null>(() => {
     try { const saved = JSON.parse(sessionStorage.getItem(storageKey) || 'null');
       return saved && typeof saved.key === 'string' && typeof saved.body?.reason === 'string' ? saved : null;
@@ -63,7 +63,7 @@ export function ReverseSaleDialog({
 
   const isAssistant = userRole === 'ASSISTANT';
   const cleanCode = code.replace(/\D/g, '').slice(0, 6);
-  const canSubmit = simulation && (!!pending || !isAssistant || cleanCode.length === 6);
+  const canSubmit = (!!pending || !isAssistant || cleanCode.length === 6);
 
   const handleSubmit = async (event: React.FormEvent) => {
     event.preventDefault();
@@ -89,7 +89,7 @@ export function ReverseSaleDialog({
 
       toast({
         variant: 'success',
-        title: `Simulated sale ${saleReference} reversed. Stock restored.`,
+        title: `${simulation ? 'Simulated sale' : 'Sale'} ${saleReference} reversed. Stock restored.`,
       });
       onOpenChange(false);
       onSuccess?.(result);
@@ -99,9 +99,9 @@ export function ReverseSaleDialog({
       if (!httpError.status) {
         setErrorMsg('Unable to save recovery data. Nothing was sent.');
       } else if (typeof httpError.status !== 'number' || httpError.status >= 500) {
-        setErrorMsg('This simulated reversal is not confirmed. Retry the same request to check its result.');
+        setErrorMsg('This reversal is not confirmed. Retry the same request to check its result.');
       } else if (pending) {
-        setErrorMsg('This simulated reversal remains unconfirmed. Check the sale before taking further action.');
+        setErrorMsg('This reversal remains unconfirmed. Check the sale before taking further action.');
       } else if (code === 'INVALID_AUTHORIZATION_CODE') {
         sessionStorage.removeItem(storageKey); setPending(null);
         setErrorMsg('The authorization code is invalid or has expired.');
@@ -114,12 +114,15 @@ export function ReverseSaleDialog({
       } else if (code === 'SALE_ALREADY_REVERSED') {
         sessionStorage.removeItem(storageKey); setPending(null);
         setErrorMsg('This sale has already been reversed.');
+      } else if (code === 'REVERSAL_MANUAL_REVIEW_REQUIRED' || code === 'REVERSAL_CONFLICT') {
+        sessionStorage.removeItem(storageKey); setPending(null);
+        setErrorMsg('This sale requires manual review. Ask the owner to review its repayments and store credit.');
       } else if (code === 'SUPERVISOR_CODE_REQUIRED') {
         sessionStorage.removeItem(storageKey); setPending(null);
         setErrorMsg('Supervisor authorization code is required for assistants.');
       } else {
         sessionStorage.removeItem(storageKey); setPending(null);
-        setErrorMsg('Could not reverse the simulated sale. Check the sale and try again.');
+        setErrorMsg('Could not reverse the sale. Check the sale and try again.');
       }
     } finally {
       sending.current = false;
@@ -142,8 +145,8 @@ export function ReverseSaleDialog({
       className="reverse-sale-dialog rounded-md max-w-lg w-full font-sans"
     >
       <form onSubmit={(e) => void handleSubmit(e)} className="flex flex-col gap-4 py-2">
-        <p className="text-sm" role="status">{simulation ? 'Simulation only: inventory and customer balances shown here are demonstration data.' : 'Sale reversal is unavailable until the service contract is approved.'}</p>
-        {pending && <p className="text-sm" role="status">A previous simulated reversal is unconfirmed. Retry the same request.</p>}
+        <p className="text-sm" role="status">{simulation ? 'Simulation only: inventory and customer balances shown here are demonstration data.' : 'Confirming restores stock and adjusts the customer balance recorded by the service.'}</p>
+        {pending && <p className="text-sm" role="status">A previous reversal is unconfirmed. Retry the same request.</p>}
         <div className="p-3 bg-[var(--color-surface-hover)] border border-[var(--color-border)] rounded-md text-sm">
           <div className="flex justify-between items-center">
             <span>Sale reference</span>

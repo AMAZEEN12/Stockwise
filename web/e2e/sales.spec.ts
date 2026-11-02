@@ -1,4 +1,4 @@
-﻿import {test,expect} from '@playwright/test';
+import {test,expect} from '@playwright/test';
 import type {Page} from '@playwright/test';
 import AxeBuilder from '@axe-core/playwright';
 import {makeProducts} from '../scripts/mock-data.mjs';
@@ -12,6 +12,7 @@ async function setup(page:Page, products:Product[] = makeProducts()) {
   await page.route('**/customers?*',(route) => route.fulfill({json:{items:customers,page:0,size:100,totalItems:customers.length}}));
   await page.route('**/products?*',(route) => {const q = new URL(route.request().url()).searchParams.get('q')?.toLowerCase() || ''; const items = products.filter((product) => product.name.toLowerCase().includes(q)); return route.fulfill({json:{items,page:0,size:20,totalItems:items.length}});});
   await page.route('**/products/*',(route) => {const product = products.find((item) => route.request().url().endsWith(item.id)); return route.fulfill({json:product});});
+  await page.route('**/orders?*',(route) => route.fulfill({json:[]}));
 }
 async function add(page:Page, name:string, quantity:number) {
   await page.getByRole('textbox',{name:'Search products to add'}).fill(name);

@@ -57,7 +57,7 @@ export function DashboardPage() {
         <div className="dashboard-actions">
           <Button
             variant="secondary"
-            size="md"
+            size="lg"
             onClick={() => void refetch()}
             disabled={isFetching}
           >

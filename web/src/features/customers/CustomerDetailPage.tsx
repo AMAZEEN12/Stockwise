@@ -11,6 +11,8 @@ import { debtDisplay, storeCreditDisplay } from './customer-balance';
 import { formatDelta, formatLagosDateTime, sourceLabel, sourceTone } from './customer-ledger';
 import { IssueStoreCreditDialog } from './IssueStoreCreditDialog';
 import { RecordRepaymentDialog } from './RecordRepaymentDialog';
+import { useToast } from '../../components/ui/toast';
+import { buildCustomerPortalUrl, buildCustomerWhatsAppShareUrl } from './customer-share';
 import { formatMoney } from '../../lib/money';
 import type { User } from '../../models/responses/auth.response';
 import type { HttpError } from '../../service/http-client';
@@ -22,6 +24,7 @@ export function CustomerDetailPage() {
   const user = useOutletContext<User>();
   const [creditDialogOpen, setCreditDialogOpen] = useState(false);
   const [repaymentDialogOpen, setRepaymentDialogOpen] = useState(false);
+  const { toast } = useToast();
 
   const canIssueCredit = ['OWNER', 'ADMIN'].includes(user.role);
   const canRecordRepayment = ['OWNER', 'ASSISTANT'].includes(user.role);
@@ -31,6 +34,29 @@ export function CustomerDetailPage() {
   });
 
   const customer = customersQuery.data?.find((c) => c.id === customerId);
+
+  const handleCopyLink = async () => {
+    if (!customer) return;
+    const url = buildCustomerPortalUrl(window.location.origin, customer.id);
+    try {
+      await navigator.clipboard.writeText(url);
+      toast({
+        variant: 'success',
+        title: 'Customer link copied to clipboard',
+      });
+    } catch {
+      toast({
+        variant: 'error',
+        title: 'Could not copy link to clipboard',
+      });
+    }
+  };
+
+  const handleSendToCustomer = () => {
+    if (!customer) return;
+    const whatsappUrl = buildCustomerWhatsAppShareUrl(window.location.origin, customer);
+    window.open(whatsappUrl, '_blank', 'noopener,noreferrer');
+  };
 
   const { data: ledger, isLoading, isError, error, refetch, isFetching } = useCustomerLedgerQuery(
     { customerId },
@@ -56,7 +82,6 @@ export function CustomerDetailPage() {
           <EmptyState
             layout="panel"
             headingLevel="h2"
-            icon={<CustomerIcon kind="empty" />}
             title="Customer not found"
             description="The customer record could not be found or may have been removed."
             action={{ label: 'Back to customer list', onClick: () => void navigate('/app/customers') }}
@@ -68,12 +93,27 @@ export function CustomerDetailPage() {
           <header className="customer-detail-header">
             <div className="customer-detail-title-group">
               <h1>{customer.displayName}’s Ledger</h1>
-              <p className="customer-micro">
-                {customer.contactPlaceholder ? `${customer.contactPlaceholder} · ` : ''}
-                Customer ID: {customer.id.slice(0, 8)}…
-              </p>
+              {customer.contactPlaceholder && (
+                <p className="customer-micro">{customer.contactPlaceholder}</p>
+              )}
             </div>
             <div className="customer-detail-actions">
+              <Button
+                variant="secondary"
+                size="md"
+                className="customer-copy-link-btn"
+                onClick={() => void handleCopyLink()}
+              >
+                Copy link
+              </Button>
+              <Button
+                variant="secondary"
+                size="md"
+                className="customer-send-link-btn"
+                onClick={handleSendToCustomer}
+              >
+                Send to customer
+              </Button>
               {canRecordRepayment && customer.balanceKobo > 0 && (
                 <Button
                   variant="primary"
@@ -156,7 +196,6 @@ export function CustomerDetailPage() {
                 layout="panel"
                 headingLevel="h3"
                 className="customer-state customer-ledger-empty"
-                icon={<CustomerIcon kind="empty" />}
                 title="No ledger entries"
                 description="Credit sales, repayments, reversals, and store credit activity for this customer will appear here."
               />

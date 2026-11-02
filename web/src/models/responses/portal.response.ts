@@ -14,11 +14,23 @@ export interface PortalCustomerInfo {
   storeCreditKobo: number;
   hasDebtActivity: boolean;
   hasStoreCreditActivity: boolean;
+  paymentDueAt?: string | null;
+}
+
+export interface PortalStatementEntry {
+  id: string;
+  sourceType: string;
+  sourceId?: string | null;
+  deltaKobo: number;
+  balanceAfterKobo: number;
+  storeCreditAfterKobo: number;
+  createdAt: string;
 }
 
 export interface CustomerPortalDetailsResponse {
   shop: PortalShopInfo;
   customer: PortalCustomerInfo;
+  statement?: PortalStatementEntry[];
   tokenExpiresAt: string;
 }
 

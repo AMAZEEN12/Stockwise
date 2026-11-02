@@ -33,7 +33,7 @@ export function CustomersPage() {
   return <section className="customers-page" aria-label="Customer directory">
     <header className="page-heading"><div><h1>Customers</h1><p className="customer-micro" title="Time of the last successful retrieval in Africa/Lagos; balances may change afterwards.">{asOf ? `as of ${asOf} WAT` : 'Waiting for customer data'}{customers.isFetching && customers.data ? ' · refreshing…' : ''}</p></div>{canCreate && <Button ref={trigger} className="add-customer" size="lg" onClick={()=>setOpen(true)}>Add customer</Button>}</header>
     {!canCreate && <p className="customer-readonly customer-micro"><CustomerIcon/>Read-only access. Admins cannot add customers.</p>}
-    <FilterBar className="customer-filter-bar" searchLabel="Search customers by name" searchPlaceholder="Search by name"
+    <FilterBar className="customer-filter-bar" searchLabel="Search customers by name" searchLabelHidden searchPlaceholder="Search by name"
       query={query} onQueryChange={setQuery} activeCount={0} onClearAll={()=>setQuery('')}
       searchIcon={<CustomerIcon kind="search"/>} searchInputClassName="customer-search"
       searchInputProps={{type:"text",className:"shop-input",maxLength:100}}
@@ -41,7 +41,6 @@ export function CustomersPage() {
     {customers.isLoading ? <CustomerLoading count={5}/> : <>
       {customers.isError && <CustomerLoadError error={customers.error as HttpError} stale={!!customers.data} retrying={customers.isFetching} onRetry={()=>void customers.refetch()}/>}
       {!customers.isError && !list.length ? <EmptyState layout="panel" headingLevel="h3" className="customer-state customers-directory-state" titleClassName="customer-state-title"
-        icon={<CustomerIcon kind={query.trim() ? 'info' : 'empty'}/>}
         title={query.trim() ? 'No customers match' : 'No customers yet'}
         description={query.trim() ? 'Try a different name.' : canCreate ? 'Add your first customer to start selling on credit.' : 'Customers added by the shop will appear here.'}
         action={query.trim() ? {label:'Clear search',onClick:()=>setQuery('')} : canCreate ? {label:'Add your first customer',onClick:()=>setOpen(true)} : undefined}

@@ -11,7 +11,6 @@ import java.util.List;
 import java.util.Map;
 import java.util.Optional;
 import java.util.UUID;
-import java.util.concurrent.ConcurrentHashMap;
 
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.jdbc.core.simple.JdbcClient;
@@ -44,8 +43,6 @@ public class CustomerRepository {
 
     private final JdbcClient jdbc;
     private final Clock clock;
-    private final Map<String, RepaymentSubmission> repaymentSubmissions = new ConcurrentHashMap<>();
-    private final Map<String, StoreCreditSubmission> storeCreditSubmissions = new ConcurrentHashMap<>();
 
     public CustomerRepository(JdbcClient jdbc) {
         this(jdbc, Clock.systemUTC());
@@ -166,15 +163,28 @@ public class CustomerRepository {
      */
     @Transactional
     public List<RepaymentAllocation> recordRepayment(UUID customerId, long amountKobo, UUID createdBy) {
+        return recordRepayment(customerId, amountKobo, createdBy, null);
+    }
+
+    /**
+     * As above, with the {@code repayment} row that recorded it (contract v0.5.0,
+     * {@code POST /repayments}) as the ledger entry's {@code source_id}, so the ledger points at
+     * the repayment it came from (R10, R11). A repayment above the balance owed is
+     * {@link RepaymentExceedsBalance} (R9); the customer's row lock makes that check exact.
+     */
+    @Transactional
+    public List<RepaymentAllocation> recordRepayment(UUID customerId, long amountKobo, UUID createdBy, UUID repaymentId) {
         if (amountKobo <= 0) {
             throw new IllegalArgumentException("Repayment amount must be positive");
         }
         Instant now = clock.instant();
 
-        // Lock customer row to serialize concurrent debt changes
+        // Lock customer row to serialize concurrent debt changes. NO KEY UPDATE, because the
+        // repayment row inserted just before holds a KEY SHARE lock on this customer through its
+        // foreign key; FOR UPDATE would conflict with a parallel repayment's and deadlock.
         CustomerBalance balance = jdbc.sql("""
                 SELECT id, balance_kobo, store_credit_kobo
-                FROM customer WHERE id = :id FOR UPDATE
+                FROM customer WHERE id = :id FOR NO KEY UPDATE
                 """)
                 .param("id", customerId)
                 .query((rs, row) -> new CustomerBalance(
@@ -186,7 +196,7 @@ public class CustomerRepository {
                 .orElseThrow(() -> new NotFoundException("Customer not found: " + customerId));
 
         if (balance.balanceKobo < amountKobo) {
-            throw new IllegalArgumentException("Repayment amount (" + amountKobo + " kobo) exceeds outstanding debt (" + balance.balanceKobo + " kobo)");
+            throw new RepaymentExceedsBalance(amountKobo, balance.balanceKobo);
         }
 
         long newBalance = balance.balanceKobo - amountKobo;
@@ -194,10 +204,11 @@ public class CustomerRepository {
         // Append repayment ledger entry
         UUID ledgerEntryId = jdbc.sql("""
                 INSERT INTO ledger_entry (customer_id, delta_kobo, source_type, source_id, balance_after_kobo, created_at)
-                VALUES (:customerId, :delta, 'REPAYMENT', NULL, :balanceAfter, :createdAt)
+                VALUES (:customerId, :delta, 'REPAYMENT', CAST(:repaymentId AS uuid), :balanceAfter, :createdAt)
                 RETURNING id
                 """)
                 .param("customerId", customerId)
+                .param("repaymentId", repaymentId)
                 .param("delta", -amountKobo)
                 .param("balanceAfter", newBalance)
                 .param("createdAt", now.atOffset(ZoneOffset.UTC))
@@ -267,108 +278,6 @@ public class CustomerRepository {
 
         return allocations;
     }
-
-    public record RepaymentResult(
-            UUID customerId,
-            long amountKobo,
-            long balanceAfterKobo,
-            List<RepaymentAllocation> allocations,
-            Instant createdAt) {
-    }
-
-    @Transactional
-    public RepaymentResult recordRepayment(UUID customerId, long amountKobo, UUID createdBy, UUID idempotencyKey) {
-        if (idempotencyKey != null) {
-            String subKey = createdBy + ":" + idempotencyKey;
-            RepaymentSubmission existing = repaymentSubmissions.get(subKey);
-            if (existing != null) {
-                if (existing.customerId.equals(customerId) && existing.amountKobo == amountKobo) {
-                    return existing.result;
-                }
-                throw new IdempotencyKeyReused(idempotencyKey);
-            }
-        }
-
-        List<RepaymentAllocation> allocations = recordRepayment(customerId, amountKobo, createdBy);
-        Customer customer = findById(customerId).orElseThrow();
-        Instant now = clock.instant();
-        RepaymentResult result = new RepaymentResult(customerId, amountKobo, customer.balanceKobo(), allocations, now);
-
-        if (idempotencyKey != null) {
-            repaymentSubmissions.put(createdBy + ":" + idempotencyKey, new RepaymentSubmission(customerId, amountKobo, result));
-        }
-        return result;
-    }
-
-    /**
-     * R12: Issue store credit to a customer with optional Idempotency-Key.
-     */
-    @Transactional
-    public Customer issueStoreCredit(UUID customerId, long amountKobo, String reason, String note, UUID createdBy) {
-        return issueStoreCredit(customerId, amountKobo, reason, note, createdBy, null);
-    }
-
-    @Transactional
-    public Customer issueStoreCredit(UUID customerId, long amountKobo, String reason, String note, UUID createdBy, UUID idempotencyKey) {
-        if (amountKobo <= 0) {
-            throw new IllegalArgumentException("Store credit amount must be positive");
-        }
-        if (idempotencyKey != null) {
-            String subKey = createdBy + ":" + idempotencyKey;
-            StoreCreditSubmission existing = storeCreditSubmissions.get(subKey);
-            if (existing != null) {
-                if (existing.customerId.equals(customerId) && existing.amountKobo == amountKobo) {
-                    return existing.customer;
-                }
-                throw new IdempotencyKeyReused(idempotencyKey);
-            }
-        }
-
-        Instant now = clock.instant();
-
-        CustomerBalance balance = jdbc.sql("""
-                SELECT id, balance_kobo, store_credit_kobo
-                FROM customer WHERE id = :id FOR UPDATE
-                """)
-                .param("id", customerId)
-                .query((rs, row) -> new CustomerBalance(
-                        rs.getObject("id", UUID.class),
-                        rs.getLong("balance_kobo"),
-                        rs.getLong("store_credit_kobo")
-                ))
-                .optional()
-                .orElseThrow(() -> new NotFoundException("Customer not found: " + customerId));
-
-        long newStoreCredit = Math.addExact(balance.storeCreditKobo, amountKobo);
-
-        jdbc.sql("""
-                INSERT INTO ledger_entry (customer_id, delta_kobo, source_type, source_id, balance_after_kobo, created_at)
-                VALUES (:customerId, :delta, 'STORE_CREDIT', NULL, :balanceAfter, :createdAt)
-                """)
-                .param("customerId", customerId)
-                .param("delta", amountKobo)
-                .param("balanceAfter", balance.balanceKobo)
-                .param("createdAt", now.atOffset(ZoneOffset.UTC))
-                .update();
-
-        jdbc.sql("""
-                UPDATE customer
-                SET store_credit_kobo = :newStoreCredit
-                WHERE id = :id
-                """)
-                .param("newStoreCredit", newStoreCredit)
-                .param("id", customerId)
-                .update();
-
-        Customer updated = findById(customerId).orElseThrow();
-        if (idempotencyKey != null) {
-            storeCreditSubmissions.put(createdBy + ":" + idempotencyKey, new StoreCreditSubmission(customerId, amountKobo, updated));
-        }
-        return updated;
-    }
-
-    private record RepaymentSubmission(UUID customerId, long amountKobo, RepaymentResult result) {}
-    private record StoreCreditSubmission(UUID customerId, long amountKobo, Customer customer) {}
 
     public List<RepaymentAllocation> findAllocationsBySaleId(UUID saleId) {
         return jdbc.sql("""

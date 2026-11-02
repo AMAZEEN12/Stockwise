@@ -15,9 +15,7 @@ import org.springframework.jdbc.core.simple.JdbcClient;
 import org.springframework.stereotype.Repository;
 import org.springframework.transaction.annotation.Transactional;
 
-import ng.tesa.stockwise.common.NotFoundException;
 import ng.tesa.stockwise.common.Page;
-import ng.tesa.stockwise.common.PreconditionFailedException;
 
 /**
  * SQL for the catalogue (spec R1, R2; plan Q1 and Q2). Field rules are the V2 CHECK
@@ -77,65 +75,61 @@ public class ProductRepository {
         return findById(id).orElseThrow();
     }
 
+    /**
+     * R1, R18: applies the changes only if the product is still at {@code expectedVersion}, in one
+     * guarded UPDATE, and returns the updated product. Fields left null keep their value. Nothing
+     * is read first: a concurrent edit or sale moves the version and this update matches no row.
+     * Empty means the product does not exist; a version mismatch is {@link Product.VersionConflict}.
+     * A taken reference is refused by {@code product_reference_uq}.
+     */
+    @Transactional
+    public Optional<Product> update(UUID id, int expectedVersion, Product.Changes changes) {
+        Optional<UUID> updated;
+        try {
+            updated = jdbc.sql("""
+                            UPDATE product
+                            SET reference           = coalesce(CAST(:reference AS text), reference),
+                                name                = coalesce(CAST(:name AS text), name),
+                                category            = coalesce(CAST(:category AS text), category),
+                                price_kobo          = coalesce(CAST(:price AS bigint), price_kobo),
+                                low_stock_threshold = coalesce(CAST(:threshold AS integer), low_stock_threshold),
+                                active              = coalesce(CAST(:active AS boolean), active),
+                                version             = version + 1,
+                                updated_at          = now()
+                            WHERE id = :id AND version = :version
+                            RETURNING id
+                            """)
+                    .param("reference", changes.reference() == null ? null : changes.reference().trim())
+                    .param("name", changes.name() == null ? null : changes.name().trim())
+                    .param("category", changes.category() == null ? null : changes.category().trim())
+                    .param("price", changes.priceKobo())
+                    .param("threshold", changes.lowStockThreshold())
+                    .param("active", changes.active())
+                    .param("id", id)
+                    .param("version", expectedVersion)
+                    .query(UUID.class)
+                    .optional();
+        } catch (DuplicateKeyException e) {
+            if (e.getMessage() != null && e.getMessage().contains("product_reference_uq")) {
+                throw new Product.DuplicateReference(changes.reference().trim());
+            }
+            throw e;
+        }
+        if (updated.isPresent()) {
+            return findById(id);
+        }
+        Optional<Product> current = findById(id);
+        if (current.isPresent()) {
+            throw new Product.VersionConflict(current.get().version());
+        }
+        return Optional.empty();
+    }
+
     public Optional<Product> findById(UUID id) {
         return jdbc.sql("SELECT " + COLUMNS + " FROM product WHERE id = :id")
                 .param("id", id)
                 .query((rs, row) -> map(rs))
                 .optional();
-    }
-
-    /**
-     * R1/R18: Optimistic update with If-Match: version check.
-     * Updates provided fields, increments version, and touches updated_at.
-     */
-    @Transactional
-    public Product update(UUID id, int expectedVersion, Product.Update update) {
-        Product current = findById(id).orElseThrow(() -> new NotFoundException("Product " + id));
-        if (current.version() != expectedVersion) {
-            throw new PreconditionFailedException("Product version mismatch. Expected " + expectedVersion + " but was " + current.version());
-        }
-
-        String newRef = update.reference() != null && !update.reference().isBlank() ? update.reference().trim() : current.reference();
-        String newName = update.name() != null && !update.name().isBlank() ? update.name().trim() : current.name();
-        String newCat = update.category() != null && !update.category().isBlank() ? update.category().trim() : current.category();
-        long newPrice = update.priceKobo() != null ? update.priceKobo() : current.priceKobo();
-        int newThreshold = update.lowStockThreshold() != null ? update.lowStockThreshold() : current.lowStockThreshold();
-        boolean newActive = update.active() != null ? update.active() : current.active();
-
-        try {
-            int rows = jdbc.sql("""
-                    UPDATE product
-                    SET reference = :reference,
-                        name = :name,
-                        category = :category,
-                        price_kobo = :price,
-                        low_stock_threshold = :threshold,
-                        active = :active,
-                        version = version + 1,
-                        updated_at = now()
-                    WHERE id = :id AND version = :version
-                    """)
-                    .param("reference", newRef)
-                    .param("name", newName)
-                    .param("category", newCat)
-                    .param("price", newPrice)
-                    .param("threshold", newThreshold)
-                    .param("active", newActive)
-                    .param("id", id)
-                    .param("version", expectedVersion)
-                    .update();
-
-            if (rows == 0) {
-                throw new PreconditionFailedException("Product version conflict during update");
-            }
-        } catch (DuplicateKeyException e) {
-            if (e.getMessage() != null && e.getMessage().contains("product_reference_uq")) {
-                throw new Product.DuplicateReference(newRef);
-            }
-            throw e;
-        }
-
-        return findById(id).orElseThrow();
     }
 
     /**

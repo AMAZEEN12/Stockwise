@@ -8,6 +8,7 @@ import jakarta.validation.constraints.Max;
 import jakarta.validation.constraints.Min;
 import jakarta.validation.constraints.NotBlank;
 import jakarta.validation.constraints.NotNull;
+import jakarta.validation.constraints.Pattern;
 import jakarta.validation.constraints.PositiveOrZero;
 import jakarta.validation.constraints.Size;
 
@@ -24,9 +25,8 @@ import org.springframework.web.bind.annotation.RestController;
 
 import ng.tesa.stockwise.common.NotFoundException;
 import ng.tesa.stockwise.common.Page;
-import ng.tesa.stockwise.common.PreconditionFailedException;
 
-/** Catalogue endpoints (spec R1, R2). Adding a product is OWNER only (SecurityConfig). */
+/** Catalogue endpoints (spec R1, R2, R18). Adding and editing a product is OWNER only (SecurityConfig). */
 @RestController
 @RequestMapping("/api/v1/products")
 public class ProductController {
@@ -65,46 +65,70 @@ public class ProductController {
         return ResponseEntity.created(URI.create("/api/v1/products/" + product.id())).body(product);
     }
 
-    /** The ETag is the version, for the later conditional edit and archive ({@code If-Match}). */
+    /** The ETag is the version, for the conditional edit and archive ({@code If-Match}). */
     @GetMapping("/{productId}")
     public ResponseEntity<Product> get(@PathVariable UUID productId) {
         Product product = products.findById(productId).orElseThrow(() -> new NotFoundException("Product " + productId));
         return ResponseEntity.ok().eTag(String.valueOf(product.version())).body(product);
     }
 
-    /** Contract {@code ProductUpdate}. Optional fields; null means unchanged. */
+    /**
+     * Contract {@code ProductUpdate}. Every field is optional; a sent string must not be blank.
+     * Quantity is not editable here (R13). Unknown fields are refused by the JSON reader.
+     */
     public record UpdateRequest(
-            @Size(max = 40) String reference,
-            @Size(max = 200) String name,
-            @Size(max = 60) String category,
+            @Size(max = 40) @Pattern(regexp = ".*\\S.*", message = "must not be blank") String reference,
+            @Size(max = 200) @Pattern(regexp = ".*\\S.*", message = "must not be blank") String name,
+            @Size(max = 60) @Pattern(regexp = ".*\\S.*", message = "must not be blank") String category,
             @PositiveOrZero @Max(9007199254740991L) Long priceKobo,
             @PositiveOrZero Integer lowStockThreshold,
             Boolean active) {
+
+        Product.Changes toChanges() {
+            return new Product.Changes(reference, name, category, priceKobo, lowStockThreshold, active);
+        }
     }
 
     /**
-     * R1/R18: Optimistic product edit and archive with If-Match: <version>.
-     * Returns 200 OK with ETag on success, 412 PRECONDITION_FAILED on version conflict.
+     * R1, R18: edit, archive ({@code active: false}) or unarchive a product. OWNER only
+     * (SecurityConfig). {@code If-Match} must carry the version the client edited, as the ETag
+     * gave it; a stale version is 412 {@code VERSION_CONFLICT} and nothing changes. Repeating the
+     * same request with the new ETag is safe.
      */
     @PatchMapping("/{productId}")
-    public ResponseEntity<Product> patch(
-            @PathVariable UUID productId,
-            @RequestHeader(name = "If-Match", required = false) String ifMatch,
-            @Valid @RequestBody UpdateRequest request) {
-        if (ifMatch == null || ifMatch.isBlank()) {
-            throw new PreconditionFailedException("If-Match header is required for product update");
+    public ResponseEntity<Product> update(@PathVariable UUID productId,
+                                          @RequestHeader(name = "If-Match", required = false) String ifMatch,
+                                          @Valid @RequestBody UpdateRequest request) {
+        int expectedVersion = parseVersion(ifMatch);
+        Product.Changes changes = request.toChanges();
+        if (changes.isEmpty()) {
+            throw new Product.NoChanges();
         }
-        int version;
-        try {
-            String clean = ifMatch.replace("\"", "").trim();
-            version = Integer.parseInt(clean);
-        } catch (NumberFormatException e) {
-            throw new PreconditionFailedException("If-Match header must be an integer version");
-        }
+        Product product = products.update(productId, expectedVersion, changes)
+                .orElseThrow(() -> new NotFoundException("Product " + productId));
+        return ResponseEntity.ok().eTag(String.valueOf(product.version())).body(product);
+    }
 
-        Product updated = products.update(productId, version, new Product.Update(
-                request.reference(), request.name(), request.category(),
-                request.priceKobo(), request.lowStockThreshold(), request.active()));
-        return ResponseEntity.ok().eTag(String.valueOf(updated.version())).body(updated);
+    /** Accepts {@code 7}, {@code "7"} and {@code W/"7"}; anything else is 428. */
+    static int parseVersion(String ifMatch) {
+        if (ifMatch == null) {
+            throw new Product.VersionRequired();
+        }
+        String value = ifMatch.trim();
+        if (value.startsWith("W/")) {
+            value = value.substring(2);
+        }
+        if (value.length() >= 2 && value.startsWith("\"") && value.endsWith("\"")) {
+            value = value.substring(1, value.length() - 1);
+        }
+        try {
+            int version = Integer.parseInt(value);
+            if (version < 0) {
+                throw new Product.VersionRequired();
+            }
+            return version;
+        } catch (NumberFormatException e) {
+            throw new Product.VersionRequired();
+        }
     }
 }

@@ -19,23 +19,18 @@ for (const simulated of [true,false]) test(`${simulated ? 'simulated' : 'real'} 
   await page.getByRole('button',{name:'Reverse sale'}).click();
   const dialog = page.getByRole('dialog',{name:'Reverse sale'});
   await expect(dialog).toBeVisible();
-  if (!simulated) {
-    await expect(dialog.getByText('Sale reversal is unavailable until the service contract is approved.')).toBeVisible();
-    await expect(dialog.getByRole('button',{name:'Confirm reversal'})).toBeDisabled();
-    expect(writes).toBe(0);
-    return;
-  }
-  await expect(dialog.getByText(/Simulation only/)).toBeVisible();
+  if (simulated) await expect(dialog.getByText(/Simulation only/)).toBeVisible();
+  else await expect(dialog.getByText(/Confirming restores stock/)).toBeVisible();
   expect((await new AxeBuilder({page}).analyze()).violations.filter((v) => ['serious','critical'].includes(v.impact || ''))).toEqual([]);
   await dialog.getByRole('button',{name:'Confirm reversal'}).click();
   await expect(page.getByRole('heading',{name:'Sale reversed'})).toBeVisible();
-  await expect(page.getByText(/Simulated debt removed/)).toContainText('3,400.00');
-  await expect(page.getByText(/Simulated debt removed/)).toContainText('550.00');
+  await expect(page.getByText(/debt removed/i)).toContainText('3,400.00');
+  await expect(page.getByText(/debt removed/i)).toContainText('550.00');
   expect(writes).toBe(1);
 });
 
-test('uncertain simulated reversal survives reload and reuses its key and body', async ({page}) => {
-  await page.addInitScript((person) => sessionStorage.setItem('stockwise.session',JSON.stringify({user:person,accessToken:'stockwise-simulation-test',tokenType:'Bearer',expiresAt:'2099-01-01T00:00:00Z'})),user);
+for (const simulated of [true, false]) test(`uncertain ${simulated ? 'simulated' : 'real'} reversal survives reload and reuses its key and body`, async ({page}) => {
+  await page.addInitScript(({person, token}) => sessionStorage.setItem('stockwise.session',JSON.stringify({user:person,accessToken:token,tokenType:'Bearer',expiresAt:'2099-01-01T00:00:00Z'})),{person:user, token:simulated ? 'stockwise-simulation-test' : 'real-token'});
   await page.route('**/me',(route) => route.fulfill({json:user}));
   await page.route(`**/sales/${sale.id}`,(route) => route.fulfill({json:sale}));
   await page.route('**/customers?*',(route) => route.fulfill({json:{items:[],page:0,size:100,totalItems:0}}));
@@ -53,4 +48,44 @@ test('uncertain simulated reversal survives reload and reuses its key and body',
   await page.getByRole('button',{name:'Retry same reversal'}).click();
   await expect(page.getByRole('heading',{name:'Sale reversed'})).toBeVisible();
   expect(keys).toHaveLength(2); expect(new Set(keys).size).toBe(1); expect(new Set(bodies).size).toBe(1);
+});
+
+
+test('real assistant uses a supervisor code and refreshed receipt retains reversal status', async ({page}) => {
+  const assistant = {...user, role:'ASSISTANT'};
+  await page.addInitScript((person) => sessionStorage.setItem('stockwise.session',JSON.stringify({user:person,accessToken:'real-token',tokenType:'Bearer',expiresAt:'2099-01-01T00:00:00Z'})),assistant);
+  await page.route('**/me', route => route.fulfill({json:assistant}));
+  let reversedAt: string | undefined;
+  await page.route(`**/sales/${sale.id}`, route => route.fulfill({json:{...sale,reversedAt}}));
+  await page.route('**/customers?*', route => route.fulfill({json:{items:[],page:0,size:100,totalItems:0}}));
+  await page.route(`**/sales/${sale.id}/reversal`, route => {
+    expect(route.request().postDataJSON().authorizationCode).toBe('123456');
+    reversedAt = '2026-11-02T10:00:00Z';
+    return route.fulfill({json:{reversalId:sale.id,saleId:sale.id,reversedAt,reversedBy:assistant.id,reason:'CUSTOMER_RETURN',stockRestored:true}});
+  });
+  await page.goto(`/app/receipts/${sale.id}`);
+  await expect(page.getByRole('button',{name:'Generate reversal code'})).toHaveCount(0);
+  await page.getByRole('button',{name:'Reverse sale'}).click();
+  await expect(page.getByRole('button',{name:'Confirm reversal'})).toBeDisabled();
+  await page.getByLabel('6-Digit Authorization Code').fill('123456');
+  await page.getByRole('button',{name:'Confirm reversal'}).click();
+  await expect(page.getByRole('heading',{name:'Sale reversed'})).toBeVisible();
+  await page.reload();
+  await expect(page.getByRole('heading',{name:'Sale reversed'})).toBeVisible();
+  await expect(page.getByRole('button',{name:'Reverse sale',exact:true})).toHaveCount(0);
+});
+
+test('real owner generates a sale-bound supervisor code', async ({page}) => {
+  await page.addInitScript((person) => sessionStorage.setItem('stockwise.session',JSON.stringify({user:person,accessToken:'real-token',tokenType:'Bearer',expiresAt:'2099-01-01T00:00:00Z'})),user);
+  await page.route('**/me', route => route.fulfill({json:user}));
+  await page.route(`**/sales/${sale.id}`, route => route.fulfill({json:sale}));
+  await page.route('**/customers?*', route => route.fulfill({json:{items:[],page:0,size:100,totalItems:0}}));
+  await page.route('**/reversals/authorizations', route => {
+    expect(route.request().postDataJSON()).toEqual({saleId:sale.id,validMinutes:15});
+    return route.fulfill({status:201,json:{code:'123456',saleId:sale.id,generatedBy:user.id,generatedByRole:'OWNER',expiresAt:new Date(Date.now()+900000).toISOString()}});
+  });
+  await page.goto(`/app/receipts/${sale.id}`);
+  await page.getByRole('button',{name:'Generate reversal code'}).click();
+  await page.getByRole('button',{name:'Generate 6-digit code'}).click();
+  await expect(page.getByLabel('Code: 123456')).toHaveText('123 456');
 });
