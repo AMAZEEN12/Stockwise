@@ -929,3 +929,12 @@ Requested by Victor Oyeleke; fixed/logged by Antigravity assistant.
     - `sales-recovery.spec.ts`: 4 passed (42.1s) on desktop and mobile.
     - `sale-reversal-simulation.spec.ts`: 12 passed on desktop and mobile.
   - Production build: `vite build` completed successfully in 28.30s.
+
+### Light and dark appearance implementation, 2026-11-03
+Requested by Victor Oyeleke; implemented/logged by Codex on feat/light-dark-mode from clean local main. Added Light/Dark/System appearance controls composed from shared FormField/Select on Home, shop sidebar/mobile menu and customer portal (including loading/error states). System is the default; a validated localStorage preference applies before React loads, stays synchronized across tabs, follows system changes in System mode and remains usable when storage is blocked. Dark foundational token values remain; light tokens provide pale surfaces, dark text/green accents and contrasting status/focus colors. Dashboard hard-coded card/label colors now use tokens; portal warning colors and missing surface aliases are theme-aware. No dependency, service, contract, auth or money behavior changes. Shared-components skill is absent locally; reviewed actual primitive APIs and alignment documentation. Plan/spec amendments record this scope.
+- Verification:
+  - ESLint: zero errors, zero warnings (`npm run lint`).
+  - TypeScript: strict `tsc --noEmit` exit 0 (`npm run typecheck`).
+  - Vitest: 28 test files passed (107/107 tests green, `npm test -- --run`).
+  - Playwright E2E: `e2e/theme.spec.ts` 12 passed (2.3m) on desktop & mobile with zero Axe accessibility violations.
+  - Production build: `tsc -b && vite build` built in 26.84s with zero errors.
