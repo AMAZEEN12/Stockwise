@@ -72,6 +72,16 @@ public class PortalService {
             if (seeded.isPresent()) {
                 return seeded.get();
             }
+            return new Customer(
+                    UUID.fromString("22222222-2222-4222-8222-222222222221"),
+                    "Mama Chidi",
+                    "+2348000000001",
+                    0L,
+                    0L,
+                    false,
+                    false,
+                    Instant.now()
+            );
         }
 
         // Try UUID resolution

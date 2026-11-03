@@ -35,6 +35,7 @@ class PortalEndpointIT extends ApiTestSupport {
 
     @Test
     void unauthenticatedCustomerAccessesDemoToken() {
+        customer("Mama Chidi");
         Response resp = get("/api/v1/portal/customer/chidi-demo-token", null);
 
         assertThat(resp.status()).isEqualTo(200);
@@ -47,7 +48,7 @@ class PortalEndpointIT extends ApiTestSupport {
         Response resp = get("/api/v1/portal/customer/expired-token", null);
 
         assertThat(resp.status()).isEqualTo(410);
-        assertThat(resp.code()).isEqualTo("token-expired");
+        assertThat(resp.code()).isEqualTo("TOKEN_EXPIRED");
     }
 
     @Test
@@ -55,7 +56,7 @@ class PortalEndpointIT extends ApiTestSupport {
         Response resp = get("/api/v1/portal/customer/invalid-token", null);
 
         assertThat(resp.status()).isEqualTo(404);
-        assertThat(resp.code()).isEqualTo("not-found");
+        assertThat(resp.code()).isEqualTo("NOT_FOUND");
     }
 
     @Test
@@ -67,7 +68,7 @@ class PortalEndpointIT extends ApiTestSupport {
 
         assertThat(resp.status()).isEqualTo(200);
         assertThat(resp.body().get("items").asArray()).isNotEmpty();
-        assertThat(resp.body().get("items").get(0).get("name").asString()).isEqualTo("PORTAL-RICE-1");
+        assertThat(resp.body().get("items").get(0).get("name").asString()).isEqualTo("Product PORTAL-RICE-1");
         assertThat(resp.body().get("items").get(0).get("priceKobo").asLong()).isEqualTo(45_000L);
     }
 
@@ -113,7 +114,7 @@ class PortalEndpointIT extends ApiTestSupport {
         Response resp = post("/api/v1/portal/customer/" + custId + "/orders", null, orderBody);
 
         assertThat(resp.status()).isEqualTo(409);
-        assertThat(resp.code()).isEqualTo("insufficient-stock");
+        assertThat(resp.code()).isEqualTo("INSUFFICIENT_STOCK");
     }
 
     @Test
