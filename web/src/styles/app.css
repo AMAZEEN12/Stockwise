@@ -62,7 +62,8 @@
   border-bottom: 1px solid var(--color-border);
   display: flex;
   align-items: flex-start;
-  justify-content: flex-end;
+  justify-content: space-between;
+  gap: 12px;
   padding-top: 28px;
 }
 .account-link {
@@ -579,4 +580,13 @@
     transform: perspective(1000px) rotateY(-12deg) rotateZ(4deg) !important;
     animation: none !important;
   }
+}
+
+.theme-select { width: 164px; max-width: 100%; }
+.theme-select button { min-height: 44px; }
+.portal-appearance { display: flex; justify-content: flex-end; }
+@media (max-width: 480px) {
+  .home-header { height: auto; min-height: 101px; flex-wrap: wrap; padding-bottom: 16px; }
+  .home-header .theme-select { width: 140px; }
+  .home-header .account-link { padding-inline: 12px; }
 }

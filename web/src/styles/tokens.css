@@ -1,6 +1,15 @@
 :root {
   color-scheme: dark;
   --color-bg: #0b0b0a;
+  --color-surface-hover: #20201e;
+  --color-surface-subtle: #18191b;
+  --color-surface-sunken: #151514;
+  --color-dashboard-panel: #121316;
+  --color-dashboard-card: #1a1c22;
+  --color-chart-option: #18191d;
+  --color-trend-up: #4ade80;
+  --color-trend-down: #fda4af;
+  --color-attention: #fbbf24;
   --color-surface: #121211;
   --color-border: rgb(193 193 193 / 20%);
   --color-border-input: #8c8c8a;
@@ -60,4 +69,38 @@
   --color-error: var(--color-danger);
   --font-sans: "Inter Tight", sans-serif;
   --font-mono: "JetBrains Mono", monospace;
+}
+
+/* Light values retain the shared semantic names and Stockwise green identity. */
+:root[data-theme="light"] {
+  color-scheme: light;
+  --color-bg: #f6f7f2;
+  --color-surface: #ffffff;
+  --color-surface-hover: #e9eddF;
+  --color-surface-subtle: #f0f2eb;
+  --color-surface-sunken: #edf0e7;
+  --color-border: #d2d7ca;
+  --color-border-input: #73796a;
+  --color-text: #1b2115;
+  --color-text-muted: #515b46;
+  --color-primary: #466600;
+  --color-primary-hover: #354e00;
+  --color-on-primary: #ffffff;
+  --color-danger: #ae3027;
+  --color-danger-hover: #90251e;
+  --color-on-danger: #ffffff;
+  --color-disabled: #e0e4d9;
+  --color-saving: #e6eadf;
+  --color-skeleton: #e2e6db;
+  --color-focus: #466600;
+  --color-overlay-auth: rgb(20 28 12 / 40%);
+  --color-overlay-shop: rgb(20 28 12 / 45%);
+  --shadow-dialog: 0 20px 60px rgb(20 28 12 / 18%);
+  --shadow-coin: 0 22px 30px rgb(20 28 12 / 18%);
+  --color-dashboard-panel: #e9eedf;
+  --color-dashboard-card: #ffffff;
+  --color-chart-option: #ffffff;
+  --color-trend-up: #216637;
+  --color-trend-down: #a62942;
+  --color-attention: #805400;
 }

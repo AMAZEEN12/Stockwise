@@ -92,7 +92,7 @@ export function DashboardPage() {
 
               <div className="overview-cards-row">
                 {/* Card 1: Today's Revenue */}
-                <div className="bg-[#1a1c22] rounded-xl p-4 py-6">
+                <div className="bg-(--color-dashboard-card) rounded-xl p-4 py-6">
                   <div className="overview-card-header mb-4">
                     <span className="overview-card-label">Total Revenue</span>
 
@@ -109,7 +109,7 @@ export function DashboardPage() {
                 </div>
 
                 {/* Card 2: Outstanding Credit */}
-                <div className="bg-[#1a1c22] rounded-xl p-4 py-6">
+                <div className="bg-(--color-dashboard-card) rounded-xl p-4 py-6">
                   <div className="overview-card-header mb-4">
                     <span className="overview-card-label">Outstanding Credit</span>
                        <span className="metric-trend trend-down">
@@ -125,7 +125,7 @@ export function DashboardPage() {
                 </div>
 
                 {/* Card 3: Store Credit Held */}
-                <div className="bg-[#1a1c22] rounded-xl p-4 py-6">
+                <div className="bg-(--color-dashboard-card) rounded-xl p-4 py-6">
                   <div className="overview-card-header mb-4">
                     <span className="overview-card-label">Store Credit Held</span>
                      <span className="metric-trend trend-up">
