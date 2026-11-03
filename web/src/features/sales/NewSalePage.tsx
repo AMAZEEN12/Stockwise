@@ -222,7 +222,6 @@ export function NewSalePage() {
       line.quantity > 10000 ||
       line.quantity < 1,
   );
-  const unavailableCredit = credit > 0 && !simulation;
   const canConfirm =
     !!cart.length &&
     !invalidQuantity &&
@@ -230,7 +229,6 @@ export function NewSalePage() {
     (paymentType === "PAID" || !!customerId) &&
     !frozen &&
     !invalidRecovery &&
-    !unavailableCredit &&
     !["session", "forbidden"].includes(state);
   const add = (product: Product) => {
     if (frozen || !product.active || product.quantity <= 0) return;
@@ -762,18 +760,10 @@ export function NewSalePage() {
                         {displayMoney(customer.storeCreditKobo)})
                       </span>
                     </label>
-                    {unavailableCredit ? (
-                      <p className="micro text-(--color-danger)">
-                        Store-credit recording is awaiting service support.
-                        Uncheck above to complete this sale without credit
-                        deduction.
-                      </p>
-                    ) : (
-                      applyStoreCredit && credit > 0 && (
+                    {applyStoreCredit && credit > 0 && (
                         <p className="micro text-[var(--color-primary)]">
                           {displayMoney(credit)} will be deducted from customer’s store credit.
                         </p>
-                      )
                     )}
                   </div>
                 )}
@@ -844,11 +834,6 @@ export function NewSalePage() {
               <p className="micro">Choose a customer to continue on credit.</p>
             ) : total === null ? (
               <p className="micro">Fix the amount to continue.</p>
-            ) : unavailableCredit ? (
-              <p className="micro">
-                Store-credit recording is awaiting service support. No sale has
-                been sent.
-              </p>
             ) : state === "session" ? (
               <p className="micro">Sign in again to continue.</p>
             ) : null}

@@ -1,6 +1,6 @@
 ﻿import {test,expect} from '@playwright/test';
 import {makeProducts} from '../scripts/mock-data.mjs';
-test('role changes and unavailable real settlement never send a sale',async ({page}) => {
+test('role changes never send a sale, and store credit shows its deduction',async ({page}) => {
   const user={id:'a2222222-2222-4222-8222-222222222222',email:'owner@stockwise.test',displayName:'Demo Owner',role:'OWNER'};
   await page.addInitScript((user)=>sessionStorage.setItem('stockwise.session',JSON.stringify({accessToken:'real-service-token',tokenType:'Bearer',expiresAt:'2099-01-01T00:00:00Z',user})),user);
   let role='OWNER'; let posts=0; const products=makeProducts();
@@ -11,7 +11,7 @@ test('role changes and unavailable real settlement never send a sale',async ({pa
   await page.route('**/sales',(route)=>{posts++; return route.abort();});
   await page.goto('/app/sell'); await page.getByRole('textbox',{name:'Search products to add'}).fill('Dettol'); await page.getByRole('button',{name:/Dettol 250ml/}).click();
   await page.getByRole('button',{name:'On credit',exact:true}).click(); await page.getByRole('button',{name:'Choose customer (required)',exact:true}).click(); await page.getByRole('button',{name:/Bolu Adeyemi Balance owed — Store credit/}).click(); await page.getByRole('button',{name:'Back to sale',exact:true}).click();
-  await expect(page.getByText('Store-credit recording is awaiting service support. No sale has been sent.')).toBeVisible(); await expect(page.getByRole('button',{name:'Confirm sale',exact:true})).toBeDisabled(); expect(posts).toBe(0);
+  await expect(page.getByText(/will be deducted from customer/)).toBeVisible(); expect(posts).toBe(0);
   await page.getByRole('button',{name:'Remove customer',exact:true}).click(); await page.getByRole('button',{name:'Paid',exact:true}).click(); role='ADMIN';
   await page.getByRole('button',{name:'Confirm sale',exact:true}).click(); await expect(page.getByText('Read-only access',{exact:true})).toBeVisible(); expect(posts).toBe(0);
 });
