@@ -27,6 +27,7 @@ public enum ErrorCode {
     AUTHORIZATION_SALE_MISMATCH(HttpStatus.CONFLICT, "authorization-sale-mismatch", "Authorization code was issued for another sale"),
     REVERSAL_MANUAL_REVIEW_REQUIRED(HttpStatus.CONFLICT, "reversal-manual-review-required", "Reversal requires manual review"),
     REVERSAL_CONFLICT(HttpStatus.CONFLICT, "reversal-conflict", "Reversal conflict"),
+    TOKEN_EXPIRED(HttpStatus.GONE, "token-expired", "Token expired"),
     DATABASE_UNAVAILABLE(HttpStatus.SERVICE_UNAVAILABLE, "database-unavailable", "Database unavailable"),
     INTERNAL_ERROR(HttpStatus.INTERNAL_SERVER_ERROR, "internal-error", "Something went wrong");
 
