@@ -89,7 +89,10 @@
   background: var(--color-primary-hover);
 }
 .home-main {
-  min-height: calc(100dvh - 101px);
+  --home-wordmark-width: min(calc(100vw - 96px), 1344px);
+  --home-coin-size: 340px;
+  --home-coin-top: max(320px, calc(var(--home-wordmark-width) * 368 / 1344 + 24px));
+  min-height: max(calc(100dvh - 101px), calc(var(--home-coin-top) + var(--home-coin-size) + 40px));
   position: relative;
   padding: 0 48px 40px;
   display: flex;
@@ -135,6 +138,9 @@
   font-size: 1.12em;
   font-weight: 400;
 }
+.home-copy-mobile {
+  display: none;
+}
 .home-copy p {
   margin: 0;
   color: var(--color-text-muted);
@@ -143,9 +149,10 @@
 }
 .coin-position {
   position: absolute;
-  width: 340px;
-  height: 340px;
-  top: 320px;
+  width: var(--home-coin-size);
+  height: auto;
+  aspect-ratio: 1;
+  top: var(--home-coin-top);
   right: 9%;
   perspective: 1000px;
   transform: rotateX(var(--tilt-x, 0deg)) rotateY(var(--tilt-y, 0deg));
@@ -440,15 +447,21 @@
   letter-spacing: 0.04em;
 }
 
+@media (min-width: 768px) {
+  .home-copy {
+    margin-bottom: 32px;
+  }
+}
 @media (min-width: 1441px) {
+  .home-main {
+    --home-wordmark-width: calc(100vw - 96px);
+    --home-coin-size: min(24vw, 440px);
+  }
   .wordmark svg {
     max-width: none;
   }
   .coin-position {
-    top: 40%;
-    width: min(24vw, 440px);
-    height: auto;
-    aspect-ratio: 1;
+    width: var(--home-coin-size);
   }
 }
 @media (max-width: 767px) {
@@ -464,6 +477,13 @@
   .home-main {
     min-height: calc(100dvh - 77px - env(safe-area-inset-top, 0px));
     padding: 5px max(16px, env(safe-area-inset-right, 0px)) calc(24px + env(safe-area-inset-bottom, 0px)) max(16px, env(safe-area-inset-left, 0px));
+    display: grid;
+    grid-template-columns: minmax(0, 1fr) auto;
+    grid-template-rows: auto 1fr auto;
+    column-gap: 12px;
+  }
+  .wordmark {
+    grid-column: 1 / -1;
   }
   .wordmark svg {
     margin: 0;
@@ -472,11 +492,24 @@
     stroke-width: 4;
   }
   .home-copy {
-    margin-top: 47px;
+    grid-column: 1;
+    grid-row: 3;
+    align-self: center;
+    margin-top: 0;
     padding: 0 4px;
   }
   .home-copy h2 {
+    display: block;
+    margin-bottom: 0;
+    font-size: clamp(18px, 5vw, 28px);
+    line-height: 1.15;
+    letter-spacing: -0.5px;
+  }
+  .home-copy-desktop {
     display: none;
+  }
+  .home-copy-mobile {
+    display: inline;
   }
   .home-copy p {
     font-size: 18px;
@@ -484,6 +517,8 @@
     letter-spacing: -0.4px;
   }
   .coin-position {
+    grid-column: 2;
+    grid-row: 3;
     position: relative;
     display: block;
     align-self: flex-end;
@@ -492,7 +527,7 @@
     aspect-ratio: 1;
     top: auto;
     right: auto;
-    margin: 32px 4px 0 0;
+    margin: 0 4px 0 0;
     pointer-events: none;
   }
   .auth-dialog {

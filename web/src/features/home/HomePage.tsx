@@ -32,7 +32,7 @@ export function HomePage() {
         </h1>
         <div ref={coin} className="coin-position" aria-hidden="true"><div className="coin-sway"><img src={nairaCoin} alt="" width="340" height="340" draggable="false" /></div></div>
         <div className="home-copy">
-          <h2>Know your stock<br />Trust your <em>credit</em></h2>
+          <h2>Know your stock<br /><span className="home-copy-desktop">Trust</span><span className="home-copy-mobile">Know</span> your <em>credit</em></h2>
         </div>
       </main>
       <Outlet />
