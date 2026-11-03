@@ -114,6 +114,15 @@ export function CustomerDetailPage() {
               >
                 Send to customer
               </Button>
+              <Button
+                variant="secondary"
+                size="md"
+                className="customer-portal-btn"
+                onClick={() => window.open(`/c/${customer.id}`, '_blank', 'noopener,noreferrer')}
+                title="Open customer portal in a new tab"
+              >
+                Customer portal ↗
+              </Button>
               {canRecordRepayment && customer.balanceKobo > 0 && (
                 <Button
                   variant="primary"

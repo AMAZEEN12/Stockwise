@@ -111,6 +111,16 @@ public class ProblemHandler {
                 List.of(new Problem.FieldError("quantity", "would exceed the supported stock count")));
     }
 
+    @ExceptionHandler(ng.tesa.stockwise.portal.PortalExceptions.TokenExpiredException.class)
+    ResponseEntity<Problem> tokenExpired(ng.tesa.stockwise.portal.PortalExceptions.TokenExpiredException e, HttpServletRequest request) {
+        return problem(request, ErrorCode.TOKEN_EXPIRED, e.getMessage(), null);
+    }
+
+    @ExceptionHandler(ng.tesa.stockwise.portal.PortalExceptions.PortalOrderValidationException.class)
+    ResponseEntity<Problem> portalOrderValidation(ng.tesa.stockwise.portal.PortalExceptions.PortalOrderValidationException e, HttpServletRequest request) {
+        return problem(request, ErrorCode.VALIDATION_FAILED, e.getMessage(), null);
+    }
+
     @ExceptionHandler(SaleExceptions.ReferenceNotFound.class)
     ResponseEntity<Problem> referenceNotFound(SaleExceptions.ReferenceNotFound e, HttpServletRequest request) {
         return problem(request, ErrorCode.NOT_FOUND, e.getMessage(),

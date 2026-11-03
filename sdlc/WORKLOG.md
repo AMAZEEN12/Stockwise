@@ -6,6 +6,16 @@ Source document: `Tesa cohort 6 software engineering capstone project.pdf` (TeSA
 > Any agent opening this project: read this file first, then the "Conventions and guidelines" and "Decisions" sections, then the artifacts in this folder. Continue from "Resume here". Don't re-ask anything already answered below.
 
 ## Resume here
+Customer Portal Public Access & Contract v0.6.0 implementation, 2026-11-03 (logged by Antigravity for Nnaemeka Chukwuma):
+- **Change slug:** `customer-portal-public-access` (active in `sdlc/customer-portal-public-access/`).
+- **Resolved customer portal 401 Unauthorized:**
+  1. `SecurityConfig.java`: Allowed public unauthenticated access to `GET /api/v1/portal/customer/**` and `POST /api/v1/portal/customer/*/orders`.
+  2. Implemented `PortalController` and `PortalService` in package `ng.tesa.stockwise.portal`, providing token resolution (`chidi-demo-token`, customer UUID, contact placeholder), live in-stock catalogue (`GET .../products`), and click-and-collect pre-orders (`POST .../orders`) with WhatsApp order link generation.
+  3. Added `TOKEN_EXPIRED` (HTTP 410) handling in `ErrorCode.java` and `ProblemHandler.java`.
+  4. Bumped OpenAPI contract to v0.6.0 with two-engineer sign-off in `decisions.md` §3 (Nnaemeka Chukwuma and Isaac Bassey).
+  5. Updated `CustomerDetailPage.tsx` with a convenient "Customer portal ↗" button for staff link sharing.
+  6. Verified backend compilation, 13/13 unit tests, frontend ESLint 0 warnings, TypeScript clean, and 99/99 Vitest tests.
+
 Home viewport test timing, 2026-11-02 (Victor Oyeleke; logged by Codex): PR #57 CI exposed a desktop resize race: the browser could report the previous scroll height immediately after changing viewport size, so the first scroll did not reach the coin. Victor explicitly authorized correcting the test. The test now waits and retries the scroll until the existing full-visibility requirement is met, retaining the original bounds assertions. Lint, typecheck and 103 unit tests passed; the targeted test passed 20/20 repetitions with two workers, and the full desktop/mobile browser suite passed 126/126 with two workers. No application behavior changed.
 
 Home feature publication, 2026-11-02 (Victor Oyeleke; logged by Codex): integrated `origin/main` at `411cc879`, preserving both work-log histories. After integration, web lint and typecheck passed, 103 unit tests passed, production build passed, and 14 focused desktop/mobile home and authentication browser tests passed. The full 126-case browser suite and service verification recorded below predate this main integration; they were not rerun against the combined branch.

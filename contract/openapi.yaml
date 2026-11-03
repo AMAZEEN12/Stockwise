@@ -1,7 +1,7 @@
 openapi: 3.1.0
 info:
   title: Stockwise API
-  version: 0.5.0
+  version: 0.6.0
   summary: Stock and customer-credit ledger for one demonstration shop (TeSA Cohort 6, Team 3).
   description: |
     Contract v0.1 covers the **Monday 26 Oct MVP paths only** (EXECUTION.md step 2).
@@ -22,6 +22,10 @@ info:
     - `POST /repayments`, OWNER or ASSISTANT, idempotent via a required `Idempotency-Key`;
     - `POST /customers/{customerId}/store-credit`, OWNER or ADMIN, idempotent;
     - optional `useStoreCredit` on `POST /sales` and `storeCreditAppliedKobo` on `Sale`.
+    v0.6.0 adds public customer portal and click-and-collect pre-orders:
+    - `GET /portal/customer/{token}`, public unauthenticated lookup of shop details, customer debt and store credit;
+    - `GET /portal/customer/{token}/products`, public unauthenticated active product catalogue with optional search;
+    - `POST /portal/customer/{token}/orders`, public unauthenticated click-and-collect pre-order with WhatsApp dispatch link.
     A v0.1.0 client keeps working unchanged. Every change is logged in `decisions.md` §3.
 
     Conventions:
@@ -61,6 +65,8 @@ tags:
     description: Liveness
   - name: reversals
     description: Sale reversals and supervisor authorization (R11, R12)
+  - name: portal
+    description: Public customer portal and pre-ordering
 
 paths:
   /health:
@@ -1042,6 +1048,124 @@ paths:
         '403':
           $ref: '#/components/responses/Forbidden'
 
+  /portal/customer/{token}:
+    get:
+      tags: [portal]
+      operationId: getCustomerPortalDetails
+      summary: Public lookup of shop profile and customer credit/debt status
+      description: Safe and idempotent. Public (no authentication required). Looks up shop details, customer balance, and store credit.
+      security: []
+      parameters:
+        - $ref: '#/components/parameters/RequestId'
+        - name: token
+          in: path
+          required: true
+          description: Customer portal token or customer UUID
+          schema:
+            type: string
+      responses:
+        '200':
+          description: Customer portal details retrieved successfully
+          headers:
+            X-Request-Id:
+              $ref: '#/components/headers/RequestId'
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/CustomerPortalDetailsResponse'
+        '400':
+          $ref: '#/components/responses/BadRequest'
+        '404':
+          $ref: '#/components/responses/NotFound'
+        '410':
+          $ref: '#/components/responses/TokenExpired'
+
+  /portal/customer/{token}/products:
+    get:
+      tags: [portal]
+      operationId: getCustomerPortalProducts
+      summary: Public product catalogue lookup for customer pre-orders
+      description: Safe and idempotent. Public (no authentication required). Retrieves active products with available inventory for customer self-service.
+      security: []
+      parameters:
+        - $ref: '#/components/parameters/RequestId'
+        - name: token
+          in: path
+          required: true
+          description: Customer portal token or customer UUID
+          schema:
+            type: string
+        - name: q
+          in: query
+          required: false
+          description: Optional substring search query filter by product name
+          schema:
+            type: string
+      responses:
+        '200':
+          description: Active product catalogue
+          headers:
+            X-Request-Id:
+              $ref: '#/components/headers/RequestId'
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/PortalProductsResponse'
+        '400':
+          $ref: '#/components/responses/BadRequest'
+        '404':
+          $ref: '#/components/responses/NotFound'
+        '410':
+          $ref: '#/components/responses/TokenExpired'
+
+  /portal/customer/{token}/orders:
+    post:
+      tags: [portal]
+      operationId: createCustomerPortalOrder
+      summary: Place a click-and-collect customer pre-order
+      description: Neither safe nor idempotent. Public (no authentication required). Validates inventory, applies available store credit, and generates a WhatsApp pre-order message link.
+      security: []
+      parameters:
+        - $ref: '#/components/parameters/RequestId'
+        - $ref: '#/components/parameters/IdempotencyKeyOptional'
+        - name: token
+          in: path
+          required: true
+          description: Customer portal token or customer UUID
+          schema:
+            type: string
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/CreatePortalOrderRequest'
+      responses:
+        '201':
+          description: Customer pre-order placed successfully
+          headers:
+            X-Request-Id:
+              $ref: '#/components/headers/RequestId'
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/CreatePortalOrderResponse'
+        '400':
+          $ref: '#/components/responses/BadRequest'
+        '404':
+          $ref: '#/components/responses/NotFound'
+        '409':
+          description: '`INSUFFICIENT_STOCK`: at least one requested product has insufficient inventory; pre-order was not placed.'
+          headers:
+            X-Request-Id:
+              $ref: '#/components/headers/RequestId'
+          content:
+            application/problem+json:
+              schema:
+                $ref: '#/components/schemas/Problem'
+        '410':
+          $ref: '#/components/responses/TokenExpired'
+
 components:
   securitySchemes:
     bearerAuth:
@@ -1154,6 +1278,15 @@ components:
             $ref: '#/components/schemas/Problem'
     ServiceUnavailable:
       description: '`DATABASE_UNAVAILABLE`: the service is up but cannot reach the database.'
+      headers:
+        X-Request-Id:
+          $ref: '#/components/headers/RequestId'
+      content:
+        application/problem+json:
+          schema:
+            $ref: '#/components/schemas/Problem'
+    TokenExpired:
+      description: '`TOKEN_EXPIRED`: the provided customer portal link or token has expired.'
       headers:
         X-Request-Id:
           $ref: '#/components/headers/RequestId'
@@ -2007,3 +2140,136 @@ components:
               quantity:
                 type: integer
                 minimum: 1
+
+    PortalShopInfo:
+      type: object
+      required: [name, address, currency]
+      properties:
+        name:
+          type: string
+          example: "Ngozi Provisions Store"
+        address:
+          type: string
+          example: "Shop 4, TeSA Commercial Hub, Lagos"
+        currency:
+          type: string
+          example: "NGN"
+        whatsappPhone:
+          type: string
+          example: "+2348021234567"
+
+    PortalCustomerInfo:
+      type: object
+      required: [displayName, balanceKobo, storeCreditKobo, hasDebtActivity, hasStoreCreditActivity]
+      properties:
+        id:
+          type: string
+          format: uuid
+        displayName:
+          type: string
+          example: "Ada Okafor"
+        balanceKobo:
+          $ref: '#/components/schemas/Kobo'
+        storeCreditKobo:
+          $ref: '#/components/schemas/Kobo'
+        hasDebtActivity:
+          type: boolean
+        hasStoreCreditActivity:
+          type: boolean
+
+    CustomerPortalDetailsResponse:
+      type: object
+      required: [shop, customer, tokenExpiresAt]
+      properties:
+        shop:
+          $ref: '#/components/schemas/PortalShopInfo'
+        customer:
+          $ref: '#/components/schemas/PortalCustomerInfo'
+        tokenExpiresAt:
+          type: string
+          format: date-time
+
+    PortalProduct:
+      type: object
+      required: [id, name, priceKobo, quantity, active]
+      properties:
+        id:
+          type: string
+          format: uuid
+        name:
+          type: string
+          example: "Golden Penny Spaghetti 500g"
+        priceKobo:
+          $ref: '#/components/schemas/Kobo'
+        quantity:
+          type: integer
+          minimum: 0
+        active:
+          type: boolean
+
+    PortalProductsResponse:
+      type: object
+      required: [items, totalItems]
+      properties:
+        items:
+          type: array
+          items:
+            $ref: '#/components/schemas/PortalProduct'
+        totalItems:
+          type: integer
+          minimum: 0
+
+    PortalOrderLine:
+      type: object
+      required: [productId, quantity]
+      properties:
+        productId:
+          type: string
+          format: uuid
+        quantity:
+          type: integer
+          minimum: 1
+
+    CreatePortalOrderRequest:
+      type: object
+      required: [lines, paymentPreference]
+      properties:
+        lines:
+          type: array
+          minItems: 1
+          items:
+            $ref: '#/components/schemas/PortalOrderLine'
+        paymentPreference:
+          type: string
+          enum: [USE_STORE_CREDIT, PAY_ON_PICKUP, ON_ACCOUNT]
+        pickupNote:
+          type: string
+          maxLength: 500
+
+    CreatePortalOrderResponse:
+      type: object
+      required: [orderNumber, customerName, itemsCount, totalKobo, storeCreditAppliedKobo, paymentPreference, createdAt]
+      properties:
+        orderNumber:
+          type: string
+          example: "ORD-20261103-0042"
+        customerName:
+          type: string
+          example: "Ada Okafor"
+        itemsCount:
+          type: integer
+          minimum: 1
+        totalKobo:
+          $ref: '#/components/schemas/Kobo'
+        storeCreditAppliedKobo:
+          $ref: '#/components/schemas/Kobo'
+        paymentPreference:
+          type: string
+        pickupNote:
+          type: string
+        createdAt:
+          type: string
+          format: date-time
+        whatsappUrl:
+          type: string
+          format: uri

@@ -1126,7 +1126,8 @@
   .customer-detail-actions .record-repayment-btn,
   .customer-detail-actions .issue-credit-btn,
   .customer-detail-actions .customer-copy-link-btn,
-  .customer-detail-actions .customer-send-link-btn {
+  .customer-detail-actions .customer-send-link-btn,
+  .customer-detail-actions .customer-portal-btn {
     width: 100%;
     height: 40px;
     font-size: 14px;
