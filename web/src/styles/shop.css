@@ -166,7 +166,7 @@
   font-size: 14px;
 }
 .text-danger {
-  color: #f87171;
+  color: var(--color-danger);
 }
 .text-primary {
   color: var(--color-primary);
@@ -1014,3 +1014,6 @@
 }
 
 
+
+.shop-sidebar { overflow-y: auto; }
+.shop-account { padding-top: 24px; }

@@ -1,3 +1,4 @@
+import { ThemeSelect } from "../ui/theme-select";
 import { useState } from "react";
 import { NavLink, Outlet, useLoaderData, useNavigate } from "react-router";
 import { Dialog } from "../ui/dialog";
@@ -42,6 +43,7 @@ export function ShopLayout() {
   );
   const account = (
     <div className="shop-account">
+      <ThemeSelect />
       <p>{user.displayName}</p>
       <StatusBadge appearance="outline" className="role-badge">
         {user.role}

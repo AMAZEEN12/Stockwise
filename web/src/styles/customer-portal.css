@@ -70,8 +70,8 @@
   gap: 12px;
   padding: 16px 20px;
   border-radius: var(--radius-md);
-  background-color: color-mix(in srgb, #f59e0b 10%, var(--color-surface));
-  border: 1px solid color-mix(in srgb, #f59e0b 35%, var(--color-border));
+  background-color: color-mix(in srgb, var(--color-attention) 10%, var(--color-surface));
+  border: 1px solid color-mix(in srgb, var(--color-attention) 35%, var(--color-border));
   color: var(--color-text);
 }
 
@@ -87,7 +87,7 @@
   flex-shrink: 0;
   width: 22px;
   height: 22px;
-  color: #f59e0b;
+  color: var(--color-attention);
   margin-top: 1px;
 }
 

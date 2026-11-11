@@ -300,3 +300,6 @@ Customer balance activity amendment (2026-10-26, DM68), approved by Victor Oyele
 
 
 Sale reversal UI integration amendment (2026-11-02): Victor authorized wiring the existing reversal UI to the existing Java service, explicitly deferring the backend gaps recorded in WORKLOG. Enable real reversal/code requests, retain immutable recovery requests bound to user/service, refresh receipt status and use contract response types. Update obsolete simulation-only browser expectations and verify real-session request dispatch using intercepted HTTP. No backend, migration or contract changes; this does not record API-owner sign-off. Logged by Codex.
+
+
+Appearance amendment (2026-11-03): Victor requested light and dark mode on a new feature branch. Implement Light/Dark/System preferences across Home/auth, shop and customer portal using existing shared primitives and semantic tokens. Apply the preference before React loads, persist locally with storage-unavailable fallback, respond to system changes and cross-tab updates, and verify keyboard use, contrast and mobile bounds. No API or business-rule changes. Scope decided by Victor; technical choices/logged by Codex.

@@ -1,3 +1,4 @@
+import { ThemeSelect } from '../../components/ui/theme-select';
 import { useState, useMemo } from "react";
 import { useParams, Link } from "react-router";
 import {
@@ -124,6 +125,7 @@ export function CustomerPortalPage() {
     return (
       <main className="portal-container">
         <div className="portal-wrapper">
+        <div className="portal-appearance"><ThemeSelect /></div>
           <div className="portal-header text-center p-8">
             <h1 className="text-xl font-bold">Invalid Portal Link</h1>
             <p className="text-sm text-(--color-text-muted) mt-2">
@@ -139,6 +141,7 @@ export function CustomerPortalPage() {
     return (
       <main className="portal-container" aria-busy="true">
         <div className="portal-wrapper">
+        <div className="portal-appearance"><ThemeSelect /></div>
           <div className="portal-header">
             <Skeleton lines={2} className="h-6 w-48 mb-2" />
             <Skeleton lines={1} className="h-4 w-64" />
@@ -158,6 +161,7 @@ export function CustomerPortalPage() {
     return (
       <main className="portal-container">
         <div className="portal-wrapper">
+        <div className="portal-appearance"><ThemeSelect /></div>
           <div className="portal-header p-6">
             <span className="portal-brand-badge text-(--color-danger) bg-[var(--color-danger-subtle)]">
               {isExpired ? "Link Expired" : "Portal Unavailable"}
@@ -198,6 +202,7 @@ export function CustomerPortalPage() {
   return (
     <main className="portal-container">
       <div className="portal-wrapper">
+        <div className="portal-appearance"><ThemeSelect /></div>
         {/* Payment Due Soon Banner - at the top */}
         {isPaymentDueIn48Hours(customer) && (
           <aside

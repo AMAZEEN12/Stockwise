@@ -1,3 +1,4 @@
+import { ThemeSelect } from '../../components/ui/theme-select';
 import { useRef } from 'react';
 import { Link, Outlet } from 'react-router';
 import { nairaCoin } from '../../assets/images';
@@ -16,6 +17,7 @@ export function HomePage() {
       coin.current?.style.setProperty('--tilt-y', '0deg');
     }}>
       <header className="home-header">
+        <ThemeSelect />
         <nav aria-label="Account" className="flex items-center gap-3">
           <Link to="/sign-in" className="account-link account-secondary">Sign in</Link>
           <Link to="/sign-up" className="account-link account-primary">Sign up</Link>
