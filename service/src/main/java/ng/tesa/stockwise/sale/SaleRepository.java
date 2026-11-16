@@ -83,7 +83,7 @@ public class SaleRepository {
         return jdbc.sql("""
                         UPDATE product
                         SET quantity = quantity - :quantity, version = version + 1, updated_at = now()
-                        WHERE id = :id AND active AND quantity >= :quantity
+                        WHERE id = :id AND active
                         RETURNING price_kobo
                         """)
                 .param("id", productId)
@@ -138,7 +138,7 @@ public class SaleRepository {
                         WITH taken AS (
                             UPDATE product
                             SET quantity = quantity - CAST(:quantity AS integer), version = version + 1, updated_at = now()
-                            WHERE id = :productId AND active AND quantity >= CAST(:quantity AS integer)
+                            WHERE id = :productId AND active
                             RETURNING id, name, price_kobo),
                         line AS (
                             INSERT INTO sale_line (sale_id, product_id, quantity, unit_price_kobo, line_total_kobo)
